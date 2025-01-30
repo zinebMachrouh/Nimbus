@@ -1,0 +1,67 @@
+version: "3.1"
+
+services:
+  db:
+    container_name: BusBuddy-DB
+    image: "mongo:latest"
+    restart: always
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: "admin"
+      MONGO_INITDB_ROOT_PASSWORD: "admin"
+      MONGO_INITDB_DATABASE: "BusBuddy"
+    volumes:
+      - db:/data/db
+    networks:
+      - network-data
+
+  spring-app:
+    container_name: BusBuddy
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8085:8085"
+    environment:
+      - SPRING_PROFILES_ACTIVE=prod
+      - SPRING_DATASOURCE_URL=mongodb://admin:admin@BusBuddy-DB:27017/BusBuddy?authSource=admin
+      - SPRING_DATASOURCE_USERNAME=admin
+      - SPRING_DATASOURCE_PASSWORD=admin
+      - SWAGGER_ACTIVATION=false
+      - SPRING_JPA_HIBERNATE_DDL_AUTO=update
+      - SPRING_JPA_SHOW_SQL=false
+      - SPRING_APPLICATION_NAME=BusBuddy
+      - SPRING_SESSION_STORE_TYPE=jdbc
+      - SERVER_PORT=8085
+      - SPRING_SESSION_JDBC_INITIALIZE_SCHEMA=always
+    networks:
+      - network-data
+    depends_on:
+      - db
+
+  jenkins:
+    container_name: BusBuddy-Jenkins
+    image: "jenkins/jenkins:lts"
+    restart: always
+    user: root
+    ports:
+      - "9090:8080"
+      - "50000:50000"
+    volumes:
+      - jenkins_home:/var/jenkins_home
+      - /var/run/docker.sock:/var/run/docker.sock
+    networks:
+      - network-data
+    environment:
+      - JAVA_OPTS=-Djenkins.install.runSetupWizard=false
+
+networks:
+  network-data:
+    driver: bridge
+
+volumes:
+  db:
+    driver: local
+  jenkins_home:
+    driver: local
