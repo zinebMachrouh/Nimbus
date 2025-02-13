@@ -1,0 +1,18 @@
+server:
+  port: 8084
+
+spring:
+  application:
+    name: "BusBuddy"
+  data:
+    mongodb:
+      host: localhost
+      uri: mongodb://admin:admin@BusBuddy-DB:27017/BusBuddy?authSource=admin
+
+      port: 27017
+      database: BusBuddy
+      username: admin
+      password: admin
+      authentication-database: admin
+  profiles:
+    active: "prod"
