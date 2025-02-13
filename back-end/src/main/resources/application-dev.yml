@@ -1,0 +1,7 @@
+spring:
+  application:
+    name: "BusBuddy - Development"
+logging:
+  level:
+    root: DEBUG
+    org.springframework: DEBUG
