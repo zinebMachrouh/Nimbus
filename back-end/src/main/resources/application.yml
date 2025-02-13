@@ -14,5 +14,14 @@ spring:
       username: admin
       password: admin
       authentication-database: admin
+
+    liquibase:
+      enabled: true
+      change-log: classpath:db/changelog/db.changelog-master.yml
+      url: mongodb://admin:admin@BusBuddy-DB:27017/BusBuddy?authSource=admin
+      user: admin
+      password: admin
+      default-schema: BusBuddy
+      changeLogLockWaitTime: 600
   profiles:
     active: "prod"

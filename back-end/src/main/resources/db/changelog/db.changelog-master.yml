@@ -1,0 +1,21 @@
+databaseChangeLog:
+  - changeSet:
+      id: 1
+      author: zineb
+      changes:
+        - createCollection:
+            collectionName: roles
+
+  - changeSet:
+      id: 2
+      author: zineb
+      changes:
+        - insert:
+            collectionName: roles
+            documents:
+              - id: "1"
+                name: "ADMIN"
+              - id: "2"
+                name: "PARENT"
+              - id: "3"
+                name: "DRIVER"
