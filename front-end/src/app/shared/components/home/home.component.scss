@@ -1,0 +1,269 @@
+.home {
+  width: 100%;
+  height: 100vh;
+  padding: 10px 60px;
+  background: url("/assets/bg.avif") no-repeat center center/cover;
+  position: relative;
+  overflow: hidden;
+
+  .circle {
+    position: absolute;
+    width: 700px;
+    height: 700px;
+    background: linear-gradient(to bottom, #28887A, #246C61);
+    border-radius: 50%;
+    top: -100px;
+    right: 50%;
+    transform: translateX(50%);
+    overflow: hidden;
+    z-index: 1;
+
+    img {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      top: 50%;
+      object-fit: cover;
+      opacity: 0.2;
+      left: 50%;
+      transform: translate(-50%, -50%);
+    }
+  }
+
+  header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    position: relative;
+    z-index: 3 ;
+
+    h2 {
+      font-size: 1.5rem;
+      color: #28887A;
+      font-weight: 800;
+    }
+
+    nav {
+      display: flex;
+      align-items: center;
+      gap: 15px !important;
+      margin-right: 40px;
+
+      a {
+        font-size: 1rem;
+        color: #fafafa;
+        text-decoration: none;
+        transition: all 0.3s ease;
+        text-transform: uppercase;
+
+        &:hover {
+          color: #1D3C37;
+        }
+      }
+
+      span {
+        font-size: 0.7rem;
+        font-weight: 500;
+        color: #1A2523;
+        transition: all 0.3s ease;
+      }
+    }
+
+    button {
+      padding: 7px 27px;
+      font-size: 1rem;
+      color: #28887A;
+      background: transparent;
+      border: 3px solid #1A2523;
+      border-radius: 200px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      font-weight: 700;
+      text-transform: uppercase;
+
+      &:hover {
+        background: #1A2523;
+        color: #fafafa;
+      }
+    }
+  }
+
+  h1 {
+    position: relative;
+    z-index: 2;
+    font-family: "Poller One", serif;
+    font-size: 276px;
+    margin-left: -20px;
+    margin-top: -35px;
+    background: linear-gradient(to right, #1A2523, #1F4640);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  .content{
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    position: relative;
+    z-index: 2;
+    background: linear-gradient(to top, #1A2523, #1C312D);
+    padding: 20px 30px;
+    border-radius: 15px;
+    margin-top: -35px;
+    width: 100%;
+    height: 90px;
+
+    h4{
+      font-size: 30px;
+      color: #28887A;
+    }
+    img{
+      width: 40px;
+    }
+    p{
+      width: 65%;
+      font-size: 11px;
+      text-align: center;
+      color: #267A6E;
+    }
+
+    .circles{
+      position: absolute;
+      width: 430px !important;
+      height: 430px !important;
+      top: -100px;
+      left: 34%;
+      translate: translateX(-34%);
+
+
+      img{
+        width: 100%;
+        height: 100%;
+        backdrop-filter: drop-shadow( 0px 8px 16px -8px rgba(0, 0, 0, 0.3) );
+      }
+    }
+  }
+
+  .container{
+    width: 110%;
+    margin-left: -70px;
+    height: 320px;
+    margin-top: 35px;
+    background: linear-gradient(to right, #1A2523, #1F4640);
+    padding: 35px 75px;
+    display: flex;
+    justify-content: space-between;
+
+    .right{
+      width: 32%;
+
+      h4{
+        color: #fafafa;
+        text-transform: uppercase;
+        margin-bottom: 15px;
+        font-weight: 900;
+        font-size: 45px;
+      }
+
+      p{
+        color: #fafafa;
+        font-size: 15px;
+        opacity: 0.7;
+        width: 100%;
+        text-align: justify;
+        text-justify: inter-word;
+        hyphens: auto;
+      }
+    }
+
+    .middle{
+      width: 36%;
+      text-align: center;
+      text-transform: uppercase;
+      padding-top: 200px;
+
+      h4{
+        font-family: "Poller One", serif;
+        color: #71B0A6;
+        font-size: 20px;
+      }
+    }
+    .left{
+      width: 32%;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 30px;
+
+      .text{
+        display: flex;
+        align-items: center;
+        gap: 40px;
+        font-size: 20px;
+
+        h4{
+          color: #fafafa;
+          font-weight: 400;
+        }
+
+        span{
+          color: #71B0A6;
+          font-weight: 700;
+          font-size: 22px;
+          letter-spacing: 3px;
+        }
+      }
+
+      p{
+        color: #fafafa;
+        font-size: 15px;
+        opacity: 0.7;
+        width: 100%;
+        text-align: justify;
+        text-justify: inter-word;
+        hyphens: auto;
+      }
+
+      .nums{
+        width: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+
+        button{
+          width: 30px;
+          height: 30px;
+          background: transparent;
+          border: 2px solid #fafafa;
+          cursor: pointer;
+          font-size: 15px;
+          font-weight: 700;
+          color: #71B0A6;
+        }
+
+        h2{
+          color: #71B0A6;
+          font-size: 50px;
+          font-weight: 700;
+          span{
+            color: #fafafa;
+          }
+        }
+
+        .pill{
+          width: 32px;
+          height: 13px;
+          background: #71B0A6;
+          border-radius: 200px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-size: 15px;
+          font-weight: 700;
+          color: #fafafa;
+        }
+
+      }
+    }
+  }
+}
