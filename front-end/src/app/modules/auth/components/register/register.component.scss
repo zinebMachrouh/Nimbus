@@ -1,0 +1,26 @@
+.register{
+  display: flex;
+  justify-content: space-between;
+  height: 100vh;
+  width: 100%;
+  background-color: red;
+  padding: 10px;
+
+  .left{
+    width: 50%;
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: blue;
+  }
+
+  .right{
+    width: 50%;
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: green;
+  }
+}

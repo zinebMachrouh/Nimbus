@@ -1,57 +1,76 @@
-<main class="home">
-  <div class="circle">
-    <img src="assets/bg-2.avif" alt="circle">
-  </div>
-  <header>
-    <h2>ニンバス NIMBUS.</h2>
-    <nav>
-      <a routerLink="home" routerLinkActive="active">Home</a>
-      <span>/</span>
-      <a routerLink="about" routerLinkActive="active">About US</a>
-      <span>/</span>
-      <a routerLink="faq" routerLinkActive="active">FAQ</a>
-      <span>/</span>
-      <a routerLink="login" routerLinkActive="active">Login</a>
-    </nav>
-    <button type="button">Contact us</button>
-  </header>
-  <h1>NIMBUS</h1>
-  <div class="content">
-    <h4>ニンバス</h4>
-    <img src="assets/icon.png" alt="icon">
-    <p>
-      lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore etiy dolore voluptate Quis autem vel eumlik iure voluptate<br>
-      aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip consectetur nostrud sint occaecati cupiditate non provident, similique sunt<br>
-      Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatu excepteur sinoccaecat  eisliquam nihil molestiae illum dolorem<br>
-    </p>
-    <img src="assets/icon.png" alt="icon">
-    <h4>ニンバス</h4>
-    <div class="circles">
-      <img src="assets/circles.png" alt="circles">
-    </div>
-  </div>
-  <div class="container">
-    <div class="right">
-      <h4>Curator of <br>every ride.</h4>
-      <p>
-        Nimbus is a futuristic platform specializing in smart school transportation, real-time tracking, and efficient communication, redefining safety, convenience, and reliability. With cutting-edge GPS technology, seamless parent-driver communication, and AI-powered route optimization, Nimbus ensures stress-free school commutes.
-      </p>
-    </div>
-    <div class="middle">
-      <h4>Because every ride matters</h4>
-    </div>
-    <div class="left">
-      <div class="text">
-        <h4>2025</h4>
-        <span>//</span>
-        <h4>March</h4>
-      </div>
-      <p>At vero eos et iusto odio dignissimos ducimus qui blanditiis praesentium voluptatum deleniti atque corrupti quos dolores et quas molestias excepturi sint occaecati cupiditate non provident, similique sunt in culpa qui officia deserunt mollitia animi, id est laborum et dolorum fuga et harum quidem?</p>
-      <div class="nums">
-        <button type="button"><i class="fa-solid fa-plus"></i></button>
-        <h2>09362<span>*</span></h2>
-        <span class="pill"></span>
+<section id="dashboard">
+  <section class="left">
+    <div class="left-top">
+      <header>
+        <img src="assets/logo.png" alt="Icon" class="icon">
+        <nav>
+          <a routerLink="home" routerLinkActive="active">Home</a>
+          <a routerLink="pricing">Pricing</a>
+          <a routerLink="about">About</a>
+          <a routerLink="contact">Contact</a>
+          <a routerLink="#" (click)="login()" class="library">Dig In Now</a>
+
+        </nav>
+      </header>
+      <h2>The Art of the<br>Third Dimension</h2>
+      <p>Lorem ipsum dolor sit amet, consectetur adipiscing<br> sed do eiusmod tempor incididunt ut labore dolore <br>magna aliqua ut enim elit.</p>
+
+      <div class="lt-actions">
+        <button class="btn">Learn More</button>
+        <button class="btn">
+          <i class="fa-solid fa-circle-play"></i>
+          See How It Works
+        </button>
       </div>
     </div>
-  </div>
-</main>
+    <div class="left-bottom">
+      <section class="lb-left">
+        <div>
+          <span class="since">SINCE</span>
+          <h4>31 Dec <br>2024</h4>
+          <p>Total Albums <span>500</span></p>
+          <p>Total Tracks <span>3000</span></p>
+        </div>
+        <div>
+          <span class="circle"><i class="fa-solid fa-arrow-up"></i></span>
+        </div>
+      </section>
+      <section class="lb-right">
+        <h4>so many parents <br>chose us</h4>
+        <div class="lb-container">
+          <p>
+            <span>+1235</span>
+            <span>Satisfied parents</span>
+          </p>
+          <div class="parents">
+            <img src="assets/parent-1.jpg" alt="Parent 1" class="parent">
+            <img src="assets/parent-3.jpg" alt="Parent 3" class="parent">
+            <img src="assets/parent-2.jpg" alt="Parent 2" class="parent">
+          </div>
+        </div>
+      </section>
+    </div>
+  </section>
+  <section class="right">
+    <div class="right-top">
+      <div class="rt-actions">
+        <a href="#" ><i class="fa-regular fa-envelope"></i></a>
+        <a routerLink="#" (click)="login()">Dig In Now</a>
+      </div>
+      <img src="assets/right.jpg" alt="Right Top Picture" class="right-img">
+    </div>
+    <div class="right-bottom">
+      <div class="rb-parent">
+        <img src="assets/driver.jpg" alt="Driver">
+      </div>
+      <div class="rb-info">
+        <h4>Jolene Doe</h4>
+        <span>Verified Parent</span>
+
+        <p>
+          Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore dolore magna aliqua ut enim ad minim veniam, quis nostrud exercitation ulla.
+        </p>
+      </div>
+    </div>
+  </section>
+</section>

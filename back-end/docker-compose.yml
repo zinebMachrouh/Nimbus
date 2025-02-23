@@ -2,7 +2,7 @@ version: "3.1"
 
 services:
   db:
-    container_name: BusBuddy-DB
+    container_name: Nimbus-DB
     image: "mongo:latest"
     restart: always
     ports:
@@ -10,14 +10,14 @@ services:
     environment:
       MONGO_INITDB_ROOT_USERNAME: "admin"
       MONGO_INITDB_ROOT_PASSWORD: "admin"
-      MONGO_INITDB_DATABASE: "BusBuddy"
+      MONGO_INITDB_DATABASE: "Nimbus"
     volumes:
       - db:/data/db
     networks:
       - network-data
 
   spring-app:
-    container_name: BusBuddy
+    container_name: Nimbus
     build:
       context: .
       dockerfile: Dockerfile
@@ -25,13 +25,13 @@ services:
       - "8085:8085"
     environment:
       - SPRING_PROFILES_ACTIVE=prod
-      - SPRING_DATASOURCE_URL=mongodb://admin:admin@BusBuddy-DB:27017/BusBuddy?authSource=admin
+      - SPRING_DATASOURCE_URL=mongodb://admin:admin@Nimbus-DB:27017/Nimbus?authSource=admin
       - SPRING_DATASOURCE_USERNAME=admin
       - SPRING_DATASOURCE_PASSWORD=admin
       - SWAGGER_ACTIVATION=false
       - SPRING_JPA_HIBERNATE_DDL_AUTO=update
       - SPRING_JPA_SHOW_SQL=false
-      - SPRING_APPLICATION_NAME=BusBuddy
+      - SPRING_APPLICATION_NAME=Nimbus
       - SPRING_SESSION_STORE_TYPE=jdbc
       - SERVER_PORT=8085
       - SPRING_SESSION_JDBC_INITIALIZE_SCHEMA=always
@@ -41,7 +41,7 @@ services:
       - db
 
   jenkins:
-    container_name: BusBuddy-Jenkins
+    container_name: Nimbus-Jenkins
     image: "jenkins/jenkins:lts"
     restart: always
     user: root

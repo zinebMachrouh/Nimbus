@@ -3,14 +3,14 @@ server:
 
 spring:
   application:
-    name: "BusBuddy"
+    name: "Nimbus"
   data:
     mongodb:
       host: localhost
-      uri: mongodb://admin:admin@BusBuddy-DB:27017/BusBuddy?authSource=admin
+      uri: mongodb://admin:admin@Nimbus-DB:27017/Nimbus?authSource=admin
 
       port: 27017
-      database: BusBuddy
+      database: Nimbus
       username: admin
       password: admin
       authentication-database: admin
@@ -18,10 +18,10 @@ spring:
     liquibase:
       enabled: true
       change-log: classpath:db/changelog/db.changelog-master.yml
-      url: mongodb://admin:admin@BusBuddy-DB:27017/BusBuddy?authSource=admin
+      url: mongodb://admin:admin@Nimbus-DB:27017/Nimbus?authSource=admin
       user: admin
       password: admin
-      default-schema: BusBuddy
+      default-schema: Nimbus
       changeLogLockWaitTime: 600
   profiles:
     active: "prod"

@@ -1,5 +1,6 @@
 import { Component } from '@angular/core';
-import {RouterLink, RouterLinkActive} from "@angular/router";
+import {Router, RouterLink, RouterLinkActive} from "@angular/router";
+import {AuthService} from "../../../modules/auth/services/auth.service";
 
 @Component({
   selector: 'app-home',
@@ -12,5 +13,13 @@ import {RouterLink, RouterLinkActive} from "@angular/router";
   styleUrl: './home.component.scss'
 })
 export class HomeComponent {
+  constructor(private authService : AuthService, private router : Router) {}
 
+  login(): void {
+    if (this.authService.isAuthenticated()) {
+      this.router.navigate(['/library']);
+    }else {
+      this.router.navigate(['/login']);
+    }
+  }
 }
