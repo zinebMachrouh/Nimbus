@@ -1,6 +1,6 @@
 spring:
   application:
-    name: "BusBuddy - Development"
+    name: "Nimbus - Development"
 logging:
   level:
     root: DEBUG

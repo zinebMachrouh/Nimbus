@@ -1,6 +1,6 @@
 spring:
   application:
-    name: "BusBuddy - Production"
+    name: "Nimbus - Production"
 logging:
   level:
     root: INFO
