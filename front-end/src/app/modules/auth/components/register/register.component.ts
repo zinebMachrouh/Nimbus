@@ -49,10 +49,9 @@ export class RegisterComponent {
     }
 
     const {name, principal, address, email, phone, password, gps_location} = this.registerForm.value;
-    const status = 'ACTIVE';
 
     const formData = new FormData();
-    const fields = { name, principal, address, email, phone, password, gps_location, status };
+    const fields = { name, principal, address, email, phone, password, gps_location };
 
     Object.entries(fields).forEach(([key, value]) => formData.append(key, value));
 
