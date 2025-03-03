@@ -1,16 +1,16 @@
-version: "3.1"
+version: "3.8"
 
 services:
   db:
     container_name: Nimbus-DB
-    image: "mongo:latest"
+    image: "postgres:13"
     restart: always
     ports:
-      - "27017:27017"
+      - "5432:5432"
     environment:
-      MONGO_INITDB_ROOT_USERNAME: "admin"
-      MONGO_INITDB_ROOT_PASSWORD: "admin"
-      MONGO_INITDB_DATABASE: "Nimbus"
+        POSTGRES_USER: admin
+        POSTGRES_PASSWORD: admin
+        POSTGRES_DB: Nimbus
     volumes:
       - db:/data/db
     networks:
@@ -25,7 +25,7 @@ services:
       - "8085:8085"
     environment:
       - SPRING_PROFILES_ACTIVE=prod
-      - SPRING_DATASOURCE_URL=mongodb://admin:admin@Nimbus-DB:27017/Nimbus?authSource=admin
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://Nimbus-DB:5432/Nimbus
       - SPRING_DATASOURCE_USERNAME=admin
       - SPRING_DATASOURCE_PASSWORD=admin
       - SWAGGER_ACTIVATION=false

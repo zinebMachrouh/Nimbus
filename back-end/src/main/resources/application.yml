@@ -4,24 +4,14 @@ server:
 spring:
   application:
     name: "Nimbus"
-  data:
-    mongodb:
-      host: localhost
-      uri: mongodb://admin:admin@Nimbus-DB:27017/Nimbus?authSource=admin
+  datasource:
+      url: "jdbc:postgresql://Nimbus-DB:5432/Nimbus"
+      username: "admin"
+      password: "admin"
+      driver-class-name: "org.postgresql.Driver"
 
-      port: 27017
-      database: Nimbus
-      username: admin
-      password: admin
-      authentication-database: admin
-
-    liquibase:
-      enabled: true
-      change-log: classpath:db/changelog/db.changelog-master.yml
-      url: mongodb://admin:admin@Nimbus-DB:27017/Nimbus?authSource=admin
-      user: admin
-      password: admin
-      default-schema: Nimbus
-      changeLogLockWaitTime: 600
+  jpa:
+    hibernate:
+      ddl-auto: "update"
   profiles:
     active: "prod"

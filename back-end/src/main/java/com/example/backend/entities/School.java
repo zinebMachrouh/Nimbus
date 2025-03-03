@@ -1,18 +1,20 @@
 package com.example.backend.entities;
 
 import com.example.backend.enums.SchoolStatus;
+import jakarta.persistence.*;
 import lombok.*;
-import org.springframework.data.annotation.Id;
-import org.springframework.data.mongodb.core.mapping.Document;
+
+import java.util.UUID;
 
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-@Document(collection = "schools")
+@Entity(name = "schools")
 public class School {
     @Id
-    private String id;
+    @Builder.Default
+    private String id = UUID.randomUUID().toString();
 
     private String name;
 
@@ -29,5 +31,6 @@ public class School {
     private String gps_location;
 
     @Builder.Default
+    @Enumerated(EnumType.STRING)
     private SchoolStatus status = SchoolStatus.ACTIVE;
 }

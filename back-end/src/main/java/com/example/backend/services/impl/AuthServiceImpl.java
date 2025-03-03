@@ -12,11 +12,10 @@ import com.example.backend.repositories.UserRepository;
 import com.example.backend.services.AuthService;
 import com.example.backend.utils.JwtUtil;
 import com.example.backend.utils.TokenBlacklist;
-import jakarta.servlet.http.HttpSession;
 import lombok.AllArgsConstructor;
+import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.stereotype.Service;
 
 import java.util.HashMap;
@@ -32,7 +31,6 @@ public class AuthServiceImpl implements AuthService {
     private final JwtUtil jwtUtil;
     private final PasswordEncoder passwordEncoder;
     private final AuthenticationManager authenticationManager;
-    private final HttpSession httpSession;
 
     @Override
     public SchoolResponse register(SchoolRequest schoolRequest) {
@@ -54,19 +52,23 @@ public class AuthServiceImpl implements AuthService {
 
         String token = jwtUtil.generateToken(user.getUsername(), claims);
 
-        httpSession.setAttribute("token", token);
 
         return buildSchoolResponse(school, token);
     }
 
     @Override
     public LoginResponse login(LoginRequest loginRequest) {
-        authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(
-                        loginRequest.getEmail(),
-                        loginRequest.getPassword()
-                )
-        );
+        try {
+            authenticationManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(
+                            loginRequest.getEmail(),
+                            loginRequest.getPassword()
+                    )
+            );
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new RuntimeException("Authentication failed: " + e.getMessage());
+        }
 
         User user = userRepository.findByEmail(loginRequest.getEmail())
                 .orElseThrow(() -> new RuntimeException("User not found"));
@@ -76,7 +78,6 @@ public class AuthServiceImpl implements AuthService {
         claims.put("userId", user.getId());
 
         String token = jwtUtil.generateToken(user.getUsername(), claims);
-        httpSession.setAttribute("token", token);
 
         School school = schoolRepository.findByEmail(user.getEmail())
                 .orElseThrow(() -> new RuntimeException("School not found"));
@@ -86,17 +87,7 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     public void logout() {
-        httpSession.getAttribute("token");
-        TokenBlacklist.add((String) httpSession.getAttribute("token"));
-
-        System.out.println(TokenBlacklist.getBlacklist());
-
         TokenBlacklist.clean();
-
-        System.out.println(TokenBlacklist.getBlacklist());
-
-        httpSession.invalidate();
-
     }
 
     private SchoolResponse buildSchoolResponse(School school, String token) {

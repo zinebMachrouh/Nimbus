@@ -7,7 +7,7 @@ import { tap } from 'rxjs/operators';
   providedIn: 'root',
 })
 export class AuthService {
-  private readonly API_URL = 'http://localhost:8085/api/v1/auth';
+  private readonly API_URL = 'http://localhost:8084/api/v1/auth';
   private jwtTokenKey = 'authToken';
   private currentUserSubject = new BehaviorSubject<any>(null);
   public currentUser$ = this.currentUserSubject.asObservable();
@@ -23,11 +23,11 @@ export class AuthService {
     return this.http.post(`${this.API_URL}/register`, user);
   }
 
-  login(loginRequest: { username: string; password: string }): Observable<any> {
+  login(loginRequest: { email: string; password: string }): Observable<any> {
     return this.http.post(`${this.API_URL}/login`, loginRequest).pipe(
       tap((response: any) => {
         const token = response.token;
-        const user = response.username;
+        const user = response.email;
         if (token) {
           this.storeToken(token);
           this.decodeAndSetUser(token);
@@ -84,19 +84,10 @@ export class AuthService {
   }
 
   private setUsername(user: any) {
-    localStorage.setItem('username', user);
+    localStorage.setItem('loggedUser', user);
   }
 
   public getUsername(): string | null {
-    return localStorage.getItem('username');
-  }
-
-  public isAdmin(): boolean {
-    const user = this.currentUserSubject.getValue();
-    if (user && user.roles) {
-      return user.roles.some((role: { name: string }) => role.name === 'ADMIN');
-    } else {
-      return false;
-    }
+    return localStorage.getItem('loggedUser');
   }
 }
