@@ -1,7 +1,0 @@
-spring:
-  application:
-    name: "Nimbus - Development"
-logging:
-  level:
-    root: DEBUG
-    org.springframework: DEBUG

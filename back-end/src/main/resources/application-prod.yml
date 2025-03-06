@@ -1,7 +1,0 @@
-spring:
-  application:
-    name: "Nimbus - Production"
-logging:
-  level:
-    root: INFO
-    org.springframework: WARN

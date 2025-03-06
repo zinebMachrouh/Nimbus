@@ -1,19 +1,10 @@
-FROM maven:3-eclipse-temurin-21-alpine AS build
+FROM openjdk:17-jdk-slim
 
 WORKDIR /app
 
-COPY pom.xml .
-RUN mvn dependency:go-offline
+COPY target/nimbus-platform-0.0.1-SNAPSHOT.jar app.jar
 
-COPY src ./src
-RUN mvn clean package -DskipTests
+EXPOSE 8080
 
-FROM eclipse-temurin:21 AS run
+ENTRYPOINT ["java", "-jar", "app.jar"]
 
-WORKDIR /app
-
-COPY --from=build /app/target/*.jar /app/app.jar
-
-EXPOSE 8085
-
-CMD ["java", "-jar", "app.jar"]
