@@ -1,0 +1,148 @@
+@use '@angular/material' as mat;
+
+@include mat.core();
+
+// Define custom palettes
+$nimbus-primary: (
+  50: #eef2ff,
+  100: #e0e7ff,
+  200: #c7d2fe,
+  300: #a5b4fc,
+  400: #818cf8,
+  500: #6366f1,
+  600: #4f46e5,
+  700: #4338ca,
+  800: #3730a3,
+  900: #312e81,
+  950: #1e1b4b,
+  contrast: (
+    50: rgba(0, 0, 0, 0.87),
+    100: rgba(0, 0, 0, 0.87),
+    200: rgba(0, 0, 0, 0.87),
+    300: rgba(0, 0, 0, 0.87),
+    400: white,
+    500: white,
+    600: white,
+    700: white,
+    800: white,
+    900: white,
+    950: white,
+  )
+);
+
+$nimbus-accent: (
+  50: #f5f3ff,
+  100: #ede9fe,
+  200: #ddd6fe,
+  300: #c4b5fd,
+  400: #a78bfa,
+  500: #8b5cf6,
+  600: #7c3aed,
+  700: #6d28d9,
+  800: #5b21b6,
+  900: #4c1d95,
+  950: #2e1065,
+  contrast: (
+    50: rgba(0, 0, 0, 0.87),
+    100: rgba(0, 0, 0, 0.87),
+    200: rgba(0, 0, 0, 0.87),
+    300: rgba(0, 0, 0, 0.87),
+    400: white,
+    500: white,
+    600: white,
+    700: white,
+    800: white,
+    900: white,
+    950: white,
+  )
+);
+
+$nimbus-warn: (
+  50: #fef2f2,
+  100: #fee2e2,
+  200: #fecaca,
+  300: #fca5a5,
+  400: #f87171,
+  500: #ef4444,
+  600: #dc2626,
+  700: #b91c1c,
+  800: #991b1b,
+  900: #7f1d1d,
+  950: #450a0a,
+  contrast: (
+    50: rgba(0, 0, 0, 0.87),
+    100: rgba(0, 0, 0, 0.87),
+    200: rgba(0, 0, 0, 0.87),
+    300: rgba(0, 0, 0, 0.87),
+    400: white,
+    500: white,
+    600: white,
+    700: white,
+    800: white,
+    900: white,
+    950: white,
+  )
+);
+
+// Define the palettes
+$nimbus-primary-palette: mat.define-palette($nimbus-primary, 600);
+$nimbus-accent-palette: mat.define-palette($nimbus-accent, 500);
+$nimbus-warn-palette: mat.define-palette($nimbus-warn, 500);
+
+// Create the light theme
+$nimbus-light-theme: mat.define-light-theme((
+  color: (
+    primary: $nimbus-primary-palette,
+    accent: $nimbus-accent-palette,
+    warn: $nimbus-warn-palette,
+  ),
+  typography: mat.define-typography-config(
+    $font-family: '"Inter", sans-serif',
+    $headline-1: mat.define-typography-level(96px, 96px, 300, $letter-spacing: -0.015em),
+    $headline-2: mat.define-typography-level(60px, 60px, 300, $letter-spacing: -0.005em),
+    $headline-3: mat.define-typography-level(48px, 50px, 400),
+    $headline-4: mat.define-typography-level(34px, 40px, 400),
+    $headline-5: mat.define-typography-level(24px, 32px, 400),
+    $headline-6: mat.define-typography-level(20px, 32px, 500),
+    $subtitle-1: mat.define-typography-level(16px, 28px, 400),
+    $subtitle-2: mat.define-typography-level(14px, 22px, 500),
+    $body-1: mat.define-typography-level(16px, 24px, 400),
+    $body-2: mat.define-typography-level(14px, 20px, 400),
+    $caption: mat.define-typography-level(12px, 20px, 400),
+    $button: mat.define-typography-level(14px, 14px, 500),
+  ),
+  density: 0,
+));
+
+// Create the dark theme
+$nimbus-dark-theme: mat.define-dark-theme((
+  color: (
+    primary: $nimbus-primary-palette,
+    accent: $nimbus-accent-palette,
+    warn: $nimbus-warn-palette,
+  ),
+  typography: mat.define-typography-config(
+    $font-family: '"Inter", sans-serif',
+    $headline-1: mat.define-typography-level(96px, 96px, 300, $letter-spacing: -0.015em),
+    $headline-2: mat.define-typography-level(60px, 60px, 300, $letter-spacing: -0.005em),
+    $headline-3: mat.define-typography-level(48px, 50px, 400),
+    $headline-4: mat.define-typography-level(34px, 40px, 400),
+    $headline-5: mat.define-typography-level(24px, 32px, 400),
+    $headline-6: mat.define-typography-level(20px, 32px, 500),
+    $subtitle-1: mat.define-typography-level(16px, 28px, 400),
+    $subtitle-2: mat.define-typography-level(14px, 22px, 500),
+    $body-1: mat.define-typography-level(16px, 24px, 400),
+    $body-2: mat.define-typography-level(14px, 20px, 400),
+    $caption: mat.define-typography-level(12px, 20px, 400),
+    $button: mat.define-typography-level(14px, 14px, 500),
+  ),
+  density: 0,
+));
+
+// Apply the light theme by default
+@include mat.all-component-themes($nimbus-light-theme);
+
+// Apply the dark theme only when the `.dark-theme` CSS class is applied
+.dark-theme {
+  @include mat.all-component-colors($nimbus-dark-theme);
+}

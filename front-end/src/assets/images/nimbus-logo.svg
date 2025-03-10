@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="64" height="64" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background Circle -->
+  <circle cx="32" cy="32" r="30" fill="#28887A"/>
+  
+  <!-- Cloud Shape -->
+  <path d="M20 32 C20 24, 24 20, 32 20 C40 20, 44 24, 44 32 C44 40, 40 44, 32 44 C24 44, 20 40, 20 32" fill="#FFFFFF"/>
+  
+  <!-- Lightning Bolt -->
+  <path d="M32 24 L28 32 L32 32 L28 40 L36 32 L32 32 L36 24 Z" fill="#3BA992"/>
+</svg> 

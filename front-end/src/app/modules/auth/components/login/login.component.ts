@@ -1,46 +1,85 @@
-import {Component, inject} from '@angular/core';
-import {Router, RouterLink} from "@angular/router";
-import {FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators} from "@angular/forms";
-import {HttpClient} from "@angular/common/http";
-import {AuthService} from "../../services/auth.service";
+import { Component } from '@angular/core';
+import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
+import { Router, RouterModule } from '@angular/router';
+import { CommonModule } from '@angular/common';
+import { AuthService } from '../../services/auth.service';
 
 @Component({
   selector: 'app-login',
+  templateUrl: './login.component.html',
+  styleUrls: ['./login.component.scss'],
   standalone: true,
   imports: [
-    RouterLink,
-    FormsModule,
+    CommonModule,
+    RouterModule,
     ReactiveFormsModule
-  ],
-  templateUrl: './login.component.html',
-  styleUrl: './login.component.scss'
+  ]
 })
 export class LoginComponent {
   loginForm: FormGroup;
-  private readonly router = inject(Router);
+  isLoading = false;
+  hidePassword = true;
+  errorMessage = '';
 
-  constructor(private fb: FormBuilder, private http: HttpClient, private authService: AuthService) {
+  constructor(
+    private fb: FormBuilder,
+    private authService: AuthService,
+    private router: Router
+  ) {
     this.loginForm = this.fb.group({
-      email: ['', Validators.required],
-      password: ['', Validators.required],
+      username: ['', Validators.required],
+      password: ['', [Validators.required, Validators.minLength(6)]]
     });
   }
 
-  onSubmit() {
-    if (this.loginForm.valid) {
-      const { email, password } = this.loginForm.value;
-      const payload = { email, password };
+  getErrorMessage(controlName: string): string {
+    const control = this.loginForm.get(controlName);
+    if (!control?.errors || !control.touched) return '';
 
-      this.authService.login(payload).subscribe({
-        next: (response) => {
-          console.log('Login successful:', response);
-          this.router.navigate(['/library']);
+    if (control.hasError('required')) {
+      return `${controlName.charAt(0).toUpperCase() + controlName.slice(1)} is required`;
+    }
+    if (control.hasError('minlength')) {
+      return 'Password must be at least 6 characters';
+    }
+    return '';
+  }
+
+  onSubmit(): void {
+    this.errorMessage = '';
+    
+    if (this.loginForm.valid) {
+      this.isLoading = true;
+      const { username, password } = this.loginForm.value;
+
+      this.authService.login(username, password).subscribe({
+        next: () => {
+          this.router.navigate(['/dashboard']);
         },
         error: (error) => {
-          console.error('Login failed:', error);
-          alert('Login failed: ' + (error.message || 'Unknown error'));
+          this.isLoading = false;
+          
+          if (error.status === 401) {
+            this.errorMessage = 'Invalid username or password';
+          } else if (error.status === 404) {
+            this.errorMessage = 'Account not found';
+          } else if (!navigator.onLine) {
+            this.errorMessage = 'Please check your internet connection';
+          } else {
+            this.errorMessage = 'Unable to connect to the server. Please try again later';
+          }
+        },
+        complete: () => {
+          this.isLoading = false;
+        }
+      });
+    } else {
+      Object.keys(this.loginForm.controls).forEach(key => {
+        const control = this.loginForm.get(key);
+        if (control?.invalid) {
+          control.markAsTouched();
         }
       });
     }
   }
-}
+} 

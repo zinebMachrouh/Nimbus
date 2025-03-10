@@ -55,17 +55,5 @@ export class RegisterComponent {
 
     Object.entries(fields).forEach(([key, value]) => formData.append(key, value));
 
-    try {
-      const response = this.authService.register(formData);
-      if (response) {
-        this.router.navigate(['/login']);
-        console.log('Registration successful');
-      }else {
-        console.log('Registration failed');
-      }
-    }catch (e) {
-      console.log('An error occurred during registration.');
-    }
-
   }
 }

@@ -1,93 +1,144 @@
 import { Injectable } from '@angular/core';
 import {HttpClient} from '@angular/common/http';
-import {BehaviorSubject, Observable, Subscription} from 'rxjs';
+import {BehaviorSubject, catchError, Observable, Subscription, throwError} from 'rxjs';
 import { tap } from 'rxjs/operators';
+import {Router} from "@angular/router";
+import {User} from "../models/User";
+import {JwtResponse} from "../models/jwt-response";
+import {environment} from "../../../../../environment";
 
 @Injectable({
   providedIn: 'root',
 })
 export class AuthService {
-  private readonly API_URL = 'http://localhost:8084/api/v1/auth';
-  private jwtTokenKey = 'authToken';
-  private currentUserSubject = new BehaviorSubject<any>(null);
-  public currentUser$ = this.currentUserSubject.asObservable();
+  private currentUserSubject = new BehaviorSubject<User | null>(null)
+  public currentUser$ = this.currentUserSubject.asObservable()
 
-  constructor(private http: HttpClient) {
-    const token = this.getToken();
-    if (token) {
-      this.decodeAndSetUser(token);
-    }
+  private tokenExpirationTimer: any
+
+  constructor(
+    private http: HttpClient,
+    private router: Router,
+  ) {}
+
+  login(username: string, password: string): Observable<JwtResponse> {
+    return this.http.post<JwtResponse>(`${environment.apiUrl}/api/auth/signin`, { username, password }).pipe(
+      tap((response) => {
+        this.handleAuthentication(
+          response.id,
+          response.username,
+          response.email,
+          response.fullName,
+          response.roles,
+          response.token,
+          +response.type,
+        )
+      }),
+      catchError((error) => {
+        return throwError(() => error)
+      }),
+    )
   }
 
-  register(user: any): Observable<any> {
-    return this.http.post(`${this.API_URL}/register`, user);
-  }
-
-  login(loginRequest: { email: string; password: string }): Observable<any> {
-    return this.http.post(`${this.API_URL}/login`, loginRequest).pipe(
-      tap((response: any) => {
-        const token = response.token;
-        const user = response.email;
-        if (token) {
-          this.storeToken(token);
-          this.decodeAndSetUser(token);
-          this.setUsername(user);
-        }
-      })
-    );
+  register(
+    username: string,
+    email: string,
+    password: string,
+    fullName: string,
+    phoneNumber: string,
+    address: string,
+    roles: string[],
+  ): Observable<any> {
+    return this.http.post(`${environment.apiUrl}/api/auth/signup`, {
+      username,
+      email,
+      password,
+      fullName,
+      phoneNumber,
+      address,
+      roles,
+    })
   }
 
   logout(): void {
-    this.clearToken();
-    this.currentUserSubject.next(null);
+    this.currentUserSubject.next(null)
+    localStorage.removeItem("userData")
+    if (this.tokenExpirationTimer) {
+      clearTimeout(this.tokenExpirationTimer)
+    }
+    this.tokenExpirationTimer = null
+    this.router.navigate(["/auth/login"])
+  }
+
+  autoLogin(): void {
+    const userData = localStorage.getItem("userData")
+    if (!userData) {
+      return
+    }
+
+    const parsedUser: {
+      id: number
+      username: string
+      email: string
+      fullName: string
+      phoneNumber: string
+      address: string
+      roles: string[]
+      _token: string
+      _tokenExpirationDate: string
+    } = JSON.parse(userData)
+
+    const loadedUser = new User(
+      parsedUser.id,
+      parsedUser.username,
+      parsedUser.email,
+      parsedUser.fullName,
+      parsedUser.roles,
+      parsedUser._token,
+      new Date(parsedUser._tokenExpirationDate),
+      parsedUser.phoneNumber,
+      parsedUser.address,
+    )
+
+    if (loadedUser.token) {
+      this.currentUserSubject.next(loadedUser)
+      const expirationDuration = new Date(parsedUser._tokenExpirationDate).getTime() - new Date().getTime()
+      this.autoLogout(expirationDuration)
+    }
+  }
+
+  autoLogout(expirationDuration: number): void {
+    this.tokenExpirationTimer = setTimeout(() => {
+      this.logout()
+    }, expirationDuration)
   }
 
   getToken(): string | null {
-    return localStorage.getItem(this.jwtTokenKey);
-  }
-
-  private storeToken(token: string): void {
-    localStorage.setItem(this.jwtTokenKey, token);
-  }
-
-  private clearToken(): void {
-    localStorage.removeItem(this.jwtTokenKey);
-  }
-
-  private decodeAndSetUser(token: string): void {
-    try {
-      const payload = JSON.parse(atob(token.split('.')[1]));
-      this.currentUserSubject.next(payload);
-    } catch (error) {
-      console.error('Error decoding token:', error);
-      this.clearToken();
-      this.currentUserSubject.next(null);
-    }
+    return this.currentUserSubject.value?.token || null
   }
 
   isAuthenticated(): boolean {
-    const token = this.getToken();
-    if (!token) return false;
-
-    try {
-      const payload = JSON.parse(atob(token.split('.')[1]));
-      const expirationDate = new Date(payload.exp * 1000);
-      if (expirationDate < new Date()) {
-        this.clearToken();
-        return false;
-      }
-      return true;
-    } catch {
-      this.clearToken();
-      return false;
-    }
+    return !!this.currentUserSubject.value
   }
 
-  private setUsername(user: any) {
-    localStorage.setItem('loggedUser', user);
+  hasRole(role: string): boolean {
+    return this.currentUserSubject.value?.roles.includes(role) || false
   }
 
-  public getUsername(): string | null {
-    return localStorage.getItem('loggedUser');
+  private handleAuthentication(
+    id: number,
+    username: string,
+    email: string,
+    fullName: string,
+    roles: string[],
+    token: string,
+    expiresIn: number,
+  ): void {
+    const expirationDate = new Date(new Date().getTime() + expiresIn)
+    const user = new User(id, username, email, fullName, roles, token, expirationDate)
+    this.currentUserSubject.next(user)
+    this.autoLogout(expiresIn)
+    localStorage.setItem("userData", JSON.stringify(user))
   }
 }
+
