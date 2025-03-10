@@ -1,67 +1,52 @@
-version: "3.1"
+version: '3.8'
 
 services:
-  db:
-    container_name: BusBuddy-DB
-    image: "mongo:latest"
-    restart: always
+  app:
+    build: .
     ports:
-      - "27017:27017"
-    environment:
-      MONGO_INITDB_ROOT_USERNAME: "admin"
-      MONGO_INITDB_ROOT_PASSWORD: "admin"
-      MONGO_INITDB_DATABASE: "BusBuddy"
-    volumes:
-      - db:/data/db
-    networks:
-      - network-data
-
-  spring-app:
-    container_name: BusBuddy
-    build:
-      context: .
-      dockerfile: Dockerfile
-    ports:
-      - "8085:8085"
-    environment:
-      - SPRING_PROFILES_ACTIVE=prod
-      - SPRING_DATASOURCE_URL=mongodb://admin:admin@BusBuddy-DB:27017/BusBuddy?authSource=admin
-      - SPRING_DATASOURCE_USERNAME=admin
-      - SPRING_DATASOURCE_PASSWORD=admin
-      - SWAGGER_ACTIVATION=false
-      - SPRING_JPA_HIBERNATE_DDL_AUTO=update
-      - SPRING_JPA_SHOW_SQL=false
-      - SPRING_APPLICATION_NAME=BusBuddy
-      - SPRING_SESSION_STORE_TYPE=jdbc
-      - SERVER_PORT=8085
-      - SPRING_SESSION_JDBC_INITIALIZE_SCHEMA=always
-    networks:
-      - network-data
+      - "8084:8080"
     depends_on:
-      - db
-
-  jenkins:
-    container_name: BusBuddy-Jenkins
-    image: "jenkins/jenkins:lts"
-    restart: always
-    user: root
-    ports:
-      - "9090:8080"
-      - "50000:50000"
-    volumes:
-      - jenkins_home:/var/jenkins_home
-      - /var/run/docker.sock:/var/run/docker.sock
-    networks:
-      - network-data
+      - postgres
+      - redis
     environment:
-      - JAVA_OPTS=-Djenkins.install.runSetupWizard=false
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/nimbus
+      - SPRING_DATASOURCE_USERNAME=postgres
+      - SPRING_DATASOURCE_PASSWORD=postgres
+      - SPRING_REDIS_HOST=redis
+      - SPRING_REDIS_PORT=6379
+      - JWT_SECRET=nimbus_secret_key_should_be_very_long_and_secure_in_production
+      - JWT_EXPIRATION=86400000
+      - WEBSOCKET_ALLOWED_ORIGINS=*
+    networks:
+      - nimbus-network
+
+  postgres:
+    image: postgres:14-alpine
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_DB=nimbus
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    networks:
+      - nimbus-network
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    networks:
+      - nimbus-network
 
 networks:
-  network-data:
+  nimbus-network:
     driver: bridge
 
 volumes:
-  db:
-    driver: local
-  jenkins_home:
-    driver: local
+  postgres-data:
+  redis-data:
+

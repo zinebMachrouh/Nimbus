@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="600" height="400" viewBox="0 0 600 400" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background -->
+  <rect width="600" height="400" fill="#F5F5F5"/>
+  
+  <!-- Sky -->
+  <rect width="600" height="200" fill="#E3F2FD"/>
+  
+  <!-- Sun -->
+  <circle cx="50" cy="50" r="30" fill="#FFC107"/>
+  
+  <!-- Clouds -->
+  <path d="M100 80 C120 60, 140 60, 160 80 C180 60, 200 60, 220 80 C240 60, 260 60, 280 80 C300 60, 320 60, 340 80" stroke="#90CAF9" stroke-width="20" fill="none"/>
+  
+  <!-- School Bus -->
+  <g transform="translate(150, 150)">
+    <!-- Bus Body -->
+    <rect x="0" y="0" width="300" height="100" fill="#FFD700"/>
+    <rect x="20" y="20" width="80" height="60" fill="#FFFFFF"/>
+    <rect x="120" y="20" width="80" height="60" fill="#FFFFFF"/>
+    <rect x="220" y="20" width="80" height="60" fill="#FFFFFF"/>
+    
+    <!-- Wheels -->
+    <circle cx="80" cy="100" r="20" fill="#000000"/>
+    <circle cx="220" cy="100" r="20" fill="#000000"/>
+    
+    <!-- Windows -->
+    <rect x="40" y="30" width="40" height="40" fill="#87CEEB"/>
+    <rect x="140" y="30" width="40" height="40" fill="#87CEEB"/>
+    <rect x="240" y="30" width="40" height="40" fill="#87CEEB"/>
+  </g>
+  
+  <!-- Road -->
+  <rect y="250" width="600" height="150" fill="#424242"/>
+  <rect y="300" width="600" height="10" fill="#FFFFFF"/>
+  <rect y="350" width="600" height="10" fill="#FFFFFF"/>
+</svg> 
