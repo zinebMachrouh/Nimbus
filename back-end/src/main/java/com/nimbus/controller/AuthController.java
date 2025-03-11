@@ -48,29 +48,36 @@ public class AuthController {
 
     @PostMapping("/signin")
     public ResponseEntity<?> authenticateUser(@RequestBody LoginRequest loginRequest) {
-        System.out.println("Login request: " + loginRequest);
-        Authentication authentication = authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(loginRequest.getUsername(), loginRequest.getPassword()));
+        try {
+            System.out.println("Login request: " + loginRequest);
+            Authentication authentication = authenticationManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(loginRequest.getUsername(), loginRequest.getPassword()));
 
-        SecurityContextHolder.getContext().setAuthentication(authentication);
-        String jwt = jwtUtils.generateJwtToken(authentication);
+            SecurityContextHolder.getContext().setAuthentication(authentication);
+            String jwt = jwtUtils.generateJwtToken(authentication);
 
-        System.out.println("JWT: " + jwt);
-        
-        UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
-        List<String> roles = userDetails.getAuthorities().stream()
-                .map(GrantedAuthority::getAuthority)
-                .collect(Collectors.toList());
+            System.out.println("JWT: " + jwt);
+            
+            UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
+            List<String> roles = userDetails.getAuthorities().stream()
+                    .map(GrantedAuthority::getAuthority)
+                    .collect(Collectors.toList());
 
-        System.out.println("User details: " + userDetails);
+            System.out.println("User details: " + userDetails);
 
-        return ResponseEntity.ok(new JwtResponse(jwt,
-                                                 userDetails.getId(),
-                                                 userDetails.getUsername(),
-                                                 userDetails.getEmail(),
-                                                 userDetails.getFullName(),
-                                                 userDetails.getAddress(),
-                                                 roles));
+            return ResponseEntity.ok(new JwtResponse(jwt,
+                                                     userDetails.getId(),
+                                                     userDetails.getUsername(),
+                                                     userDetails.getEmail(),
+                                                     userDetails.getFullName(),
+                                                     userDetails.getAddress(),
+                                                     roles));
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity
+                    .badRequest()
+                    .body(new MessageResponse("Error: " + e.getMessage()));
+        }
     }
 
     @PostMapping("/signup")

@@ -16,7 +16,7 @@ import java.util.Set;
 @Entity
 @Table(name = "drivers")
 public class Driver extends User {
-    @Column(nullable = false, unique = true)
+    @Column(unique = true)
     private String licenseNumber;
 
     @OneToMany(mappedBy = "driver")

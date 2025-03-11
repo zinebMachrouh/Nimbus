@@ -29,13 +29,14 @@ public class UserDetailsImpl implements UserDetails {
 
     private Collection<? extends GrantedAuthority> authorities;
 
-    public UserDetailsImpl(Long id, String username, String email, String password, String firstName, String lastName,
+    public UserDetailsImpl(Long id, String username, String email, String password, String fullName, String address,
                           boolean active, Collection<? extends GrantedAuthority> authorities) {
         this.id = id;
         this.username = username;
         this.email = email;
         this.password = password;
         this.fullName = fullName;
+        this.address = address;
         this.active = active;
         this.authorities = authorities;
     }

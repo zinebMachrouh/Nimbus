@@ -57,7 +57,11 @@ export class AuthService {
       phoneNumber,
       address,
       roles,
-    })
+    }).pipe(
+      catchError((error) => {
+        return throwError(() => error)
+      }),
+    )
   }
 
   logout(): void {

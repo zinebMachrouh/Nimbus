@@ -6,8 +6,10 @@ services:
     ports:
       - "8084:8080"
     depends_on:
-      - postgres
-      - redis
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
     environment:
       - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/nimbus
       - SPRING_DATASOURCE_USERNAME=postgres
@@ -19,6 +21,7 @@ services:
       - WEBSOCKET_ALLOWED_ORIGINS=*
     networks:
       - nimbus-network
+    restart: always
 
   postgres:
     image: postgres:14-alpine
@@ -32,6 +35,12 @@ services:
       - postgres-data:/var/lib/postgresql/data
     networks:
       - nimbus-network
+    restart: always
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   redis:
     image: redis:7-alpine
@@ -41,6 +50,12 @@ services:
       - redis-data:/data
     networks:
       - nimbus-network
+    restart: always
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
 networks:
   nimbus-network:
@@ -48,5 +63,6 @@ networks:
 
 volumes:
   postgres-data:
+    driver: local
   redis-data:
-
+    driver: local
