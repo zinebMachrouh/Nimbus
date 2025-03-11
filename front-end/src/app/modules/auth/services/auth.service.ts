@@ -89,7 +89,6 @@ export class AuthService {
       address: string
       roles: string[]
       _token: string
-      _tokenExpirationDate: string
     } = JSON.parse(userData)
 
     const loadedUser = new User(
@@ -99,23 +98,15 @@ export class AuthService {
       parsedUser.fullName,
       parsedUser.roles,
       parsedUser._token,
-      new Date(parsedUser._tokenExpirationDate),
       parsedUser.phoneNumber,
       parsedUser.address,
     )
 
     if (loadedUser.token) {
       this.currentUserSubject.next(loadedUser)
-      const expirationDuration = new Date(parsedUser._tokenExpirationDate).getTime() - new Date().getTime()
-      this.autoLogout(expirationDuration)
     }
   }
 
-  autoLogout(expirationDuration: number): void {
-    this.tokenExpirationTimer = setTimeout(() => {
-      this.logout()
-    }, expirationDuration)
-  }
 
   getToken(): string | null {
     return this.currentUserSubject.value?.token || null
@@ -139,9 +130,8 @@ export class AuthService {
     expiresIn: number,
   ): void {
     const expirationDate = new Date(new Date().getTime() + expiresIn)
-    const user = new User(id, username, email, fullName, roles, token, expirationDate)
+    const user = new User(id, username, email, fullName, roles, token)
     this.currentUserSubject.next(user)
-    this.autoLogout(expiresIn)
     localStorage.setItem("userData", JSON.stringify(user))
   }
 }

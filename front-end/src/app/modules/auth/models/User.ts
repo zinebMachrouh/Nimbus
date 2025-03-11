@@ -6,15 +6,15 @@ export class User {
     public fullName: string,
     public roles: string[],
     private _token: string,
-    private _tokenExpirationDate: Date,
     public phoneNumber?: string,
     public address?: string
   ) {}
 
   get token(): string | null {
-    if (!this._tokenExpirationDate || new Date() > this._tokenExpirationDate) {
+    if (!this._token) {
       return null;
+    }else {
+      return this._token;
     }
-    return this._token;
   }
 }
