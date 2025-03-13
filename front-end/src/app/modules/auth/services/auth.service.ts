@@ -31,7 +31,6 @@ export class AuthService {
           response.fullName,
           response.roles,
           response.token,
-          +response.type,
         )
       }),
       catchError((error) => {
@@ -71,7 +70,7 @@ export class AuthService {
       clearTimeout(this.tokenExpirationTimer)
     }
     this.tokenExpirationTimer = null
-    this.router.navigate(["/auth/login"])
+    this.router.navigate(["/login"])
   }
 
   autoLogin(): void {
@@ -109,6 +108,7 @@ export class AuthService {
 
 
   getToken(): string | null {
+    console.log(this.currentUserSubject.value?.token);
     return this.currentUserSubject.value?.token || null
   }
 
@@ -126,10 +126,8 @@ export class AuthService {
     email: string,
     fullName: string,
     roles: string[],
-    token: string,
-    expiresIn: number,
+    token: string
   ): void {
-    const expirationDate = new Date(new Date().getTime() + expiresIn)
     const user = new User(id, username, email, fullName, roles, token)
     this.currentUserSubject.next(user)
     localStorage.setItem("userData", JSON.stringify(user))

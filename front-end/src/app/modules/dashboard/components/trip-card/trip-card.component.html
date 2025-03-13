@@ -1,0 +1,52 @@
+<div class="trip-card">
+  <div class="trip-header">
+    <div class="trip-route">
+      <mat-icon>directions_bus</mat-icon>
+      <span>{{ trip.route.name }}</span>
+    </div>
+    <div class="trip-status" [ngClass]="trip.status.toLowerCase()">
+      {{ trip.status }}
+    </div>
+  </div>
+  
+  <div class="trip-details">
+    <div class="trip-info">
+      <div class="info-item">
+        <mat-icon>person</mat-icon>
+        <span>{{ trip.driver.firstName }} {{ trip.driver.lastName }}</span>
+      </div>
+      <div class="info-item">
+        <mat-icon>schedule</mat-icon>
+        <span>{{ trip.scheduledDepartureTime | date:'shortTime' }}</span>
+      </div>
+      <div class="info-item" *ngIf="trip.actualDepartureTime">
+        <mat-icon>play_arrow</mat-icon>
+        <span>{{ trip.actualDepartureTime | date:'shortTime' }}</span>
+      </div>
+      <div class="info-item" *ngIf="trip.actualArrivalTime">
+        <mat-icon>flag</mat-icon>
+        <span>{{ trip.actualArrivalTime | date:'shortTime' }}</span>
+      </div>
+    </div>
+  </div>
+  
+  <div class="trip-actions" *ngIf="showActions">
+    <button mat-raised-button color="primary" *ngIf="trip.status === 'SCHEDULED'">
+      <mat-icon>play_arrow</mat-icon>
+      Start Trip
+    </button>
+    <button mat-raised-button color="accent" *ngIf="trip.status === 'IN_PROGRESS'">
+      <mat-icon>qr_code_scanner</mat-icon>
+      Scan QR
+    </button>
+    <button mat-raised-button color="warn" *ngIf="trip.status === 'IN_PROGRESS'">
+      <mat-icon>stop</mat-icon>
+      End Trip
+    </button>
+    <button mat-button [routerLink]="['/trips', trip.id]">
+      <mat-icon>info</mat-icon>
+      Details
+    </button>
+  </div>
+</div>
+

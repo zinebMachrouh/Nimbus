@@ -5,7 +5,7 @@ import { DashboardComponent } from "./shared/components/dashboard/dashboard.comp
 import { LoginComponent } from './modules/auth/components/login/login.component';
 
 export const routes: Routes = [
-  { path: '', redirectTo: '/login', pathMatch: 'full' },
+  { path: '', redirectTo: '/home', pathMatch: 'full' },
   { path: 'home', component: HomeComponent },
   { path: 'login', component: LoginComponent },
   { path: 'register', component: RegisterComponent },
