@@ -20,7 +20,9 @@ declare var google: any
   standalone: true,
   imports: [CommonModule],
 })
-export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
+export class MapComponent {
+  /*
+  implements OnInit, AfterViewInit, OnDestroy
   @ViewChild("mapContainer") mapContainer!: ElementRef
 
   @Input() tripId!: number
@@ -151,4 +153,6 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
       }
     })
   }
+
+   */
 }

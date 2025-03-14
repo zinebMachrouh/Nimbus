@@ -1,17 +1,17 @@
-import { Injectable } from '@angular/core';
-import {HttpClient} from '@angular/common/http';
-import {BehaviorSubject, catchError, Observable, Subscription, throwError} from 'rxjs';
-import { tap } from 'rxjs/operators';
-import {Router} from "@angular/router";
-import {User} from "../models/User";
-import {JwtResponse} from "../models/jwt-response";
-import {environment} from "../../../../../environment";
+import { Injectable } from "@angular/core"
+import { HttpClient } from "@angular/common/http"
+import { BehaviorSubject, catchError, type Observable, throwError } from "rxjs"
+import { tap } from "rxjs/operators"
+import { Router } from "@angular/router"
+import { User } from "../models/User"
+import { JwtResponse } from "../models/jwt-response"
+import { environment } from "../../../../../environment"
 
 @Injectable({
-  providedIn: 'root',
+  providedIn: "root",
 })
 export class AuthService {
-  private currentUserSubject = new BehaviorSubject<User | null>(null)
+  currentUserSubject = new BehaviorSubject<User | null>(null)
   public currentUser$ = this.currentUserSubject.asObservable()
 
   private tokenExpirationTimer: any
@@ -24,16 +24,24 @@ export class AuthService {
   login(username: string, password: string): Observable<JwtResponse> {
     return this.http.post<JwtResponse>(`${environment.apiUrl}/api/auth/signin`, { username, password }).pipe(
       tap((response) => {
-        this.handleAuthentication(
-          response.id,
-          response.username,
-          response.email,
-          response.fullName,
-          response.roles,
-          response.token,
-        )
+        if (response.token) {
+          console.log("response:", response)
+          this.handleAuthentication(
+            response.id,
+            response.username,
+            response.email,
+            response.fullName,
+            response.roles,
+            response.token,
+            response.phoneNumber,
+            response.address,
+          )
+        } else {
+          throw new Error("No token received from server")
+        }
       }),
       catchError((error) => {
+        console.error("Login error:", error)
         return throwError(() => error)
       }),
     )
@@ -48,19 +56,21 @@ export class AuthService {
     address: string,
     roles: string[],
   ): Observable<any> {
-    return this.http.post(`${environment.apiUrl}/api/auth/signup`, {
-      username,
-      email,
-      password,
-      fullName,
-      phoneNumber,
-      address,
-      roles,
-    }).pipe(
-      catchError((error) => {
-        return throwError(() => error)
-      }),
-    )
+    return this.http
+      .post(`${environment.apiUrl}/api/auth/signup`, {
+        username,
+        email,
+        password,
+        fullName,
+        phoneNumber,
+        address,
+        roles,
+      })
+      .pipe(
+        catchError((error) => {
+          return throwError(() => error)
+        }),
+      )
   }
 
   logout(): void {
@@ -79,45 +89,90 @@ export class AuthService {
       return
     }
 
-    const parsedUser: {
-      id: number
-      username: string
-      email: string
-      fullName: string
-      phoneNumber: string
-      address: string
-      roles: string[]
-      _token: string
-    } = JSON.parse(userData)
+    try {
+      const parsedUser = JSON.parse(userData)
+      const expirationDate = new Date(parsedUser._tokenExpirationDate)
 
-    const loadedUser = new User(
-      parsedUser.id,
-      parsedUser.username,
-      parsedUser.email,
-      parsedUser.fullName,
-      parsedUser.roles,
-      parsedUser._token,
-      parsedUser.phoneNumber,
-      parsedUser.address,
-    )
+      if (expirationDate > new Date()) {
+        const loadedUser = new User(
+          parsedUser.id,
+          parsedUser.username,
+          parsedUser.email,
+          parsedUser.fullName,
+          parsedUser.roles,
+          parsedUser._token,
+          expirationDate,
+          parsedUser.phoneNumber,
+          parsedUser.address,
+        )
 
-    if (loadedUser.token) {
-      this.currentUserSubject.next(loadedUser)
+        if (loadedUser.token) {
+          this.currentUserSubject.next(loadedUser)
+
+          // Reset the expiration timer
+          const expirationTime = expirationDate.getTime() - new Date().getTime()
+          if (this.tokenExpirationTimer) {
+            clearTimeout(this.tokenExpirationTimer)
+          }
+          this.tokenExpirationTimer = setTimeout(() => {
+            this.logout()
+          }, expirationTime)
+        }
+      } else {
+        // Token has expired, clear storage
+        this.logout()
+      }
+    } catch (error) {
+      console.error("Error during auto-login:", error)
+      this.logout()
     }
   }
 
-
   getToken(): string | null {
-    console.log(this.currentUserSubject.value?.token);
-    return this.currentUserSubject.value?.token || null
+    const user = this.currentUserSubject.value
+    if (!user) {
+      const userData = localStorage.getItem("userData")
+      if (userData) {
+        try {
+          const parsedUser = JSON.parse(userData)
+          const expirationDate = new Date(parsedUser._tokenExpirationDate)
+          if (expirationDate > new Date()) {
+            const loadedUser = new User(
+              parsedUser.id,
+              parsedUser.username,
+              parsedUser.email,
+              parsedUser.fullName,
+              parsedUser.roles,
+              parsedUser._token,
+              expirationDate,
+              parsedUser.phoneNumber,
+              parsedUser.address,
+            )
+            return loadedUser.token
+          } else {
+            this.logout()
+            return null
+          }
+        } catch (error) {
+          console.error("Error parsing user data:", error)
+          this.logout()
+          return null
+        }
+      }
+      return null
+    }
+    return user.token
   }
 
   isAuthenticated(): boolean {
-    return !!this.currentUserSubject.value
+    const token = this.getToken()
+    return !!token
   }
 
   hasRole(role: string): boolean {
-    return this.currentUserSubject.value?.roles.includes(role) || false
+    const user = this.currentUserSubject.value
+    if (!user) return false
+    return user.roles.some((r) => r === `ROLE_${role.toUpperCase()}`)
   }
 
   private handleAuthentication(
@@ -126,11 +181,32 @@ export class AuthService {
     email: string,
     fullName: string,
     roles: string[],
-    token: string
+    token: string,
+    phoneNumber?: string,
+    address?: string,
   ): void {
-    const user = new User(id, username, email, fullName, roles, token)
+    if (!token) {
+      console.error("No token received during authentication")
+      return
+    }
+
+    const expirationDate = new Date()
+    expirationDate.setHours(expirationDate.getHours() + 24)
+
+    console.log(fullName);
+    const user = new User(id, username, email, fullName, roles, token, expirationDate, phoneNumber, address)
+
     this.currentUserSubject.next(user)
     localStorage.setItem("userData", JSON.stringify(user))
+
+    const expirationTime = 24 * 60 * 60 * 1000 // 24 hours in milliseconds
+    if (this.tokenExpirationTimer) {
+      clearTimeout(this.tokenExpirationTimer)
+    }
+    this.tokenExpirationTimer = setTimeout(() => {
+      console.log("Token expired, logging out...")
+      this.logout()
+    }, expirationTime)
   }
 }
 

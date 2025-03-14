@@ -6,5 +6,7 @@ export interface JwtResponse {
   email: string
   fullName: string
   roles: string[]
+  phoneNumber?: string
+  address?: string
 }
 

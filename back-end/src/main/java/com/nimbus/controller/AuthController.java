@@ -70,6 +70,7 @@ public class AuthController {
                                                      userDetails.getUsername(),
                                                      userDetails.getEmail(),
                                                      userDetails.getFullName(),
+                                                     userDetails.getPhoneNumber(),
                                                      userDetails.getAddress(),
                                                      roles));
         } catch (Exception e) {

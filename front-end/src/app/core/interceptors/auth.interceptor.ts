@@ -1,25 +1,39 @@
-import { HttpInterceptor, HttpHandler, HttpEvent, HttpRequest} from '@angular/common/http';
-import { Observable } from 'rxjs';
-import { Injectable } from '@angular/core';
-import { environment } from '../../../../environment';
-import { AuthService } from '../../modules/auth/services/auth.service';
+import type { HttpInterceptorFn } from "@angular/common/http"
+import { inject } from "@angular/core"
+import { catchError } from "rxjs/operators"
+import { throwError } from "rxjs"
+import { environment } from "../../../../environment"
+import { AuthService } from "../../modules/auth/services/auth.service"
+import { Router } from "@angular/router"
 
-@Injectable()
-export class AuthInterceptor implements HttpInterceptor {
-  constructor(private authService: AuthService) {}
+export const authInterceptor: HttpInterceptorFn = (request, next) => {
+  const authService = inject(AuthService)
+  const router = inject(Router)
 
-  intercept(request: HttpRequest<unknown>, next: HttpHandler): Observable<HttpEvent<unknown>> {
-    const token = this.authService.getToken()
-    const isApiUrl = request.url.startsWith(environment.apiUrl)
+  const token = authService.getToken()
+  const isApiUrl = request.url.startsWith(environment.apiUrl)
 
-    if (token && isApiUrl) {
-      request = request.clone({
-        setHeaders: {
-          Authorization: `Bearer ${token}`,
-        },
-      })
-    }
-
-    return next.handle(request)
+  if (token && isApiUrl) {
+    request = request.clone({
+      setHeaders: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+      withCredentials: true,
+    })
   }
+
+  return next(request).pipe(
+    catchError((error) => {
+      if (error.status === 401) {
+        console.error("Authentication error:", error)
+        authService.logout()
+        router.navigate(["/login"])
+      } else if (error.status === 403) {
+        console.error("Authorization error:", error)
+        router.navigate(["/unauthorized"])
+      }
+      return throwError(() => error)
+    }),
+  )
 }

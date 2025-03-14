@@ -26,78 +26,30 @@
         </div>
       </header>
       <main>
-        <div *ngIf="isAdmin" class="admin-dashboard">
-          <h2>Admin</h2>
-            <div class="stats-row">
-              <app-stat-card
-                title="Total Students"
-                [value]="dashboardData?.totalStudents || 0"
-                icon="school"
-                color="#3f51b5">
-              </app-stat-card>
+        <div class="main-header">
+          <div class="header-left">
+            <h1>Dashboard</h1>
+            <p>{{getCurrentDate()}}</p>
+          </div>
 
-              <app-stat-card
-                title="Active Routes"
-                [value]="dashboardData?.totalRoutes || 0"
-                icon="map"
-                color="#4caf50">
-              </app-stat-card>
-
-              <app-stat-card
-                title="Active Trips"
-                [value]="dashboardData?.inProgressTrips || 0"
-                icon="directions_bus"
-                color="#ff9800">
-              </app-stat-card>
-
-              <app-stat-card
-                title="Attendance Rate"
-                [value]="dashboardData?.attendanceRate || 0"
-                icon="check_circle"
-                color="#f44336"
-                suffix="%">
-              </app-stat-card>
+          <div class="header-right">
+            <div class="search">
+              <input type="text" placeholder="Search">
+              <i class="fa-solid fa-search"></i>
             </div>
-
-            <div class="dashboard-row">
-              <div class="dashboard-card">
-                <mat-card>
-                  <mat-card-header>
-                    <mat-card-title>Active Trips</mat-card-title>
-                  </mat-card-header>
-                  <mat-card-content>
-                    <div *ngIf="dashboardData?.activeTrips?.length === 0" class="empty-state">
-                      <mat-icon>directions_bus_filled</mat-icon>
-                      <p>No active trips at the moment</p>
-                    </div>
-                    <div *ngIf="dashboardData?.activeTrips?.length > 0" class="trips-list">
-                      <app-trip-card
-                        *ngFor="let trip of dashboardData.activeTrips"
-                        [trip]="trip">
-                      </app-trip-card>
-                    </div>
-                  </mat-card-content>
-                </mat-card>
-              </div>
-
-              <div class="dashboard-card">
-                <mat-card>
-                  <mat-card-header>
-                    <mat-card-title>Recent Activity</mat-card-title>
-                  </mat-card-header>
-                  <mat-card-content>
-                    <mat-list>
-                      <mat-list-item *ngFor="let activity of dashboardData?.recentActivities">
-                        <mat-icon matListItemIcon>{{ activity.icon }}</mat-icon>
-                        <div matListItemTitle>{{ activity.title }}</div>
-                        <div matListItemLine>{{ activity.timestamp | date:'medium' }}</div>
-                      </mat-list-item>
-                    </mat-list>
-                  </mat-card-content>
-                </mat-card>
-              </div>
+            <div class="notification">
+              <i class="fa-solid fa-bell"></i>
+              <span>3</span>
+            </div>
+            <div class="profile">
+              <img src="./assets/pfp.jpg" alt="Profile">
+              <p><strong>{{currentUser?.fullName}}</strong><br><span>Administrator</span></p>
             </div>
           </div>
+        </div>
+        <app-admin *ngIf="isAdmin"></app-admin>
+        <app-driver *ngIf="isDriver"></app-driver>
+        <app-parent *ngIf="isParent"></app-parent>
       </main>
     </div>
   </section>
