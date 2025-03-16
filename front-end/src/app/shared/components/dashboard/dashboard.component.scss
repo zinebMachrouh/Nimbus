@@ -1,0 +1,260 @@
+#dashboard{
+    background-color: #EFF4F3;
+    height: 100vh;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: space-between;
+    overflow: hidden;
+
+    #main{
+      width: 100%;
+      padding: 0.7rem;
+      display: flex;
+      justify-content: space-between;
+      height: 100%;
+      gap: 0.7rem;
+      color: var(--night);
+
+      header{
+        background-color: var(--seasalt);
+        width: 14%;
+        border-radius: 10px;
+        display: flex;
+        flex-direction: column;
+        padding: 1.3rem 1rem;
+        gap: 1.8rem;
+
+        .brand{
+          display: flex;
+          align-items: center;
+          gap: 0.5rem;
+
+          img{
+            width: 30px;
+            height: 30px;
+            object-fit: cover;
+          }
+        }
+
+        nav{
+          display: flex;
+          flex-direction: column;
+          gap: 0.5rem;
+          border-radius: 10px;
+          background-color: var(--seasalt);
+          span{
+            opacity: 0.4;
+            font-size: 0.7rem;
+            text-transform: uppercase;
+          }
+          a{
+            color: var(--night);
+            text-decoration: none;
+            padding: 0.7rem 0.6rem;
+            border-radius: 7px;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: 0.3s;
+            cursor: pointer;
+
+            &:first-of-type {
+              padding-top: 0.3rem !important;
+            }
+
+            &:hover{
+              i{
+                color: var(--viridian);
+              }
+            }
+            &.active{
+              i{
+                color: var(--viridian);
+              }
+            }
+          }
+        }
+
+        .settings{
+          display: flex;
+          flex-direction: column;
+          gap: 0.5rem;
+
+          span{
+            opacity: 0.4;
+            font-size: 0.7rem;
+            text-transform: uppercase;
+          }
+
+          a{
+            color: var(--night);
+            text-decoration: none;
+            padding: 0.3rem 0.6rem;
+            border-radius: 7px;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: 0.3s;
+            cursor: pointer;
+
+            &:hover{
+              i{
+                color: var(--viridian);
+              }
+            }
+            &.active{
+              i{
+                color: var(--viridian);
+              }
+            }
+
+            &.logout{
+              color: #f13131;
+              &:hover{
+                i{
+                  color: #f13131;
+                }
+              }
+            }
+          }
+        }
+        .premium{
+          display: flex;
+          flex-direction: column;
+          gap: 0.7rem;
+          background: url(/assets/premium.png) no-repeat center center;
+          background-size: cover;
+          padding: 0.8rem;
+          border-radius: 10px;
+          margin-top: 75px;
+
+          span{
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            color: var(--night);
+            background-color: var(--seasalt);
+            width: fit-content;
+            padding: 0.2rem 0.5rem;
+            border-radius: 200px;
+          }
+          h4{
+            font-size: 1rem;
+            padding-bottom: 0.8rem;
+            font-weight: 700;
+            color: var(--seasalt);
+          }
+          button{
+            background-color: var(--seasalt);
+            color: var(--night);
+            width:100%;
+            padding: 0.5rem 0.5rem;
+            border-radius: 5px;
+            font-weight:   600;
+            border: none;
+            cursor: pointer;
+
+          }
+
+        }
+      }
+      main{
+        background-color: var(--seasalt);
+        border-radius: 10px;
+        width: 86%;
+        padding: 20px;
+
+        .main-header{
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          margin-bottom: 1rem;
+
+          .header-left{
+            display: flex;
+            flex-direction: column;
+            h1{
+              font-size: 2rem;
+              color: var(--night);
+            }
+            p{
+              font-size: 0.9rem;
+              color: var(--night);
+              opacity: 0.4;
+            }
+          }
+
+         .header-right{
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+
+           .search{
+              display: flex;
+              align-items: center;
+              gap: 0.5rem;
+              background-color: #F4F4F4;
+              padding: 0.5rem 0.7rem;
+              border-radius: 7px;
+              color: var(--night);
+              input{
+                background-color: #F4F4F4;
+                border: none;
+                color: var(--night);
+                font-size: 0.9rem;
+                width: 100%;
+              }
+              i{
+                color: var(--night);
+              }
+           }
+
+            .notification{
+                display: flex;
+                align-items: center;
+                gap: 0.5rem;
+                background-color: #F4F4F4;
+                padding: 0.5rem 0.7rem;
+                border-radius: 7px;
+                color: var(--viridian);
+                i{
+                  color: var(--viridian);
+                }
+            }
+           .profile{
+             display: flex;
+              align-items: center;
+             img{
+                width: 35px;
+                height: 35px;
+                object-fit: cover;
+                border-radius: 50%;
+             }
+
+             p{
+               font-size: 0.8rem;
+               color: var(--night);
+               margin-left: 0.5rem;
+               span{
+                 opacity: 0.7;
+               }
+             }
+           }
+         }
+        }
+      }
+    }
+  }
+
+  @media screen and (max-width: 500px){
+    header{
+      overflow: hidden;
+      gap: 1rem !important;
+      nav{
+        a{
+          gap: 2rem !important;
+        }
+      }
+    }
+  }
