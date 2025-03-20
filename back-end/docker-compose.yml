@@ -1,68 +1,69 @@
 version: '3.8'
 
 services:
-  app:
-    build: .
+  jenkins:
+    image: jenkins/jenkins:lts
+    privileged: true
+    user: root
     ports:
-      - "8084:8080"
-    depends_on:
-      postgres:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
-    environment:
-      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/nimbus
-      - SPRING_DATASOURCE_USERNAME=postgres
-      - SPRING_DATASOURCE_PASSWORD=postgres
-      - SPRING_REDIS_HOST=redis
-      - SPRING_REDIS_PORT=6379
-      - JWT_SECRET=nimbus_secret_key_should_be_very_long_and_secure_in_production
-      - JWT_EXPIRATION=86400000
-      - WEBSOCKET_ALLOWED_ORIGINS=*
+      - "8081:8080"
+      - "50000:50000"
+    container_name: jenkins
+    volumes:
+      - jenkins_home:/var/jenkins_home
+      - /var/run/docker.sock:/var/run/docker.sock
     networks:
-      - nimbus-network
-    restart: always
+      - nimbus_network
+    environment:
+      - JENKINS_OPTS="--prefix=/jenkins"
 
   postgres:
-    image: postgres:14-alpine
+    image: postgres:15
+    container_name: postgres
     ports:
       - "5432:5432"
     environment:
-      - POSTGRES_DB=nimbus
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=postgres
+      POSTGRES_DB: nimbus_db
+      POSTGRES_USER: nimbus_user
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-nimbus_password}
     volumes:
-      - postgres-data:/var/lib/postgresql/data
+      - postgres_data:/var/lib/postgresql/data
     networks:
-      - nimbus-network
-    restart: always
+      - nimbus_network
     healthcheck:
-      test: ["CMD", "pg_isready", "-U", "postgres"]
+      test: ["CMD-SHELL", "pg_isready -U nimbus_user -d nimbus_db"]
       interval: 10s
       timeout: 5s
       retries: 5
 
-  redis:
-    image: redis:7-alpine
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: nimbus-backend
     ports:
-      - "6379:6379"
-    volumes:
-      - redis-data:/data
+      - "8082:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/nimbus_db
+      - SPRING_DATASOURCE_USERNAME=nimbus_user
+      - SPRING_DATASOURCE_PASSWORD=${DB_PASSWORD:-nimbus_password}
+      - SPRING_JPA_HIBERNATE_DDL_AUTO=update
     networks:
-      - nimbus-network
-    restart: always
+      - nimbus_network
     healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
-      interval: 10s
-      timeout: 5s
+      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
+      interval: 30s
+      timeout: 10s
       retries: 5
 
 networks:
-  nimbus-network:
+  nimbus_network:
     driver: bridge
 
 volumes:
-  postgres-data:
-    driver: local
-  redis-data:
-    driver: local
+  jenkins_home:
+  postgres_data: 
