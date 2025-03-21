@@ -1,6 +1,6 @@
 import { AuthService } from '../AuthService'
 import { User, UserRole } from '../../core/entities/user.entity'
-import { AuthRequest, AuthResponse, RegisterRequest } from '../../core/dto/auth.dto'
+import {AuthRequest, AuthResponse, RegisterRequest} from '../../core/dto/auth.dto'
 import { BaseHttpService } from '../BaseHttpService'
 import { ApiError } from '../../core/models/ApiError'
 
@@ -28,7 +28,32 @@ export class AuthServiceImpl extends BaseHttpService implements AuthService {
     }
 
     async register(data: RegisterRequest): Promise<AuthResponse> {
-        return await this.post<AuthResponse>('/register', data);
+        try {
+            const registerResponse = await this.post<AuthResponse>('/register', data);
+            console.log('Registration response:', registerResponse);
+            
+            if (registerResponse.token) {
+                // Ensure token is properly stored
+                localStorage.setItem('token', registerResponse.token);
+                
+                // Store user data for seamless login
+                localStorage.setItem('currentUser', JSON.stringify({
+                    id: registerResponse.userId,
+                    email: registerResponse.email,
+                    firstName: registerResponse.firstName,
+                    lastName: registerResponse.lastName,
+                    role: registerResponse.role as UserRole,
+                }));
+                
+                console.log('Token stored directly:', registerResponse.token);
+            } else {
+                throw new Error('No authentication token received after registration');
+            }
+            return registerResponse;
+        } catch (error) {
+            console.error('Registration error:', error);
+            throw error;
+        }
     }
 
     async logout(): Promise<void> {
