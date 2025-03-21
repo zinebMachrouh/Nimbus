@@ -13,8 +13,8 @@ export interface RegisterRequest {
   password: string;
   phoneNumber: string;
   role: UserRole;
-  licenseNumber?: string; 
-  address?: string; 
+  licenseNumber?: string;
+  address?: string;
 }
 
 export interface AuthResponse {
@@ -25,4 +25,4 @@ export interface AuthResponse {
   firstName: string;
   lastName: string;
   role: UserRole;
-} 
+}

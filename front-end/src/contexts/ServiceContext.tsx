@@ -1,41 +1,41 @@
-import React, { createContext, useContext } from 'react';
-import { AuthService } from '../services/AuthService';
-import { AuthServiceImpl } from '../services/impl/AuthServiceImpl';
+import React from "react"
+import { createContext, useContext } from "react"
+import { AuthService } from "../services/AuthService"
+import { AuthServiceImpl } from "../services/impl/AuthServiceImpl"
+import { VehicleService } from "../services/VehicleService"
+import { VehicleServiceImpl } from "../services/impl/VehicleServiceImpl"
+import {SchoolService} from "../services/SchoolService.ts";
+import {SchoolServiceImpl} from "../services/impl/SchoolServiceImpl.ts";
 
 interface ServiceContextType {
-  authService: AuthService;
-  // Add other services here as needed
+  authService: AuthService
+  vehicleService: VehicleService
+  schoolService: SchoolService
 }
 
-// Create default implementations
 const defaultServices: ServiceContextType = {
   authService: new AuthServiceImpl(),
-  // Initialize other services here
-};
+  vehicleService: new VehicleServiceImpl(),
+  schoolService: new SchoolServiceImpl(),
+}
 
-// Create the context
-const ServiceContext = createContext<ServiceContextType>(defaultServices);
+const ServiceContext = createContext<ServiceContextType>(defaultServices)
 
-// Provider component
 export const ServiceProvider: React.FC<{
-  children: React.ReactNode;
-  services?: Partial<ServiceContextType>;
+  children: React.ReactNode
+  services?: Partial<ServiceContextType>
 }> = ({ children, services }) => {
-  // Merge provided services with defaults
   const value = {
     ...defaultServices,
     ...services,
-  };
+  }
 
-  return (
-    <ServiceContext.Provider value={value}>
-      {children}
-    </ServiceContext.Provider>
-  );
-};
+  return <ServiceContext.Provider value={value}>{children}</ServiceContext.Provider>
+}
 
-// Hook for using the services
-export const useServices = () => useContext(ServiceContext);
+export const useServices = () => useContext(ServiceContext)
 
-// Utility hooks for specific services
-export const useAuthService = () => useContext(ServiceContext).authService; 
+export const useAuthService = () => useContext(ServiceContext).authService
+export const useVehicleService = () => useContext(ServiceContext).vehicleService
+export const useSchoolService = () => useContext(ServiceContext).schoolService
+

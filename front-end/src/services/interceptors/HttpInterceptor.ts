@@ -41,7 +41,10 @@ export class HttpInterceptor {
     const token = localStorage.getItem('token');
     
     if (token) {
+      console.log(`Request to ${config.url} - Token available: ${token.substring(0, 10)}...`);
       config.headers.Authorization = `Bearer ${token}`;
+    } else {
+      console.warn(`Request to ${config.url} - No auth token available`);
     }
     
     if (import.meta.env.MODE === 'development') {
