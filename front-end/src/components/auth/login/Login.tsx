@@ -1,5 +1,5 @@
 import './Login.css';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { FaArrowLeft, FaEye, FaEyeSlash, FaExclamationCircle } from 'react-icons/fa';
 import { Link, useNavigate } from 'react-router-dom';
@@ -24,6 +24,12 @@ const Login: React.FC = () => {
             password: ''
         }
     });
+
+    useEffect(() => {
+        if (authService.isAuthenticated()) {
+            navigate("/dashboard");
+        }
+    }, [navigate, authService]); 
 
     const onSubmit = async (data: LoginFormData) => {
         setIsLoading(true);

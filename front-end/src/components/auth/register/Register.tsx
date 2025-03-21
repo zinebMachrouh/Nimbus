@@ -1,5 +1,3 @@
-"use client"
-
 import React from "react"
 import { useState, useEffect } from "react"
 import { Link, useNavigate } from "react-router-dom"
@@ -12,7 +10,6 @@ import { VehicleStatus } from "../../../core/entities/vehicle.entity"
 import { CreateSchoolRequest } from "../../../core/dto/school.dto.ts"
 import { CreateVehicleRequest } from "../../../core/dto/vehicle.dto.ts"
 
-// Toast notification component
 interface ToastProps {
     message: string;
     type: 'success' | 'error';
@@ -90,6 +87,8 @@ const UserRegistration = ({
     isLoading: boolean
     errorMessage: string | null
 }) => {
+
+
     const [hidePassword, setHidePassword] = useState(true)
     const [hideConfirmPassword, setHideConfirmPassword] = useState(true)
     const [formData, setFormData] = useState<RegistrationData>(userData)
@@ -986,6 +985,13 @@ const Register = () => {
         initialLatitude: 0,
         initialLongitude: 0,
     })
+    
+    useEffect(() => {
+        if (authService.isAuthenticated()) {
+            navigate("/dashboard");
+        }
+    }, [navigate, authService]);
+
 
     // Helper function to check authentication status
     const checkAuthStatus = () => {
