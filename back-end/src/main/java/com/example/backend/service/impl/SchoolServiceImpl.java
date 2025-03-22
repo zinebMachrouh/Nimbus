@@ -54,7 +54,6 @@ public class SchoolServiceImpl extends BaseServiceImpl<School, SchoolRepository>
         newSchool.setLatitude(school.getLatitude());
         newSchool.setLongitude(school.getLongitude());
 
-        // Get the last created admin and assign it to the school
         Admin lastAdmin = adminRepository.findFirstByOrderByCreatedAtDesc()
             .orElseThrow(() -> new EntityNotFoundException("No admin found. Please create an admin first."));
         
@@ -65,6 +64,7 @@ public class SchoolServiceImpl extends BaseServiceImpl<School, SchoolRepository>
     }
 
     @Override
+    @Transactional
     public School updateSchool(Long id, SchoolRequest school) {
         School existingSchool = findSchoolById(id);
         
@@ -72,7 +72,14 @@ public class SchoolServiceImpl extends BaseServiceImpl<School, SchoolRepository>
             throw new EntityNotFoundException("School not found with id: " + id);
         }
 
+        System.out.println("School name: " + school.getName());
+        System.out.println("School address: " + school.getAddress());
+        System.out.println("School phone number: " + school.getPhoneNumber());
+
+        System.out.println("Existing school name: " + existingSchool.getName());
+
         existingSchool.setName(school.getName());
+        System.out.println("Existing school name after update: " + existingSchool.getName());
         existingSchool.setAddress(school.getAddress());
         existingSchool.setPhoneNumber(school.getPhoneNumber());
         return repository.save(existingSchool);

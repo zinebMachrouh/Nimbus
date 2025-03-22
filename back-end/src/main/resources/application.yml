@@ -12,6 +12,9 @@ spring:
         dialect: org.hibernate.dialect.PostgreSQLDialect
         format_sql: true
     show-sql: false
+  devtools:
+    livereload:
+      enabled: false
 
 nimbus:
   app:

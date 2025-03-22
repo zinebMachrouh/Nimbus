@@ -158,7 +158,7 @@ const UserRegistration = ({
         e.preventDefault()
 
         if (validateForm()) {
-            onSubmit(formData)
+        onSubmit(formData)
         }
     }
 
@@ -399,7 +399,7 @@ const SchoolRegistration = ({
     const handleFormSubmit = (e: React.FormEvent) => {
         e.preventDefault()
         if (validateForm()) {
-            onSubmit(formData)
+        onSubmit(formData)
         }
     }
 
@@ -643,7 +643,7 @@ const VehicleRegistration = ({
     const handleFormSubmit = (e: React.FormEvent) => {
         e.preventDefault()
         if (validateForm()) {
-            onSubmit(formData)
+        onSubmit(formData)
         }
     }
 
@@ -833,18 +833,18 @@ const VehicleRegistration = ({
                 </div>
 
                 <div className="form-row">
-                    <div className="form-field">
-                        <label htmlFor="lastMaintenanceDate">Last Maintenance Date</label>
-                        <div className="input-wrapper">
-                            <input
-                                id="lastMaintenanceDate"
-                                type="date"
-                                max={getCurrentDate()}
-                                value={formData.lastMaintenanceDate}
-                                onChange={(e) => handleInputChange("lastMaintenanceDate", e.target.value)}
+                <div className="form-field">
+                    <label htmlFor="lastMaintenanceDate">Last Maintenance Date</label>
+                    <div className="input-wrapper">
+                        <input
+                            id="lastMaintenanceDate"
+                            type="date"
+                            max={getCurrentDate()}
+                            value={formData.lastMaintenanceDate}
+                            onChange={(e) => handleInputChange("lastMaintenanceDate", e.target.value)}
                                 className={validationErrors.lastMaintenanceDate ? "error" : ""}
-                                required
-                            />
+                            required
+                        />
                         </div>
                         {validationErrors.lastMaintenanceDate && (
                             <div className="field-error">{validationErrors.lastMaintenanceDate}</div>
@@ -1070,7 +1070,7 @@ const Register = () => {
 
         try {
             console.log('Creating school with data from form')
-            
+
             const schoolRequest: CreateSchoolRequest = {
                 name: schoolData.schoolName,
                 address: schoolData.schoolAddress,
@@ -1090,8 +1090,8 @@ const Register = () => {
                 console.log('School creation successful with direct API call:', response)
                 setSchoolId(response.id)
                 localStorage.setItem("school", JSON.stringify(response))
-                setRegistrationData(schoolData)
-                nextStep()
+            setRegistrationData(schoolData)
+            nextStep()
             } catch (fetchError: any) {
                 console.error('Direct API call failed:', fetchError)
                 throw fetchError
@@ -1144,7 +1144,7 @@ const Register = () => {
                 showToast("Registration completed successfully! Redirecting to dashboard...", "success")
                 
                 setTimeout(() => {
-                    navigate("/dashboard")
+            navigate("/dashboard")
                 }, 2000)
                 
             } catch (fetchError: any) {

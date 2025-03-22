@@ -16,6 +16,8 @@ import { School } from "../../../core/entities/school.entity.ts";
 import { GiMassDriver } from "react-icons/gi";
 import './AdminDashboard.css';
 import { FaBus } from "react-icons/fa6";
+import SchoolForm from "./school/SchoolForm.tsx";
+
 const AdminDashboard = () => {
     const vehicleService = useVehicleService();
     const routeService = useRouteService();
@@ -24,7 +26,7 @@ const AdminDashboard = () => {
     const schoolService = useSchoolService();
     const attendanceService = useAttendanceService();
     const adminService = useAdminService();
-    
+
 
     const [vehicles, setVehicles] = useState<Vehicle[]>([]);
     const [routes, setRoutes] = useState<Route[]>([]);
@@ -32,6 +34,7 @@ const AdminDashboard = () => {
     const [parents, setParents] = useState<Parent[]>([]);
     const [drivers, setDrivers] = useState<Driver[]>([]);
     const [school, setSchool] = useState<School | null>(JSON.parse(localStorage.getItem("school") || "{}"));
+    const [isSchoolFormOpen, setIsSchoolFormOpen] = useState(false);
     
     const [attendance, setAttendance] = useState<number>(0);
     const [attendancePercentage, setAttendancePercentage] = useState<number>(0);
@@ -403,17 +406,17 @@ const AdminDashboard = () => {
                                     <h3>{school?.name}</h3>
                                     <p>{school?.phoneNumber}</p>
                                 </div>
-                                <button type="button">Update</button>
+                                <button type="button" onClick={() => setIsSchoolFormOpen(true)}>Update</button>
                             </div>
                         </div>
                         <div className="actions">
-                            <button type="button" className="action-card add-vehicle">
+                            <div className="action-card add-vehicle">
                                 <div className="action-icon">
                                     <FaBus/>
                                 </div>
                                 <span>Add Vehicle</span>
-                            </button>
-                            <button type="button" className="action-card add-driver">
+                            </div>
+                            <div className="action-card add-driver">
                                 <div className="action-icon">
                                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                                         <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
@@ -421,19 +424,19 @@ const AdminDashboard = () => {
                                     </svg>
                                 </div>
                                 <span>Add Driver</span>
-                            </button>
-                            <button type="button" className="action-card add-route">
+                            </div>
+                            <div className="action-card add-route">
                                 <div className="action-icon">
                                     <RiRouteFill/>
                                 </div>
                                 <span>Add Route</span>
-                            </button>
-                            <button type="button" className="action-card add-student">
+                            </div>
+                            <div className="action-card add-student">
                                 <div className="action-icon">
                                     <PiStudent/>
                                 </div>
                                 <span>Add Student</span>
-                            </button>
+                            </div>
                         </div>
                         
                       
@@ -442,6 +445,13 @@ const AdminDashboard = () => {
                     </div>
                 </div>
             </div>
+            
+            {/* School Form Modal */}
+            <SchoolForm 
+                isOpen={isSchoolFormOpen} 
+                onClose={() => setIsSchoolFormOpen(false)} 
+                school={school}
+            />
         </div>
      );
 }
