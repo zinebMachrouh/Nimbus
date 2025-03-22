@@ -1,10 +1,10 @@
-import { NavLink, useNavigate } from "react-router-dom";
+import { NavLink, Outlet, useNavigate } from "react-router-dom";
 import { useAdminService, useAttendanceService, useAuthService, useRouteService, useSchoolService, useStudentService, useTripService, useVehicleService } from "../../contexts/ServiceContext";
 import { FiSettings, FiLogOut } from "react-icons/fi";
 import { BiBell, BiUser } from "react-icons/bi";
 import './Dashboard.css';
-import { useEffect, useState, useRef } from "react";
-import { User } from "../../core/entities/user.entity";
+import { useEffect, useState, useRef, createContext } from "react";
+import { User, UserRole } from "../../core/entities/user.entity";
 import AdminDashboard from "./admin/AdminDashboard";
 import { Driver } from "../../core/entities/driver.entity";
 import { Parent } from "../../core/entities/parent.entity";
@@ -14,6 +14,7 @@ import { Student } from "../../core/entities/student.entity";
 import { Vehicle } from "../../core/entities/vehicle.entity";
 import { Trip } from "../../core/entities/trip.entity";
 
+export const MyContext = createContext<any>(null);
 const Dashboard = () => {
     const navigate = useNavigate();
     const authService = useAuthService();
@@ -38,7 +39,6 @@ const Dashboard = () => {
     const profileMenuRef = useRef<HTMLDivElement>(null);
 
 
-     
     const [attendance, setAttendance] = useState<number>(0);
     const [attendancePercentage, setAttendancePercentage] = useState<number>(0);
 
@@ -117,6 +117,12 @@ const Dashboard = () => {
         };
     }, []);
 
+    useEffect(() => {
+        if(user?.role === UserRole.ADMIN){
+            navigate("/dashboard/admin");
+        }
+    }, [user]);
+
     const logout = () => {
         setShowProfileMenu(false);
         authService.logout();        
@@ -130,13 +136,13 @@ const Dashboard = () => {
 
                 <div className="desktop-nav">
                     <nav>
-                        <NavLink to="/dashboard">Dashboard</NavLink>
                         {
                             authService.isAuthenticated() && authService.hasRole('ROLE_ADMIN') && (
                                 <>
+                                    <NavLink to="/dashboard/admin">Dashboard</NavLink>
                                     <NavLink to="/users">Users</NavLink>
                                     <NavLink to="/students">Students</NavLink>
-                                    <NavLink to="/vehicles">Vehicles</NavLink>
+                                    <NavLink to="vehicles">Vehicles</NavLink>
                                     <NavLink to="/trips">Trips</NavLink>
                                     <NavLink to="/routes">Routes</NavLink>
                                     <NavLink to="/reports">Reports</NavLink>
@@ -146,6 +152,7 @@ const Dashboard = () => {
                         {
                             authService.isAuthenticated() && authService.hasRole('ROLE_DRIVER') && (
                                 <>
+                                    <NavLink to="/dashboard/driver">Dashboard</NavLink>
                                     <NavLink to="/trips">Trips</NavLink>
                                     <NavLink to="/routes">Routes</NavLink>
                                     <NavLink to="/history">History</NavLink>
@@ -156,6 +163,7 @@ const Dashboard = () => {
                         {
                             authService.isAuthenticated() && authService.hasRole('ROLE_PARENT') && (
                                 <>
+                                    <NavLink to="/dashboard/parent">Dashboard</NavLink>
                                     <NavLink to="/trips">Trips</NavLink>
                                     <NavLink to="/routes">Routes</NavLink>
                                     <NavLink to="/attendance">Attendance</NavLink>
@@ -200,11 +208,9 @@ const Dashboard = () => {
                 <div className="dashboard-content-header">
                     <h1>Welcome In, <span>{user?.firstName}</span></h1>
                 </div>
-                {
-                    authService.hasRole('ROLE_ADMIN') && (
-                        <AdminDashboard vehicles={vehicles} routes={routes} students={students} parents={parents} drivers={drivers} school={school as School}  attendancePercentage={attendancePercentage} trips={trips} activeTripsPercentage={activeTripsPercentage} />
-                    )
-                }
+                <MyContext.Provider value={{ vehicles, routes, students, parents, drivers, school, attendancePercentage, trips, activeTripsPercentage }}>
+                    <Outlet />
+                </MyContext.Provider>
             </div>
         </main>
      );

@@ -31,6 +31,8 @@ export interface CreateVehicleRequest {
   trackingDeviceId?: string
   currentLatitude?: number
   currentLongitude?: number
+  initialLatitude?: number
+  initialLongitude?: number
   schoolId?: number
 }
 
@@ -48,4 +50,6 @@ export interface UpdateVehicleRequest {
   trackingDeviceId?: string
   currentLatitude?: number
   currentLongitude?: number
+  initialLatitude?: number
+  initialLongitude?: number
 } 

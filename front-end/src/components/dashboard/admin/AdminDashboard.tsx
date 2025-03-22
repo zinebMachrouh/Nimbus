@@ -1,24 +1,18 @@
-import {useEffect, useState} from "react";
-import {Vehicle} from "../../../core/entities/vehicle.entity.ts";
-import { Route, RouteType } from "../../../core/entities/route.entity.ts";
-import { Student } from "../../../core/entities/student.entity.ts";
+import {useContext, useState} from "react";
 import { Trip, TripStatus } from "../../../core/entities/trip.entity.ts";
 import { RiParentLine, RiRouteFill } from "react-icons/ri";
 import { PiStudent } from "react-icons/pi";
-import { Driver, DriverStatus } from "../../../core/entities/driver.entity.ts";
-import { Parent } from "../../../core/entities/parent.entity.ts";
 import { CiRoute } from "react-icons/ci";
 import TripCard from "./trips/TripCard.tsx";
 import Map from "./Map.tsx";
-import { School } from "../../../core/entities/school.entity.ts";
 import './AdminDashboard.css';
 import { FaBus } from "react-icons/fa6";
 import SchoolForm from "./school/SchoolForm.tsx";
-import { Attendance } from "../../../core/entities/attendance.entity.ts";
+import { MyContext } from "../Dashboard.tsx";
 
-const AdminDashboard = ({vehicles, routes, students, parents, drivers, school, attendancePercentage, trips, activeTripsPercentage}: {vehicles: Vehicle[], routes: Route[], students: Student[], parents: Parent[], drivers: Driver[], school: School, activeTrips: Trip[], attendance: Attendance[], attendancePercentage: number, trips: Trip[], activeTripsPercentage: number}) => {
+const AdminDashboard = () => {
     const [isSchoolFormOpen, setIsSchoolFormOpen] = useState(false);
-
+    const { vehicles, routes, students, parents, drivers, school, attendancePercentage, trips, activeTripsPercentage } = useContext(MyContext);
     return ( 
         <div className="admin-dashboard">
             <div className="admin-dashboard-header">

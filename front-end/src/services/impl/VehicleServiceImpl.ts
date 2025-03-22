@@ -24,7 +24,36 @@ export class VehicleServiceImpl extends BaseHttpService implements VehicleServic
     return response.data;
   }
 
+  async addVehicle(formData: any): Promise<Vehicle> {
+    const vehicleRequest: CreateVehicleRequest = {
+      vehicleNumber: formData.licensePlate,
+      make: formData.make,
+      model: formData.model,
+      year: formData.year,
+      capacity: formData.capacity,
+      status: formData.status,
+      currentMileage: formData.currentMileage,
+      insuranceExpiryDate: formData.registrationExpiryDate,
+      registrationExpiryDate: formData.registrationExpiryDate,
+      lastMaintenanceDate: new Date().toISOString().split('T')[0],
+      schoolId: formData.schoolId,
+      initialLatitude: formData.currentLatitude,
+      initialLongitude: formData.currentLongitude
+    };
+    
+    return this.create(vehicleRequest);
+  }
+
   async update(id: number, vehicleRequest: UpdateVehicleRequest): Promise<Vehicle> {
+    // If there are latitude/longitude properties, map them to initialLatitude/initialLongitude as well
+    if (vehicleRequest.currentLatitude !== undefined || vehicleRequest.currentLongitude !== undefined) {
+      vehicleRequest = {
+        ...vehicleRequest,
+        initialLatitude: vehicleRequest.currentLatitude,
+        initialLongitude: vehicleRequest.currentLongitude
+      };
+    }
+    
     const response = await this.put<ApiResponse<Vehicle>>(`/${id}`, vehicleRequest);
     return response.data;
   }

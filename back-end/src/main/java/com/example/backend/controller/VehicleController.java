@@ -52,6 +52,8 @@ public class VehicleController {
         vehicle.setRegistrationExpiryDate(vehicleRequest.getRegistrationExpiryDate());
         vehicle.setLastMaintenanceDate(vehicleRequest.getLastMaintenanceDate());
         vehicle.setCurrentMileage(vehicleRequest.getCurrentMileage());
+        vehicle.setCurrentLatitude(vehicleRequest.getInitialLatitude());
+        vehicle.setCurrentLongitude(vehicleRequest.getInitialLongitude());
         vehicle.setStatus(Vehicle.VehicleStatus.AVAILABLE);
         vehicle.setActive(true);
         
@@ -82,6 +84,14 @@ public class VehicleController {
         vehicle.setRegistrationExpiryDate(vehicleRequest.getRegistrationExpiryDate());
         vehicle.setLastMaintenanceDate(vehicleRequest.getLastMaintenanceDate());
         vehicle.setCurrentMileage(vehicleRequest.getCurrentMileage());
+        
+        // Update location if provided
+        if (vehicleRequest.getInitialLatitude() != null) {
+            vehicle.setCurrentLatitude(vehicleRequest.getInitialLatitude());
+        }
+        if (vehicleRequest.getInitialLongitude() != null) {
+            vehicle.setCurrentLongitude(vehicleRequest.getInitialLongitude());
+        }
         
         return ResponseEntity.ok(ApiResponse.success(vehicleService.save(vehicle)));
     }
