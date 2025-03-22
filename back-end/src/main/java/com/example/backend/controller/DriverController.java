@@ -2,7 +2,6 @@ package com.example.backend.controller;
 
 import com.example.backend.dto.request.ReportIssueRequest;
 import com.example.backend.dto.response.ApiResponse;
-import com.example.backend.entities.Attendance;
 import com.example.backend.entities.Trip;
 import com.example.backend.entities.Vehicle;
 import com.example.backend.entities.user.Driver;
@@ -21,7 +20,6 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
-import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -142,7 +140,6 @@ public class DriverController {
             Map.of("completedTrips", completedTrips)));
     }
 
-    // Issue Reporting
     @Operation(summary = "Report an issue")
     @PostMapping("/issues")
     public ResponseEntity<ApiResponse<?>> reportIssue(@Valid @RequestBody ReportIssueRequest request) {

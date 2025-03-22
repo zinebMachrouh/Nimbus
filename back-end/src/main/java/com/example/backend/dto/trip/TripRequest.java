@@ -12,14 +12,14 @@ public class TripRequest {
     @NotNull(message = "Route ID is required")
     private Long routeId;
 
-    @NotNull(message = "Driver ID is required")
     private Long driverId;
 
-    @NotNull(message = "Vehicle ID is required")
     private Long vehicleId;
 
     @NotNull(message = "Scheduled departure time is required")
     private LocalDateTime scheduledDepartureTime;
+
+    private LocalDateTime estimatedArrivalTime;
 
     private String notes;
 } 

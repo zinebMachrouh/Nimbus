@@ -1088,8 +1088,8 @@ const Register = () => {
                 const response = await schoolService.create(schoolRequest)
 
                 console.log('School creation successful with direct API call:', response)
-                showToast("School registered successfully!", "success")
                 setSchoolId(response.id)
+                localStorage.setItem("school", JSON.stringify(response))
                 setRegistrationData(schoolData)
                 nextStep()
             } catch (fetchError: any) {
@@ -1122,15 +1122,14 @@ const Register = () => {
                 registrationExpiryDate: vehicleData.registrationExpiryDate,
                 lastMaintenanceDate: vehicleData.lastMaintenanceDate,
                 trackingDeviceId: vehicleData.trackingDeviceId || undefined,
-                initialLatitude: vehicleData.initialLatitude || undefined,
-                initialLongitude: vehicleData.initialLongitude || undefined,
+                currentLatitude: vehicleData.initialLatitude || undefined,
+                currentLongitude: vehicleData.initialLongitude || undefined,
                 //@ts-ignore
                 schoolId: schoolId,
             }
 
             console.log('Vehicle creation request:', vehicleRequest);
             
-            // Direct API call instead of using service
             const token = localStorage.getItem('token')
             if (!token) {
                 throw new Error("Authentication token not found")
@@ -1144,7 +1143,6 @@ const Register = () => {
                 
                 showToast("Registration completed successfully! Redirecting to dashboard...", "success")
                 
-                // Brief delay before redirect to show success message
                 setTimeout(() => {
                     navigate("/dashboard")
                 }, 2000)
@@ -1178,8 +1176,8 @@ const Register = () => {
                 registrationExpiryDate: vehicleData.registrationExpiryDate,
                 lastMaintenanceDate: vehicleData.lastMaintenanceDate,
                 trackingDeviceId: vehicleData.trackingDeviceId || undefined,
-                initialLatitude: vehicleData.initialLatitude || undefined,
-                initialLongitude: vehicleData.initialLongitude || undefined,
+                currentLatitude: vehicleData.initialLatitude || undefined,
+                currentLongitude: vehicleData.initialLongitude || undefined,
             }
 
             console.log('Vehicle creation request:', vehicleRequest);

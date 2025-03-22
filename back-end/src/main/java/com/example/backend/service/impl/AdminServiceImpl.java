@@ -256,10 +256,18 @@ public class AdminServiceImpl implements AdminService {
             throw new ValidationException("vehicleNumber", "Vehicle number already exists");
         }
 
-        // Get the last created school
-        School school = schoolRepository.findFirstByOrderByCreatedAtDesc()
-            .orElseThrow(() -> new EntityNotFoundException("No school found. Please create a school first."));
-        log.debug("Found last created school with id: {}", school.getId());
+        School school;
+        // Use schoolId from request if provided, otherwise use the last created school
+        if (request.getSchoolId() != null) {
+            school = schoolRepository.findById(request.getSchoolId())
+                .orElseThrow(() -> new EntityNotFoundException("School", request.getSchoolId()));
+            log.debug("Using school with id {} from request", school.getId());
+        } else {
+            // Get the last created school as fallback
+            school = schoolRepository.findFirstByOrderByCreatedAtDesc()
+                .orElseThrow(() -> new EntityNotFoundException("No school found. Please create a school first."));
+            log.debug("Using last created school with id: {}", school.getId());
+        }
 
         Vehicle vehicle = new Vehicle();
         vehicle.setLicensePlate(request.getVehicleNumber());

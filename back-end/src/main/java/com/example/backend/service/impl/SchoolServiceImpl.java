@@ -7,10 +7,7 @@ import com.example.backend.entities.Student;
 import com.example.backend.entities.user.Admin;
 import com.example.backend.exception.EntityNotFoundException;
 import com.example.backend.exception.ValidationException;
-import com.example.backend.repository.AdminRepository;
-import com.example.backend.repository.RouteRepository;
-import com.example.backend.repository.SchoolRepository;
-import com.example.backend.repository.StudentRepository;
+import com.example.backend.repository.*;
 import com.example.backend.service.SchoolService;
 import com.example.backend.service.base.BaseServiceImpl;
 import lombok.extern.slf4j.Slf4j;
@@ -28,17 +25,23 @@ public class SchoolServiceImpl extends BaseServiceImpl<School, SchoolRepository>
     private final StudentRepository studentRepository;
     private final RouteRepository routeRepository;
     private final AdminRepository adminRepository;
+    private final DriverRepository driverRepository;
+    private final VehicleRepository vehicleRepository;
     
     private static final int MAXIMUM_STUDENTS_PER_SCHOOL = 2000;
 
     public SchoolServiceImpl(SchoolRepository repository,
                            StudentRepository studentRepository,
                            RouteRepository routeRepository,
-                           AdminRepository adminRepository) {
+                           AdminRepository adminRepository,
+                             DriverRepository driverRepository,
+                             VehicleRepository vehicleRepository) {
         super(repository);
         this.studentRepository = studentRepository;
         this.routeRepository = routeRepository;
         this.adminRepository = adminRepository;
+        this.driverRepository = driverRepository;
+        this.vehicleRepository = vehicleRepository;
     }
 
     @Override
@@ -210,14 +213,12 @@ public class SchoolServiceImpl extends BaseServiceImpl<School, SchoolRepository>
 
     @Override
     public long countActiveDrivers(Long schoolId) {
-        // This would be implemented when driver management is added
-        return 0;
+        return driverRepository.countActiveDriversBySchool(schoolId);
     }
 
     @Override
     public long countActiveVehicles(Long schoolId) {
-        // This would be implemented when vehicle management is added
-        return 0;
+        return vehicleRepository.countActiveVehiclesBySchool(schoolId);
     }
 
     // Private helper methods

@@ -7,6 +7,15 @@ export interface SchoolService {
   create(schoolRequest: CreateSchoolRequest): Promise<School>
   update(id: number, schoolRequest: UpdateSchoolRequest): Promise<School>
   deleteSchool(id: number): Promise<void>
-  findSchoolsByAdmin(adminId: number): Promise<School[]>
+  findNearbySchools(latitude: number, longitude: number, radiusInMeters: number): Promise<School[]>
+  getSchoolStatistics(id: number): Promise<any>
+  findSchoolsByNameContaining(name: string): Promise<School[]>
+  getSchoolWithStudents(id: number): Promise<School>
+  addStudent(schoolId: number, studentId: number): Promise<void>
+  removeStudent(schoolId: number, studentId: number): Promise<void>
+  addRoute(schoolId: number, routeId: number): Promise<void>
+  removeRoute(schoolId: number, routeId: number): Promise<void>
+  getSchoolsWithStats(): Promise<School[]>
+  countActiveSchools(): Promise<number>
 }
 

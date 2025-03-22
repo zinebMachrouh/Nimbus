@@ -9,6 +9,7 @@ import com.example.backend.dto.vehicle.VehicleRequest;
 import com.example.backend.entities.*;
 import com.example.backend.entities.user.Driver;
 import com.example.backend.entities.user.Parent;
+import com.example.backend.entities.user.User;
 import com.example.backend.service.*;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -39,6 +40,12 @@ public class AdminController {
     private final StudentService studentService;
     private final DriverService driverService;
     private final AdminService adminService;
+
+    @Operation(summary = "Get all users")
+    @GetMapping("/users")
+    public ResponseEntity<ApiResponse<List<User>>> getAllUsers() {
+        return ResponseEntity.ok(ApiResponse.success(userService.findAll()));
+    }
 
     @Operation(summary = "Create a new parent account")
     @PostMapping("/parents")
@@ -159,8 +166,20 @@ public class AdminController {
             @PathVariable Long schoolId,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime start,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime end) {
-        // TODO: Implement comprehensive school statistics
-        return ResponseEntity.ok(ApiResponse.success("School statistics"));
+
+        long activeStudents = schoolService.countActiveStudents(schoolId);
+        long activeRoutes = schoolService.countActiveRoutes(schoolId);
+        long activeDrivers = schoolService.countActiveDrivers(schoolId);
+        long activeVehicles = schoolService.countActiveVehicles(schoolId);
+
+        return ResponseEntity.ok(ApiResponse.success("School statistics retrieved successfully",
+            List.of(
+                "activeStudents", activeStudents,
+                "activeRoutes", activeRoutes,
+                "activeDrivers", activeDrivers,
+                "activeVehicles", activeVehicles
+            )
+        ));
     }
 
     // Driver Management

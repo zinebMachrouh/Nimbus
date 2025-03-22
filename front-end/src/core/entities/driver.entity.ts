@@ -12,10 +12,14 @@ export enum DriverStatus {
 
 export interface Driver extends User {
   licenseNumber: string;
-  licenseExpiryDate: Date;
+  licenseExpiryDate: string;
+  phoneNumber: string;
+  address?: string;
   vehicle?: Vehicle;
   school?: School;
   trips?: Trip[];
+  experience?: number;
+  rating?: number;
   currentLatitude?: number;
   currentLongitude?: number;
   status: DriverStatus;

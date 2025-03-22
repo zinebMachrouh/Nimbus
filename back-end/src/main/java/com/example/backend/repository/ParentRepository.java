@@ -3,6 +3,7 @@ package com.example.backend.repository;
 import com.example.backend.entities.user.Parent;
 import com.example.backend.repository.base.EmailAwareRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -66,7 +67,8 @@ public interface ParentRepository extends EmailAwareRepository<Parent> {
     @Query("SELECT p FROM Parent p WHERE p.email = :email AND p.active = true")
     Optional<Parent> findByEmailForAuthentication(String email);
     
-    long countActiveUsersByRole(Parent.Role role);
+    @Query("SELECT COUNT(p) FROM Parent p WHERE p.role = :role AND p.active = true")
+    long countActiveUsersByRole(@Param("role") Parent.Role role);
     
     Optional<Parent> findByEmail(String email);
 }

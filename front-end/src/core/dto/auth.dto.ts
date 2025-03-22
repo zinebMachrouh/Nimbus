@@ -20,9 +20,11 @@ export interface RegisterRequest {
 export interface AuthResponse {
   token: string;
   type: string;
-  userId: number;
+  id: number;
+  username: string;
   email: string;
   firstName: string;
   lastName: string;
-  role: UserRole;
+  phoneNumber: string;
+  role: string;
 }

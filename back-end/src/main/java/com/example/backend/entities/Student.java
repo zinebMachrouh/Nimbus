@@ -40,6 +40,9 @@ public class Student extends BaseEntity {
     @Column(nullable = false)
     private Integer seatNumber;
 
+    @Column
+    private String grade;
+
     private String qrCode;
 
     @Transient

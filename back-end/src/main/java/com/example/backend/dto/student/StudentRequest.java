@@ -2,6 +2,7 @@ package com.example.backend.dto.student;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Past;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -17,14 +18,23 @@ public class StudentRequest {
     private String lastName;
 
     @NotNull(message = "Date of birth is required")
+    @Past(message = "Date of birth must be in the past")
     private LocalDate dateOfBirth;
 
-    @NotNull(message = "Parent ID is required")
-    private Long parentId;
+    @NotBlank(message = "Grade is required")
+    private String grade;
+
+    private String address;
+    private String city;
+    private String state;
+    private String zipCode;
+    private String emergencyContact;
+    private String emergencyPhone;
+    private String medicalNotes;
 
     @NotNull(message = "School ID is required")
     private Long schoolId;
 
-    @NotNull(message = "Seat number is required")
-    private Integer seatNumber;
+    @NotNull(message = "Parent ID is required")
+    private Long parentId;
 } 

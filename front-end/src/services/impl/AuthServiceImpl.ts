@@ -1,6 +1,6 @@
 import { AuthService } from '../AuthService'
 import { User, UserRole } from '../../core/entities/user.entity'
-import {AuthRequest, AuthResponse, RegisterRequest} from '../../core/dto/auth.dto'
+import { AuthRequest, AuthResponse, RegisterRequest } from '../../core/dto/auth.dto'
 import { BaseHttpService } from '../BaseHttpService'
 import { ApiError } from '../../core/models/ApiError'
 
@@ -12,8 +12,8 @@ export class AuthServiceImpl extends BaseHttpService implements AuthService {
     async login(username: string, password: string): Promise<void> {
         try {
             const credentials: AuthRequest = { username, password };
-            const authResponse = await this.post<AuthResponse>('/login', credentials);
-            this.setTokens(authResponse.token, authResponse);
+            const response = await this.post<AuthResponse>('/login', credentials);
+            this.setTokens(response);
         } catch (error) {
             if (error instanceof ApiError) {
                 console.error(`Login failed: ${error.message}`);
@@ -27,42 +27,36 @@ export class AuthServiceImpl extends BaseHttpService implements AuthService {
         }
     }
 
-    async register(data: RegisterRequest): Promise<AuthResponse> {
+    async logout(): Promise<void> {
         try {
-            const registerResponse = await this.post<AuthResponse>('/register', data);
-            console.log('Registration response:', registerResponse);
-            
-            if (registerResponse.token) {
-                // Ensure token is properly stored
-                localStorage.setItem('token', registerResponse.token);
-                
-                // Store user data for seamless login
-                localStorage.setItem('currentUser', JSON.stringify({
-                    id: registerResponse.userId,
-                    email: registerResponse.email,
-                    firstName: registerResponse.firstName,
-                    lastName: registerResponse.lastName,
-                    role: registerResponse.role as UserRole,
-                }));
-                
-                console.log('Token stored directly:', registerResponse.token);
-            } else {
-                throw new Error('No authentication token received after registration');
-            }
-            return registerResponse;
+            const token = this.getToken();
+            await this.post('/logout', {}, {
+                headers: {
+                    Authorization: `Bearer ${token}`
+                }
+            });
+            this.clearTokens();
         } catch (error) {
-            console.error('Registration error:', error);
-            throw error;
+            console.error('Logout failed:', error);
+            this.clearTokens();
         }
     }
 
-    async logout(): Promise<void> {
+    async register(data: RegisterRequest): Promise<AuthResponse> {
         try {
-            await this.post<void>('/logout');
+            const response = await this.post<AuthResponse>('/register', data);
+            this.setTokens(response);
+            return response;
         } catch (error) {
-            console.error('Logout error:', error);
-        } finally {
-            this.clearTokens();
+            if (error instanceof ApiError) {
+                console.error(`Registration failed: ${error.message}`);
+                if (error.validationErrors) {
+                    console.error('Validation errors:', error.validationErrors);
+                }
+            } else {
+                console.error('Registration failed:', error);
+            }
+            throw error;
         }
     }
 
@@ -95,14 +89,16 @@ export class AuthServiceImpl extends BaseHttpService implements AuthService {
         return user.role === role;
     }
     
-    private setTokens(token: string, userData: AuthResponse): void {
-        localStorage.setItem('token', token);
+    private setTokens(response: AuthResponse): void {
+        localStorage.setItem('token', response.token);
         localStorage.setItem('currentUser', JSON.stringify({
-            id: userData.userId,
-            email: userData.email,
-            firstName: userData.firstName,
-            lastName: userData.lastName,
-            role: userData.role as UserRole,
+            id: response.id,
+            email: response.email,
+            username: response.username,
+            firstName: response.firstName,
+            lastName: response.lastName,
+            phoneNumber: response.phoneNumber,
+            role: response.role,
         }));
     }
 

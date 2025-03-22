@@ -112,4 +112,7 @@ public interface DriverRepository extends EmailAwareRepository<Driver> {
             AND d.active = true
             """)
     List<Driver> findBySchoolId(Long schoolId);
+
+    @Query("SELECT COUNT(d) FROM Driver d WHERE d.school.id = :schoolId AND d.active = true")
+    long countActiveDriversBySchool(@Param("schoolId") Long schoolId);
 } 

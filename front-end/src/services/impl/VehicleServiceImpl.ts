@@ -1,92 +1,103 @@
-import type { VehicleService } from "../VehicleService"
-import type { Vehicle, VehicleStatus } from "../../core/entities/vehicle.entity"
-import type { CreateVehicleRequest, UpdateVehicleRequest } from "../../core/dto/vehicle.dto"
-import { BaseHttpService } from "../BaseHttpService"
+import { VehicleService } from '../VehicleService';
+import { Vehicle } from '../../core/entities/vehicle.entity';
+import { CreateVehicleRequest, UpdateVehicleRequest } from '../../core/dto/vehicle.dto';
+import { BaseHttpService } from '../BaseHttpService';
+import { ApiResponse } from '../../core/models/ApiResponse';
 
 export class VehicleServiceImpl extends BaseHttpService implements VehicleService {
   constructor() {
-    super("/v1/admin/vehicles")
+    super('/v1/vehicles');
   }
 
   async findAll(): Promise<Vehicle[]> {
-    return this.get<Vehicle[]>()
+    const response = await this.get<ApiResponse<Vehicle[]>>();
+    return response.data;
   }
 
   async findById(id: number): Promise<Vehicle> {
-    return this.get<Vehicle>(`/${id}`)
+    const response = await this.get<ApiResponse<Vehicle>>(`/${id}`);
+    return response.data;
   }
 
   async create(vehicleRequest: CreateVehicleRequest): Promise<Vehicle> {
-    console.log('Creating vehicle with request:', vehicleRequest)
-    try {
-      const result = await this.post<Vehicle>("", vehicleRequest)
-      console.log('Vehicle creation successful:', result)
-      return result
-    } catch (error) {
-      console.error('Error creating vehicle:', error)
-      throw error
-    }
+    const response = await this.post<ApiResponse<Vehicle>>('', vehicleRequest);
+    return response.data;
   }
 
   async update(id: number, vehicleRequest: UpdateVehicleRequest): Promise<Vehicle> {
-    return this.put<Vehicle>(`/${id}`, vehicleRequest)
+    const response = await this.put<ApiResponse<Vehicle>>(`/${id}`, vehicleRequest);
+    return response.data;
   }
 
   async deleteVehicle(id: number): Promise<void> {
-    return this.delete<void>(`/${id}`)
+    await this.delete<ApiResponse<void>>(`/${id}`);
   }
 
-  async findVehiclesBySchool(schoolId: number): Promise<Vehicle[]> {
-    return this.get<Vehicle[]>(`/school/${schoolId}`)
+  async findByLicensePlate(licensePlate: string): Promise<Vehicle> {
+    const response = await this.get<ApiResponse<Vehicle>>(`/license-plate/${encodeURIComponent(licensePlate)}`);
+    return response.data;
   }
 
   async findAvailableVehicles(): Promise<Vehicle[]> {
-    return this.get<Vehicle[]>("/available")
+    const response = await this.get<ApiResponse<Vehicle[]>>('/available');
+    return response.data;
   }
 
-  async findVehiclesByStatus(status: VehicleStatus): Promise<Vehicle[]> {
-    return this.get<Vehicle[]>(`/status/${status}`)
+  async findVehiclesBySchool(schoolId: number): Promise<Vehicle[]> {
+    const response = await this.get<ApiResponse<Vehicle[]>>(`/school/${schoolId}`);
+    return response.data;
   }
 
-  async assignDriver(vehicleId: number, driverId: number): Promise<Vehicle> {
-    return this.post<Vehicle>(`/${vehicleId}/driver/${driverId}`)
+  async findNearbyVehicles(latitude: number, longitude: number, radiusInMeters: number): Promise<Vehicle[]> {
+    const response = await this.get<ApiResponse<Vehicle[]>>(
+      `/nearby?latitude=${latitude}&longitude=${longitude}&radiusInMeters=${radiusInMeters}`
+    );
+    return response.data;
   }
 
-  async removeDriver(vehicleId: number): Promise<Vehicle> {
-    return this.delete<Vehicle>(`/${vehicleId}/driver`)
+  async findActivelyOperatingVehicles(): Promise<Vehicle[]> {
+    const response = await this.get<ApiResponse<Vehicle[]>>('/operating');
+    return response.data;
   }
 
-  async scheduleMaintenance(vehicleId: number, date: Date): Promise<Vehicle> {
-    return this.post<Vehicle>(`/${vehicleId}/maintenance`, { date })
+  async countCompletedTrips(id: number): Promise<number> {
+    const response = await this.get<ApiResponse<number>>(`/${id}/trips/count`);
+    return response.data;
   }
 
-  async completeMaintenance(vehicleId: number): Promise<Vehicle> {
-    return this.post<Vehicle>(`/${vehicleId}/maintenance/complete`)
+  async updateLocation(id: number, latitude: number, longitude: number): Promise<void> {
+    await this.put<ApiResponse<void>>(`/${id}/location?latitude=${latitude}&longitude=${longitude}`);
   }
 
-  async updateVehicleStatus(vehicleId: number, status: VehicleStatus): Promise<Vehicle> {
-    return this.patch<Vehicle>(`/${vehicleId}/status`, { status })
+  async markAsAvailable(id: number): Promise<void> {
+    await this.put<ApiResponse<void>>(`/${id}/available`);
   }
 
-  async getVehicleStatistics(vehicleId: number): Promise<{
-    totalTrips: number
-    totalDistance: number
-    averageOccupancy: number
-    maintenanceHistory: {
-      date: Date
-      type: string
-      description: string
-    }[]
-  }> {
-    return this.get<any>(`/${vehicleId}/statistics`)
+  async markAsUnavailable(id: number): Promise<void> {
+    await this.put<ApiResponse<void>>(`/${id}/unavailable`);
   }
 
-  async getVehicleLocation(vehicleId: number): Promise<{
-    latitude: number
-    longitude: number
-    lastUpdated: Date
-  }> {
-    return this.get<any>(`/${vehicleId}/location`)
+  async assignToSchool(id: number, schoolId: number): Promise<void> {
+    await this.put<ApiResponse<void>>(`/${id}/assign-school/${schoolId}`);
+  }
+
+  async removeFromSchool(id: number): Promise<void> {
+    await this.put<ApiResponse<void>>(`/${id}/remove-school`);
+  }
+
+  async performMaintenance(id: number, maintenanceType: string, notes: string): Promise<void> {
+    await this.post<ApiResponse<void>>(
+      `/${id}/maintenance?maintenanceType=${encodeURIComponent(maintenanceType)}&notes=${encodeURIComponent(notes)}`
+    );
+  }
+
+  async completeMaintenance(id: number, notes: string): Promise<void> {
+    await this.post<ApiResponse<void>>(`/${id}/maintenance/complete?notes=${encodeURIComponent(notes)}`);
+  }
+
+  async findVehiclesWithStats(): Promise<Vehicle[]> {
+    const response = await this.get<ApiResponse<Vehicle[]>>('/with-stats');
+    return response.data;
   }
 }
 

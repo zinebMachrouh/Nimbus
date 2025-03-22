@@ -26,6 +26,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Optional;
 
 @Slf4j
 @Service
@@ -88,7 +89,34 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         log.debug("Attempting to authenticate user: {}", loginRequest.getUsername());
         
         try {
+            // Ensure username is trimmed
+            loginRequest.setUsername(loginRequest.getUsername().trim());
+            
             log.debug("Creating UsernamePasswordAuthenticationToken for user: {}", loginRequest.getUsername());
+            
+            // Attempt to find the user directly first to check if they exist
+            Optional<User> userOpt = userService.findByUsername(loginRequest.getUsername());
+            
+            if (userOpt.isEmpty()) {
+                log.error("User not found for authentication check: {}", loginRequest.getUsername());
+                throw new ValidationException("Invalid username or password");
+            }
+            
+            User user = userOpt.get();
+            if (!user.isActive()) {
+                log.error("Attempt to authenticate inactive user: {}", loginRequest.getUsername());
+                throw new ValidationException("User account is not active");
+            }
+            
+            // Check password match before trying authentication manager
+            boolean passwordMatches = passwordEncoder.matches(loginRequest.getPassword(), user.getPassword());
+            log.debug("Pre-check: Password matches for user {}: {}", loginRequest.getUsername(), passwordMatches);
+            
+            if (!passwordMatches) {
+                log.error("Password mismatch for user: {}", loginRequest.getUsername());
+                throw new ValidationException("Invalid username or password");
+            }
+            
             UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
                 loginRequest.getUsername(), loginRequest.getPassword());
             
@@ -99,13 +127,6 @@ public class AuthenticationServiceImpl implements AuthenticationService {
             SecurityContextHolder.getContext().setAuthentication(authentication);
             UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
             log.debug("Retrieved UserDetailsImpl for user: {}", userDetails.getUsername());
-            
-            User user = userService.findByUsername(userDetails.getUsername())
-                .orElseThrow(() -> {
-                    log.error("User not found in database after successful authentication: {}", userDetails.getUsername());
-                    return new ValidationException("User not found");
-                });
-            log.debug("Found user in database: {}", user.getUsername());
             
             String jwt = jwtUtils.generateJwtToken(authentication);
             log.debug("Generated JWT token successfully");

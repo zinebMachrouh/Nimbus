@@ -22,8 +22,6 @@ export interface Vehicle {
   lastMaintenanceDate: string;
   currentMileage: number;
   trackingDeviceId?: string;
-  initialLatitude?: number;
-  initialLongitude?: number;
   createdAt: string;
   updatedAt: string;
   driver?: Driver;
