@@ -9,7 +9,7 @@ import { Trip } from '../../../core/entities/trip.entity';
 const containerStyle = {
   width: '100%',
   height: '100%',
-  borderRadius: '8px'
+  borderRadius: '6px'
 };
 
 const defaultCenter = {

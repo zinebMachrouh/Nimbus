@@ -1,0 +1,163 @@
+/* Action Cards Section */
+.actions {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  grid-template-rows: repeat(2, 1fr);
+  gap: 12px;
+  margin-bottom: 15px;
+}
+
+.action-card {
+  background: white;
+  border-radius: 10px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease-out;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  position: relative;
+  overflow: hidden;
+  width: 100%;
+  height: 100%;
+  width: 48.5%;
+  height: 49%;
+  border: none !important;
+  outline: none !important;
+}
+
+.action-card::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 0;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.action-icon {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  transition: all 0.3s ease;
+  position: relative;
+  z-index: 1;
+}
+
+.action-icon svg {
+  width: 22px;
+  height: 22px;
+  transition: transform 0.3s ease;
+}
+
+.action-card span {
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: #555;
+  transition: color 0.3s ease;
+  position: relative;
+  z-index: 1;
+}
+
+/* Pixel animation */
+.action-card::after {
+  content: "";
+  position: absolute;
+  top: -100%;
+  left: -100%;
+  width: 300%;
+  height: 300%;
+  background: repeating-linear-gradient(
+    45deg,
+    var(--card-color),
+    var(--card-color) 3px,
+    transparent 3px,
+    transparent 12px
+  );
+  opacity: 0;
+  transition: opacity 0.5s ease;
+  z-index: 0;
+  animation: none;
+}
+
+.action-card:hover::after {
+  opacity: 0.2;
+  animation: pixel-flow 8s linear infinite;
+}
+
+@keyframes pixel-flow {
+  0% {
+    transform: translate(0, 0);
+  }
+  100% {
+    transform: translate(-33.33%, -33.33%);
+  }
+}
+
+/* Add a subtle glow effect on hover */
+.action-card:hover {
+  box-shadow: 0 5px 15px rgba(var(--card-color-rgb, 0, 0, 0), 0.15);
+}
+
+/* Pixel color variables with RGB values for box-shadow */
+.add-vehicle {
+  --card-color: #4f81a7;
+  --card-color-rgb: 79, 129, 167;
+}
+
+.add-vehicle .action-icon {
+  background-color: #4f81a7;
+}
+
+.add-vehicle:hover span {
+  color: #4f81a7;
+}
+
+.add-driver {
+  --card-color: #6c5ce7;
+  --card-color-rgb: 108, 92, 231;
+}
+
+.add-driver .action-icon {
+  background-color: #6c5ce7;
+}
+
+.add-driver:hover span {
+  color: #6c5ce7;
+}
+
+.add-route {
+  --card-color: #00b894;
+  --card-color-rgb: 0, 184, 148;
+}
+
+.add-route .action-icon {
+  background-color: #00b894;
+}
+
+.add-route:hover span {
+  color: #00b894;
+}
+
+.add-student {
+  --card-color: #e17055;
+  --card-color-rgb: 225, 112, 85;
+}
+
+.add-student .action-icon {
+  background-color: #e17055;
+}
+
+.add-student:hover span {
+  color: #e17055;
+} 
