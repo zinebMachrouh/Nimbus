@@ -36,4 +36,7 @@ public class CreateDriverRequest {
 
     @NotNull(message = "Vehicle ID is required")
     private Long vehicleId;
+
+    // Optional username - will be generated if not provided
+    private String username;
 } 

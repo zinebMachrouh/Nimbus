@@ -1,29 +1,22 @@
-import { BaseEntity } from './base.entity';
 import { School } from './school.entity';
-import { Trip } from './trip.entity';
+import { Stop } from './stop.entity';
 
 export enum RouteType {
-  MORNING_PICKUP = 'MORNING_PICKUP',
-  AFTERNOON_DROPOFF = 'AFTERNOON_DROPOFF'
+  PICKUP = 'PICKUP',
+  DROPOFF = 'DROPOFF',
+  ROUND_TRIP = 'ROUND_TRIP'
 }
 
-export interface RouteStop {
+export interface Route {
+  id: number;
   name: string;
-  address: string;
-  latitude: number;
-  longitude: number;
-  estimatedMinutesFromStart: number;
-}
-
-export interface Route extends BaseEntity {
-  name: string;
-  description: string;
-  trips?: Trip[];
-  school: School;
+  description?: string;
   type: RouteType;
-  stops: RouteStop[];
-  activeStudentsCount?: number;
-  completedTripsCount?: number;
-  totalDistance?: number;
-  estimatedDuration?: number;
+  stops?: Stop[];
+  school?: School;
+  distance?: number;
+  duration?: number;
+  active: boolean;
+  createdAt?: string;
+  updatedAt?: string;
 } 

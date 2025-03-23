@@ -32,4 +32,6 @@ public class CreateParentRequest {
     private Long schoolId;
 
     private List<Long> studentIds;
+    
+    private Boolean isActive = true; // Default to true
 } 

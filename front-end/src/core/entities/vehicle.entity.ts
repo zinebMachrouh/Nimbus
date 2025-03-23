@@ -16,14 +16,12 @@ export interface Vehicle {
   model: string;
   year: number;
   capacity: number;
-  status: 'ACTIVE' | 'INACTIVE' | 'MAINTENANCE' | 'CANCELLED';
+  status: VehicleStatus;
   insuranceExpiryDate: string;
   registrationExpiryDate: string;
   lastMaintenanceDate: string;
   currentMileage: number;
   trackingDeviceId?: string;
-  initialLatitude?: number;
-  initialLongitude?: number;
   createdAt: string;
   updatedAt: string;
   driver?: Driver;

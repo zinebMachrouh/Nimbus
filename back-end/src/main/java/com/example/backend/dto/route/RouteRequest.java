@@ -16,14 +16,12 @@ public class RouteRequest {
     @NotBlank(message = "Route name is required")
     private String name;
 
-    @NotBlank(message = "Description is required")
     private String description;
-
-    @NotNull(message = "School ID is required")
-    private Long schoolId;
 
     @NotNull(message = "Route type is required")
     private Route.RouteType type;
+
+    private Long schoolId;
 
     @NotEmpty(message = "At least one stop is required")
     @Valid

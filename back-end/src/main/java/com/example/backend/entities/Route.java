@@ -1,6 +1,8 @@
 package com.example.backend.entities;
 
 import com.example.backend.entities.base.BaseEntity;
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import lombok.Getter;
@@ -27,10 +29,12 @@ public class Route extends BaseEntity {
     private String description;
 
     @OneToMany(mappedBy = "route")
+    @JsonManagedReference("route-trip")
     private Set<Trip> trips = new HashSet<>();
 
     @ManyToOne
     @JoinColumn(name = "school_id", nullable = false)
+    @JsonBackReference("school-route")
     private School school;
 
     @Column(nullable = false)

@@ -3,8 +3,10 @@ package com.example.backend.repository;
 import com.example.backend.entities.user.User;
 import com.example.backend.repository.base.EmailAwareRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
 
 @Repository
@@ -20,7 +22,14 @@ public interface UserRepository extends EmailAwareRepository<User> {
     Optional<User> findByUsernameAndActiveTrue(String username);
     
     @Query("SELECT u FROM User u WHERE u.username = :username AND u.active = true")
-    Optional<User> findByUsernameForAuthentication(String username);
+    Optional<User> findByUsernameForAuthentication(@Param("username") String username);
+    
+    @Query("SELECT u FROM User u WHERE LOWER(u.username) = LOWER(:username) AND u.active = true")
+    Optional<User> findByUsernameIgnoreCaseForAuthentication(@Param("username") String username);
     
     boolean existsByUsername(String username);
+    
+    // Find users by role and active status
+    @Query("SELECT u FROM User u WHERE u.role = :role AND u.active = true")
+    List<User> findByRoleAndActiveTrue(@Param("role") User.Role role);
 } 

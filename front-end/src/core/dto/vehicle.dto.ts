@@ -13,8 +13,8 @@ export interface VehicleDTO extends BaseDTO {
   registrationExpiryDate: string
   lastMaintenanceDate: string
   trackingDeviceId?: string
-  initialLatitude?: number
-  initialLongitude?: number
+  currentLatitude?: number
+  currentLongitude?: number
 }
 
 export interface CreateVehicleRequest {
@@ -29,6 +29,8 @@ export interface CreateVehicleRequest {
   registrationExpiryDate: string
   lastMaintenanceDate: string
   trackingDeviceId?: string
+  currentLatitude?: number
+  currentLongitude?: number
   initialLatitude?: number
   initialLongitude?: number
   schoolId?: number
@@ -46,6 +48,8 @@ export interface UpdateVehicleRequest {
   registrationExpiryDate?: string
   lastMaintenanceDate?: string
   trackingDeviceId?: string
+  currentLatitude?: number
+  currentLongitude?: number
   initialLatitude?: number
   initialLongitude?: number
 } 

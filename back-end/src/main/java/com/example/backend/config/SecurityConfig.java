@@ -96,6 +96,8 @@ public class SecurityConfig {
                                 .requestMatchers("/api/test/**").permitAll()
                                 .requestMatchers("/ws/**").permitAll()
                                 .requestMatchers("/error").permitAll()
+                                .requestMatchers("/api/v1/auth/check-credentials").permitAll()
+                                .requestMatchers("/api/v1/auth/reset-password").permitAll()
                                 .requestMatchers("api/api/v1/admin/**").hasRole("ADMIN")
                                 .requestMatchers("api/api/v1/drivers/**").hasRole("DRIVER")
                                 .requestMatchers("api/api/v1/admin/parents/**").hasRole("PARENT")

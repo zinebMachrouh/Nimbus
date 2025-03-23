@@ -1,49 +1,102 @@
-import type { SchoolService } from "../SchoolService"
-import type { School } from "../../core/entities/school.entity"
-import type { CreateSchoolRequest, UpdateSchoolRequest } from "../../core/dto/school.dto"
-import { BaseHttpService } from "../BaseHttpService"
+import { SchoolService } from '../SchoolService';
+import { School } from '../../core/entities/school.entity';
+import { CreateSchoolRequest, UpdateSchoolRequest } from '../../core/dto/school.dto';
+import { BaseHttpService } from '../BaseHttpService';
+import { ApiResponse } from '../../core/models/ApiResponse';
 
 export class SchoolServiceImpl extends BaseHttpService implements SchoolService {
   constructor() {
-    super("/v1/admin/schools")
+    super('/v1/schools');
   }
 
   async findAll(): Promise<School[]> {
-    return this.get<School[]>()
+    const response = await this.get<ApiResponse<School[]>>();
+    return response.data;
   }
 
   async findById(id: number): Promise<School> {
-    return this.get<School>(`/${id}`)
+    const response = await this.get<ApiResponse<School>>(`/${id}`);
+    return response.data;
   }
 
   async create(schoolRequest: CreateSchoolRequest): Promise<School> {
-    console.log('Creating school with request:', schoolRequest)
-    try {
-      const result = await this.post<School>("", schoolRequest)
-      console.log('School creation successful:', result)
-      return result
-    } catch (error) {
-      console.error('Error creating school:', error)
-      // Check if the token exists in localStorage for debugging
-      const token = localStorage.getItem('token')
-      console.log('Auth token available:', !!token)
-      if (token) {
-        console.log('Token length:', token.length)
-      }
-      throw error
-    }
+    const response = await this.post<ApiResponse<School>>('', schoolRequest);
+    
+    return response.data;
   }
 
   async update(id: number, schoolRequest: UpdateSchoolRequest): Promise<School> {
-    return this.put<School>(`/${id}`, schoolRequest)
+    const response = await this.put<ApiResponse<School>>(`/${id}`, schoolRequest);
+    return response.data;
   }
 
   async deleteSchool(id: number): Promise<void> {
-    return this.delete<void>(`/${id}`)
+    await this.delete<ApiResponse<void>>(`/${id}`);
   }
 
-  async findSchoolsByAdmin(adminId: number): Promise<School[]> {
-    return this.get<School[]>(`/admin/${adminId}`)
+  async findNearbySchools(latitude: number, longitude: number, radiusInMeters: number): Promise<School[]> {
+    const response = await this.get<ApiResponse<School[]>>(
+      `/nearby?latitude=${latitude}&longitude=${longitude}&radiusInMeters=${radiusInMeters}`
+    );
+    return response.data;
+  }
+
+  async getSchoolStatistics(id: number): Promise<any> {
+    const response = await this.get<ApiResponse<any>>(`/${id}/statistics`);
+    return response.data;
+  }
+
+  async findSchoolsByNameContaining(name: string): Promise<School[]> {
+    const response = await this.get<ApiResponse<School[]>>(`/search?name=${encodeURIComponent(name)}`);
+    return response.data;
+  }
+
+  async getSchoolWithStudents(id: number): Promise<School> {
+    const response = await this.get<ApiResponse<School>>(`/${id}/with-students`);
+    return response.data;
+  }
+
+  async addStudent(schoolId: number, studentId: number): Promise<void> {
+    await this.post<ApiResponse<void>>(`/${schoolId}/students/${studentId}`);
+  }
+
+  async removeStudent(schoolId: number, studentId: number): Promise<void> {
+    await this.delete<ApiResponse<void>>(`/${schoolId}/students/${studentId}`);
+  }
+
+  async addRoute(schoolId: number, routeId: number): Promise<void> {
+    await this.post<ApiResponse<void>>(`/${schoolId}/routes/${routeId}`);
+  }
+
+  async removeRoute(schoolId: number, routeId: number): Promise<void> {
+    await this.delete<ApiResponse<void>>(`/${schoolId}/routes/${routeId}`);
+  }
+
+  async getSchoolsWithStats(): Promise<School[]> {
+    const response = await this.get<ApiResponse<School[]>>('/with-stats');
+    return response.data;
+  }
+
+  async countActiveSchools(): Promise<number> {
+    const response = await this.get<ApiResponse<number>>('/count/active');
+    return response.data;
+  }
+
+  // Alias methods for compatibility with SchoolService interface
+  async createSchool(schoolData: any): Promise<School> {
+    return this.create(schoolData);
+  }
+
+  async updateSchool(id: number, schoolData: any): Promise<School> {
+    return this.update(id, schoolData);
+  }
+
+  async getAllSchools(): Promise<School[]> {
+    return this.findAll();
+  }
+
+  async getSchoolById(id: number): Promise<School> {
+    return this.findById(id);
   }
 }
 

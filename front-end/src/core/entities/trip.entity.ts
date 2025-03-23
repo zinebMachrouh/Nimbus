@@ -1,8 +1,7 @@
-import { BaseEntity } from './base.entity';
-import { Route } from './route.entity';
 import { Driver } from './driver.entity';
+import { Route } from './route.entity';
 import { Vehicle } from './vehicle.entity';
-import { AttendanceEntity } from './attendance.entity.ts';
+import { Attendance } from './attendance.entity';
 
 export enum TripStatus {
   SCHEDULED = 'SCHEDULED',
@@ -11,14 +10,20 @@ export enum TripStatus {
   CANCELLED = 'CANCELLED'
 }
 
-export interface Trip extends BaseEntity {
-  route: Route;
-  driver: Driver;
-  vehicle: Vehicle;
-  scheduledDepartureTime: Date;
-  actualDepartureTime?: Date;
-  actualArrivalTime?: Date;
+export interface Trip {
+  id: number;
+  scheduledDepartureTime: string;
+  actualDepartureTime?: string;
+  scheduledArrivalTime?: string;
+  actualArrivalTime?: string;
   status: TripStatus;
-  attendances?: AttendanceEntity[];
   notes?: string;
+  cancellationReason?: string;
+  driver?: Driver;
+  vehicle?: Vehicle;
+  route?: Route;
+  attendances?: Attendance[];
+  active: boolean;
+  createdAt?: string;
+  updatedAt?: string;
 } 

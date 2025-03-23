@@ -1,20 +1,23 @@
-import { BaseEntity } from './base.entity';
 import { Student } from './student.entity';
 import { Trip } from './trip.entity';
 
 export enum AttendanceStatus {
-  PENDING = 'PENDING',
   PRESENT = 'PRESENT',
   ABSENT = 'ABSENT',
-  ABSENT_NOTIFIED = 'ABSENT_NOTIFIED',
+  LATE = 'LATE',
   EXCUSED = 'EXCUSED'
 }
 
-export interface AttendanceEntity extends BaseEntity {
+export interface Attendance {
+  id: number;
   student: Student;
   trip: Trip;
   status: AttendanceStatus;
-  scanTime?: Date;
+  scanTime: string;
   notes?: string;
-  parentNotified?: boolean;
+  notified: boolean;
+  notificationTime?: string;
+  active: boolean;
+  createdAt?: string;
+  updatedAt?: string;
 } 

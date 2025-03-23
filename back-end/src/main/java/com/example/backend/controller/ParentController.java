@@ -4,6 +4,7 @@ import com.example.backend.dto.response.ApiResponse;
 import com.example.backend.entities.Attendance;
 import com.example.backend.entities.Student;
 import com.example.backend.entities.Trip;
+import com.example.backend.entities.user.Parent;
 import com.example.backend.service.AttendanceService;
 import com.example.backend.service.ParentService;
 import com.example.backend.service.StudentService;
@@ -18,13 +19,14 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
 @RestController
 @RequestMapping("/api/v1/parents")
 @RequiredArgsConstructor
-@PreAuthorize("hasRole('PARENT')")
+@PreAuthorize("hasAnyRole('PARENT', 'ADMIN')")
 @Tag(name = "Parent", description = "Parent operations endpoints")
 @SecurityRequirement(name = "bearerAuth")
 public class ParentController {
@@ -32,6 +34,13 @@ public class ParentController {
     private final StudentService studentService;
     private final TripService tripService;
     private final AttendanceService attendanceService;
+
+    @Operation(summary = "Get All Parents By School Id")
+    @GetMapping("/school/{schoolId}")
+    public ResponseEntity<ApiResponse<List<Parent>>> getAllParentsBySchoolId(@PathVariable Long schoolId) {
+        List<Parent> parents = parentService.findBySchoolId(schoolId);
+        return ResponseEntity.ok(ApiResponse.success("Parents retrieved successfully", parents));
+    }
 
     // Children Management
     @Operation(summary = "Get all children")

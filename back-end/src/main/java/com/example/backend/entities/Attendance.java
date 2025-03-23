@@ -1,6 +1,7 @@
 package com.example.backend.entities;
 
 import com.example.backend.entities.base.BaseEntity;
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -15,10 +16,12 @@ public class Attendance extends BaseEntity {
     
     @ManyToOne
     @JoinColumn(name = "student_id", nullable = false)
+    @JsonBackReference("student-attendance")
     private Student student;
 
     @ManyToOne
     @JoinColumn(name = "trip_id", nullable = false)
+    @JsonBackReference("trip-attendance")
     private Trip trip;
 
     @Column(nullable = false)

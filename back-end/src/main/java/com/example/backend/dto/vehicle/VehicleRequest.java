@@ -43,4 +43,7 @@ public class VehicleRequest {
     private String trackingDeviceId;
     private Double initialLatitude;
     private Double initialLongitude;
+    
+    // School ID to directly associate a vehicle with a school
+    private Long schoolId;
 } 

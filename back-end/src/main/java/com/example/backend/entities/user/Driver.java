@@ -3,6 +3,9 @@ package com.example.backend.entities.user;
 import com.example.backend.entities.School;
 import com.example.backend.entities.Trip;
 import com.example.backend.entities.Vehicle;
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import lombok.Getter;
@@ -27,13 +30,16 @@ public class Driver extends User {
 
     @OneToOne
     @JoinColumn(name = "vehicle_id")
+    @JsonManagedReference("driver-vehicle")
     private Vehicle vehicle;
 
     @ManyToOne
     @JoinColumn(name = "school_id")
+    @JsonBackReference("school-driver")
     private School school;
 
     @OneToMany(mappedBy = "driver")
+    @JsonIgnore
     private Set<Trip> trips = new HashSet<>();
 
     @Column
@@ -43,6 +49,7 @@ public class Driver extends User {
     private Double currentLongitude;
 
     @Column(nullable = false)
+    @Enumerated(EnumType.STRING)
     private DriverStatus status = DriverStatus.AVAILABLE;
 
     @Transient

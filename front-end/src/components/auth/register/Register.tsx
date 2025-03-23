@@ -158,7 +158,7 @@ const UserRegistration = ({
         e.preventDefault()
 
         if (validateForm()) {
-            onSubmit(formData)
+        onSubmit(formData)
         }
     }
 
@@ -399,7 +399,7 @@ const SchoolRegistration = ({
     const handleFormSubmit = (e: React.FormEvent) => {
         e.preventDefault()
         if (validateForm()) {
-            onSubmit(formData)
+        onSubmit(formData)
         }
     }
 
@@ -643,7 +643,7 @@ const VehicleRegistration = ({
     const handleFormSubmit = (e: React.FormEvent) => {
         e.preventDefault()
         if (validateForm()) {
-            onSubmit(formData)
+        onSubmit(formData)
         }
     }
 
@@ -833,18 +833,18 @@ const VehicleRegistration = ({
                 </div>
 
                 <div className="form-row">
-                    <div className="form-field">
-                        <label htmlFor="lastMaintenanceDate">Last Maintenance Date</label>
-                        <div className="input-wrapper">
-                            <input
-                                id="lastMaintenanceDate"
-                                type="date"
-                                max={getCurrentDate()}
-                                value={formData.lastMaintenanceDate}
-                                onChange={(e) => handleInputChange("lastMaintenanceDate", e.target.value)}
+                <div className="form-field">
+                    <label htmlFor="lastMaintenanceDate">Last Maintenance Date</label>
+                    <div className="input-wrapper">
+                        <input
+                            id="lastMaintenanceDate"
+                            type="date"
+                            max={getCurrentDate()}
+                            value={formData.lastMaintenanceDate}
+                            onChange={(e) => handleInputChange("lastMaintenanceDate", e.target.value)}
                                 className={validationErrors.lastMaintenanceDate ? "error" : ""}
-                                required
-                            />
+                            required
+                        />
                         </div>
                         {validationErrors.lastMaintenanceDate && (
                             <div className="field-error">{validationErrors.lastMaintenanceDate}</div>
@@ -1070,7 +1070,7 @@ const Register = () => {
 
         try {
             console.log('Creating school with data from form')
-            
+
             const schoolRequest: CreateSchoolRequest = {
                 name: schoolData.schoolName,
                 address: schoolData.schoolAddress,
@@ -1088,10 +1088,10 @@ const Register = () => {
                 const response = await schoolService.create(schoolRequest)
 
                 console.log('School creation successful with direct API call:', response)
-                showToast("School registered successfully!", "success")
                 setSchoolId(response.id)
-                setRegistrationData(schoolData)
-                nextStep()
+                localStorage.setItem("school", JSON.stringify(response))
+            setRegistrationData(schoolData)
+            nextStep()
             } catch (fetchError: any) {
                 console.error('Direct API call failed:', fetchError)
                 throw fetchError
@@ -1122,15 +1122,21 @@ const Register = () => {
                 registrationExpiryDate: vehicleData.registrationExpiryDate,
                 lastMaintenanceDate: vehicleData.lastMaintenanceDate,
                 trackingDeviceId: vehicleData.trackingDeviceId || undefined,
-                initialLatitude: vehicleData.initialLatitude || undefined,
-                initialLongitude: vehicleData.initialLongitude || undefined,
                 //@ts-ignore
                 schoolId: schoolId,
+            }
+            
+            // Add coordinates only if they are defined and not zero
+            if (vehicleData.initialLatitude && vehicleData.initialLatitude !== 0) {
+                vehicleRequest.initialLatitude = vehicleData.initialLatitude;
+            }
+            
+            if (vehicleData.initialLongitude && vehicleData.initialLongitude !== 0) {
+                vehicleRequest.initialLongitude = vehicleData.initialLongitude;
             }
 
             console.log('Vehicle creation request:', vehicleRequest);
             
-            // Direct API call instead of using service
             const token = localStorage.getItem('token')
             if (!token) {
                 throw new Error("Authentication token not found")
@@ -1144,9 +1150,8 @@ const Register = () => {
                 
                 showToast("Registration completed successfully! Redirecting to dashboard...", "success")
                 
-                // Brief delay before redirect to show success message
                 setTimeout(() => {
-                    navigate("/dashboard")
+            navigate("/dashboard")
                 }, 2000)
                 
             } catch (fetchError: any) {
@@ -1178,8 +1183,17 @@ const Register = () => {
                 registrationExpiryDate: vehicleData.registrationExpiryDate,
                 lastMaintenanceDate: vehicleData.lastMaintenanceDate,
                 trackingDeviceId: vehicleData.trackingDeviceId || undefined,
-                initialLatitude: vehicleData.initialLatitude || undefined,
-                initialLongitude: vehicleData.initialLongitude || undefined,
+                //@ts-ignore
+                schoolId: schoolId,
+            }
+            
+            // Add coordinates only if they are defined and not zero
+            if (vehicleData.initialLatitude && vehicleData.initialLatitude !== 0) {
+                vehicleRequest.initialLatitude = vehicleData.initialLatitude;
+            }
+            
+            if (vehicleData.initialLongitude && vehicleData.initialLongitude !== 0) {
+                vehicleRequest.initialLongitude = vehicleData.initialLongitude;
             }
 
             console.log('Vehicle creation request:', vehicleRequest);
@@ -1209,8 +1223,8 @@ const Register = () => {
                     lastMaintenanceDate: "",
                     currentMileage: 0,
                     trackingDeviceId: "",
-                    initialLatitude: 0,
-                    initialLongitude: 0,
+                    currentLatitude: 0,
+                    currentLongitude: 0,
                 }
                 
                 setRegistrationData(resetVehicleData)

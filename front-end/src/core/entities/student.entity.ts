@@ -1,15 +1,19 @@
-import { BaseEntity } from './base.entity';
 import { School } from './school.entity';
 import { Parent } from './parent.entity';
 
-export interface Student extends BaseEntity {
+export interface Student {
+  id: number;
   firstName: string;
   lastName: string;
-  dateOfBirth: Date;
+  dateOfBirth: string;
   studentId: string;
   parent: Parent;
   school: School;
   seatNumber: number;
-  qrCode?: string;
+  grade: string;
+  qrCode: string;
   attendancePercentage?: number;
+  active: boolean;
+  createdAt?: string;
+  updatedAt?: string;
 } 

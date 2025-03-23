@@ -1,5 +1,5 @@
 import { AuthResponse, RegisterRequest } from '../core/dto/auth.dto';
-import {User} from "../core/entities/user.entity.ts";
+import { User } from "../core/entities/user.entity";
 
 export interface AuthService {
   isAuthenticated(): boolean;
@@ -7,5 +7,7 @@ export interface AuthService {
   logout(): Promise<void>;
   register(data: RegisterRequest): Promise<AuthResponse>;
   getCurrentUser(): Promise<User>;
+  hasRole(role: string): boolean;
+  getToken(): string;
 }
 

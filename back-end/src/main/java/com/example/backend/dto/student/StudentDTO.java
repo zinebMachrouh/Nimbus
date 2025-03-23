@@ -12,7 +12,6 @@ public class StudentDTO extends BaseDTO {
     private String firstName;
     private String lastName;
     private LocalDate dateOfBirth;
-    private String studentId;
     private Long parentId;
     private String parentName;
     private Long schoolId;

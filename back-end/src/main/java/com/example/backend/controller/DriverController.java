@@ -2,7 +2,6 @@ package com.example.backend.controller;
 
 import com.example.backend.dto.request.ReportIssueRequest;
 import com.example.backend.dto.response.ApiResponse;
-import com.example.backend.entities.Attendance;
 import com.example.backend.entities.Trip;
 import com.example.backend.entities.Vehicle;
 import com.example.backend.entities.user.Driver;
@@ -34,6 +33,13 @@ public class DriverController {
     private final DriverService driverService;
     private final VehicleService vehicleService;
     private final AttendanceService attendanceService;
+
+    @Operation(summary = "Get All Drivers By School")
+    @GetMapping("/school/{schoolId}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<List<Driver>> getAllDriversBySchoolId(@PathVariable Long schoolId) {
+        return ResponseEntity.ok(driverService.findBySchoolId(schoolId));
+    }
 
     @PostMapping("/trips/{tripId}/start")
     @PreAuthorize("hasRole('DRIVER')")
@@ -142,7 +148,6 @@ public class DriverController {
             Map.of("completedTrips", completedTrips)));
     }
 
-    // Issue Reporting
     @Operation(summary = "Report an issue")
     @PostMapping("/issues")
     public ResponseEntity<ApiResponse<?>> reportIssue(@Valid @RequestBody ReportIssueRequest request) {

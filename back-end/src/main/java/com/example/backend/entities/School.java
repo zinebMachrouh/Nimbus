@@ -2,7 +2,10 @@ package com.example.backend.entities;
 
 import com.example.backend.entities.base.BaseEntity;
 import com.example.backend.entities.user.Admin;
+import com.example.backend.entities.user.Driver;
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import lombok.*;
@@ -32,11 +35,23 @@ public class School extends BaseEntity {
 
     @OneToMany(mappedBy = "school")
     @Builder.Default
+    @JsonIgnore
     private Set<Student> students = new HashSet<>();
 
     @OneToMany(mappedBy = "school")
     @Builder.Default
+    @JsonIgnore
     private Set<Route> routes = new HashSet<>();
+    
+    @OneToMany(mappedBy = "school")
+    @Builder.Default
+    @JsonManagedReference("school-vehicle")
+    private Set<Vehicle> vehicles = new HashSet<>();
+    
+    @OneToMany(mappedBy = "school")
+    @Builder.Default
+    @JsonManagedReference("school-driver")
+    private Set<Driver> drivers = new HashSet<>();
 
     @Column
     private Double latitude;

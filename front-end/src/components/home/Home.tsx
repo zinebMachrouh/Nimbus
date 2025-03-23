@@ -18,7 +18,7 @@ const Home: React.FC = () => {
     };
 
     return (
-        <section id="dashboard">
+        <section id="home">
             <section className="left">
                 <div className="left-top">
                     <header>

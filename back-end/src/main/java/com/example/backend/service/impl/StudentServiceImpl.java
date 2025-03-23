@@ -56,16 +56,10 @@ public class StudentServiceImpl extends BaseServiceImpl<Student, StudentReposito
 
     @Override
     public List<Student> findByParentId(Long parentId) {
-        validateParentExists(parentId);
-        return repository.findByParentIdAndActiveTrue(parentId);
-    }
-
-    @Override
-    public Optional<Student> findByStudentId(String studentId) {
-        if (!StringUtils.hasText(studentId)) {
-            throw new ValidationException("Student ID cannot be empty");
+        if (parentId == null) {
+            throw new ValidationException("Parent ID cannot be null");
         }
-        return repository.findByStudentIdAndActiveTrue(studentId);
+        return repository.findByParentIdAndActiveTrue(parentId);
     }
 
     @Override
@@ -73,7 +67,7 @@ public class StudentServiceImpl extends BaseServiceImpl<Student, StudentReposito
         if (!StringUtils.hasText(qrCode)) {
             throw new ValidationException("QR code cannot be empty");
         }
-        return repository.findByQrCode(qrCode);
+        return repository.findByQrCodeAndActiveTrue(qrCode);
     }
 
     @Override
@@ -177,18 +171,17 @@ public class StudentServiceImpl extends BaseServiceImpl<Student, StudentReposito
     @Transactional
     public void generateQrCode(Long studentId) {
         log.debug("Generating QR code for student {}", studentId);
-        
         Student student = findStudentById(studentId);
         
-        // Generate a unique QR code using UUID and student information
-        String qrCode = String.format("NIMBUS-%s-%s-%s",
-            student.getStudentId(),
-            UUID.randomUUID().toString().substring(0, 8),
-            student.getSeatNumber());
-        
-        student.setQrCode(qrCode);
-        repository.save(student);
-        log.info("Successfully generated QR code for student {}", studentId);
+        // Only generate QR code after a seat number is assigned
+        if (student.getSeatNumber() != null) {
+            student.generateQRCode();
+            repository.save(student);
+            log.info("Generated QR code for student {}: {}", studentId, student.getQrCode());
+        } else {
+            log.warn("Cannot generate QR code for student {} as seat number is not assigned", studentId);
+            throw new ValidationException("Cannot generate QR code as seat number is not assigned");
+        }
     }
 
     @Override

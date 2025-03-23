@@ -3,6 +3,7 @@ package com.example.backend.repository;
 import com.example.backend.entities.Vehicle;
 import com.example.backend.repository.base.BaseRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -53,10 +54,13 @@ public interface VehicleRepository extends BaseRepository<Vehicle> {
     @Query("""
             SELECT v FROM Vehicle v 
             WHERE v.active = true 
-            AND EXISTS (
-                SELECT t FROM Trip t 
-                WHERE t.vehicle = v 
-                AND t.route.school.id = :schoolId
+            AND (
+                v.school.id = :schoolId
+                OR EXISTS (
+                    SELECT t FROM Trip t 
+                    WHERE t.vehicle = v 
+                    AND t.route.school.id = :schoolId
+                )
             )
             """)
     List<Vehicle> findVehiclesBySchool(Long schoolId);
@@ -91,4 +95,7 @@ public interface VehicleRepository extends BaseRepository<Vehicle> {
             AND t.status = com.example.backend.entities.Trip$TripStatus.COMPLETED
             """)
     long countCompletedTrips(Long vehicleId);
+
+    @Query("SELECT COUNT(v) FROM Vehicle v WHERE v.school.id = :schoolId AND v.active = true")
+    long countActiveVehiclesBySchool(@Param("schoolId") Long schoolId);
 } 

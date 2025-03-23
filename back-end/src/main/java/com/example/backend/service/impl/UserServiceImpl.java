@@ -19,6 +19,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 
 @Slf4j
@@ -175,7 +176,83 @@ public class UserServiceImpl extends BaseServiceImpl<User, UserRepository> imple
         return repository.findByUsernameForAuthentication(username);
     }
 
+    @Override
+    public List<User> findByRole(User.Role role) {
+        log.debug("Finding users by role: {}", role);
+        return repository.findByRoleAndActiveTrue(role);
+    }
+
+    @Override
+    public List<Parent> findAllParents() {
+        log.debug("Finding all active parents");
+        return parentRepository.findByActiveTrue();
+    }
+
+    @Override
+    public List<Parent> findAllParentsIncludingInactive() {
+        log.debug("Finding all parents including inactive ones");
+        return parentRepository.findAllIncludingInactive();
+    }
+
+    @Override
     @Transactional
+    public Parent updateParent(Long parentId, String firstName, String lastName, String email, 
+                            String phoneNumber, String address, String emergencyContact, String emergencyPhone) {
+        log.debug("Updating parent with ID: {}", parentId);
+        
+        Parent parent = parentRepository.findById(parentId)
+            .orElseThrow(() -> new EntityNotFoundException("Parent not found with ID: " + parentId));
+            
+        // Check if email is being changed and if the new email already exists
+        if (!parent.getEmail().equals(email) && repository.existsByEmail(email)) {
+            throw new IllegalArgumentException("Email already in use");
+        }
+        
+        parent.setFirstName(firstName);
+        parent.setLastName(lastName);
+        parent.setEmail(email);
+        parent.setPhoneNumber(phoneNumber);
+        parent.setAddress(address);
+        parent.setEmergencyContact(emergencyContact);
+        parent.setEmergencyPhone(emergencyPhone);
+        // Don't change active status here - let the controller handle it
+        
+        return parentRepository.save(parent);
+    }
+    
+    @Override
+    @Transactional
+    public void deleteParent(Long parentId) {
+        log.debug("Deleting parent with ID: {}", parentId);
+        
+        Parent parent = parentRepository.findById(parentId)
+            .orElseThrow(() -> new EntityNotFoundException("Parent not found with ID: " + parentId));
+            
+        // Check if parent has any students
+        long studentCount = studentRepository.countByParentIdAndActiveTrue(parentId);
+        if (studentCount > 0) {
+            throw new IllegalStateException("Cannot delete parent with associated students");
+        }
+        
+        // Soft delete by setting active to false instead of physically deleting
+        parent.setActive(false);
+        parentRepository.save(parent);
+    }
+    
+    @Override
+    @Transactional
+    public Parent toggleParentStatus(Long parentId, boolean isActive) {
+        log.debug("Toggling parent status with ID: {} to {}", parentId, isActive);
+        
+        Parent parent = parentRepository.findById(parentId)
+            .orElseThrow(() -> new EntityNotFoundException("Parent not found with ID: " + parentId));
+            
+        parent.setActive(isActive);
+        return parentRepository.save(parent);
+    }
+
+    @Transactional
+    @Override
     public Parent createParent(String firstName, String lastName, String email,
                              String password, String phoneNumber, String address) {
         if (repository.existsByEmail(email)) {
@@ -186,6 +263,21 @@ public class UserServiceImpl extends BaseServiceImpl<User, UserRepository> imple
         parent.setFirstName(firstName);
         parent.setLastName(lastName);
         parent.setEmail(email);
+        
+        // Generate username from first and last name
+        String username = generateUsername(firstName, lastName);
+        // Make sure the username is unique
+        if (existsByUsername(username)) {
+            // Add a number to make it unique
+            int counter = 1;
+            String baseUsername = username;
+            while (existsByUsername(username)) {
+                username = baseUsername + counter;
+                counter++;
+            }
+        }
+        parent.setUsername(username);
+        
         parent.setPassword(passwordEncoder.encode(password));
         parent.setPhoneNumber(phoneNumber);
         parent.setAddress(address);
@@ -196,9 +288,11 @@ public class UserServiceImpl extends BaseServiceImpl<User, UserRepository> imple
     }
 
     @Transactional
+    @Override
     public Driver createDriver(String firstName, String lastName, String email,
                              String password, String phoneNumber, String licenseNumber,
-                             LocalDateTime licenseExpiryDate, Long schoolId, Long vehicleId) {
+                             LocalDateTime licenseExpiryDate, Long schoolId, Long vehicleId,
+                             String providedUsername) {
         if (repository.existsByEmail(email)) {
             throw new IllegalArgumentException("Email already exists");
         }
@@ -219,6 +313,37 @@ public class UserServiceImpl extends BaseServiceImpl<User, UserRepository> imple
         driver.setFirstName(firstName);
         driver.setLastName(lastName);
         driver.setEmail(email);
+        
+        // Use provided username or generate one
+        String username;
+        if (providedUsername != null && !providedUsername.isEmpty()) {
+            username = providedUsername;
+            // Check if username exists
+            if (existsByUsername(username)) {
+                // Add a number to make it unique
+                int counter = 1;
+                String baseUsername = username;
+                while (existsByUsername(username)) {
+                    username = baseUsername + counter;
+                    counter++;
+                }
+            }
+        } else {
+            // Generate username from first and last name
+            username = generateUsername(firstName, lastName);
+            // Make sure the username is unique
+            if (existsByUsername(username)) {
+                // Add a number to make it unique
+                int counter = 1;
+                String baseUsername = username;
+                while (existsByUsername(username)) {
+                    username = baseUsername + counter;
+                    counter++;
+                }
+            }
+        }
+        driver.setUsername(username);
+        
         driver.setPassword(passwordEncoder.encode(password));
         driver.setPhoneNumber(phoneNumber);
         driver.setLicenseNumber(licenseNumber);
@@ -233,28 +358,74 @@ public class UserServiceImpl extends BaseServiceImpl<User, UserRepository> imple
     }
 
     @Transactional
+    @Override
     public Student createStudent(String firstName, String lastName, LocalDate dateOfBirth,
-                               String studentId, Long parentId, Long schoolId, Integer seatNumber) {
+                               Long parentId, Long schoolId, Integer seatNumber) {
         Parent parent = parentRepository.findByIdAndActiveTrue(parentId)
             .orElseThrow(() -> new IllegalArgumentException("Parent not found"));
 
         School school = schoolRepository.findByIdAndActiveTrue(schoolId)
             .orElseThrow(() -> new IllegalArgumentException("School not found"));
 
-        if (studentRepository.findByStudentIdAndActiveTrue(studentId).isPresent()) {
-            throw new IllegalArgumentException("Student ID already exists");
-        }
-
         Student student = new Student();
         student.setFirstName(firstName);
         student.setLastName(lastName);
         student.setDateOfBirth(dateOfBirth);
-        student.setStudentId(studentId);
         student.setParent(parent);
         student.setSchool(school);
         student.setSeatNumber(seatNumber);
         student.setActive(true);
 
         return studentRepository.save(student);
+    }
+
+    /**
+     * Generate a username from the first and last name
+     * @param firstName First name
+     * @param lastName Last name
+     * @return Generated username
+     */
+    private String generateUsername(String firstName, String lastName) {
+        // Remove spaces and special characters, then combine first and last name
+        String cleanFirstName = firstName.replaceAll("[^a-zA-Z0-9]", "").toLowerCase();
+        String cleanLastName = lastName.replaceAll("[^a-zA-Z0-9]", "").toLowerCase();
+        return cleanFirstName + "." + cleanLastName;
+    }
+
+    @Override
+    public Parent updateParent(Long parentId, String emergencyContact, String emergencyPhone) {
+        log.debug("Updating parent with ID: {}", parentId);
+        Parent parent = parentRepository.findById(parentId)
+                .orElseThrow(() -> new EntityNotFoundException("Parent not found with id: " + parentId));
+        parent.setEmergencyContact(emergencyContact);
+        parent.setEmergencyPhone(emergencyPhone);
+        // Don't change active status here - let the controller handle it
+        return parentRepository.save(parent);
+    }
+    
+    /**
+     * Ensures that a parent's active status is properly set and not null
+     * @param parent The parent entity to check
+     * @return The parent with active status set properly
+     */
+    @Override
+    public Parent ensureActiveStatus(Parent parent) {
+        Boolean activeStatus = parent.isActive();
+        if (activeStatus == null) {
+            log.debug("Setting null active status to true for parent: {}", parent.getId());
+            parent.setActive(true);
+            return parentRepository.save(parent);
+        }
+        return parent;
+    }
+
+    @Override
+    @Transactional
+    public Parent save(Parent parent) {
+        // Use the generic save method to handle password encoding if needed
+        if (parent.getId() == null && parent.getPassword() != null) {
+            parent.setPassword(passwordEncoder.encode(parent.getPassword()));
+        }
+        return parentRepository.save(parent);
     }
 }

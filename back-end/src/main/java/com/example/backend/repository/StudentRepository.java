@@ -12,10 +12,9 @@ import java.util.Optional;
 public interface StudentRepository extends BaseRepository<Student> {
     List<Student> findBySchoolIdAndActiveTrue(Long schoolId);
     List<Student> findByParentIdAndActiveTrue(Long parentId);
-    Optional<Student> findByStudentIdAndActiveTrue(String studentId);
     
     @Query("SELECT s FROM Student s WHERE s.qrCode = :qrCode AND s.active = true")
-    Optional<Student> findByQrCode(String qrCode);
+    Optional<Student> findByQrCodeAndActiveTrue(String qrCode);
     
     @Query("SELECT s FROM Student s " +
            "LEFT JOIN FETCH s.parent " +
@@ -32,8 +31,7 @@ public interface StudentRepository extends BaseRepository<Student> {
     @Query("SELECT s FROM Student s WHERE " +
            "s.active = true AND " +
            "(LOWER(s.firstName) LIKE LOWER(CONCAT('%', :query, '%')) OR " +
-           "LOWER(s.lastName) LIKE LOWER(CONCAT('%', :query, '%')) OR " +
-           "LOWER(s.studentId) LIKE LOWER(CONCAT('%', :query, '%')))")
+           "LOWER(s.lastName) LIKE LOWER(CONCAT('%', :query, '%')))")
     List<Student> searchStudents(String query);
 
     @Query("SELECT s FROM Student s " +
