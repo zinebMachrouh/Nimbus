@@ -1,10 +1,12 @@
 export interface Stop {
-  id: number;
+  id?: number;
   name: string;
+  address?: string;
   latitude: number;
   longitude: number;
   sequence: number;
-  active: boolean;
+  estimatedMinutesFromStart?: number;
+  active?: boolean;
   createdAt?: string;
   updatedAt?: string;
 } 

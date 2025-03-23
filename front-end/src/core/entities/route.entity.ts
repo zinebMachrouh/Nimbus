@@ -2,9 +2,8 @@ import { School } from './school.entity';
 import { Stop } from './stop.entity';
 
 export enum RouteType {
-  PICKUP = 'PICKUP',
-  DROPOFF = 'DROPOFF',
-  ROUND_TRIP = 'ROUND_TRIP'
+  MORNING_PICKUP = 'MORNING_PICKUP',
+  AFTERNOON_DROPOFF = 'AFTERNOON_DROPOFF'
 }
 
 export interface Route {

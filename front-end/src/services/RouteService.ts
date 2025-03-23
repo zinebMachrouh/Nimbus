@@ -4,6 +4,7 @@ export interface RouteService {
   getAllRoutes(): Promise<Route[]>;
   getRouteById(id: number): Promise<Route>;
   createRoute(routeData: any): Promise<Route>;
+  createRouteWithSchool(routeData: any): Promise<Route>;
   updateRoute(id: number, routeData: any): Promise<Route>;
   deleteRoute(id: number): Promise<void>;
   findBySchoolId(schoolId: number): Promise<Route[]>;
@@ -22,4 +23,9 @@ export interface RouteService {
   countCompletedTripsOnRoute(routeId: number): Promise<number>;
   calculateRouteDistance(routeId: number): Promise<number>;
   estimateRouteDuration(routeId: number): Promise<number>;
+  // Methods for route status and trip association checks
+  checkRouteTrips(routeId: number): Promise<{ tripCount: number }>;
+  updateRouteStatus(routeId: number, active: boolean): Promise<void>;
+  // Specific method for restoring inactive routes
+  restoreRoute(routeId: number): Promise<void>;
 } 

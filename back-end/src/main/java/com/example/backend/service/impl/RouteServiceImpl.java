@@ -143,6 +143,14 @@ public class RouteServiceImpl implements RouteService {
     @Override
     @Transactional
     public void addStop(Long routeId, String stopName, Double latitude, Double longitude, Integer sequence) {
+        // Call the new extended method with default values for address and estimatedMinutesFromStart
+        addStop(routeId, stopName, stopName, latitude, longitude, sequence, null);
+    }
+
+    @Override
+    @Transactional
+    public void addStop(Long routeId, String stopName, String address, Double latitude, Double longitude, 
+                        Integer sequence, Integer estimatedMinutesFromStart) {
         Route route = findRouteById(routeId);
         
         if (!StringUtils.hasText(stopName)) {
@@ -159,12 +167,27 @@ public class RouteServiceImpl implements RouteService {
         
         Route.RouteStop stop = new Route.RouteStop();
         stop.setName(stopName);
+        
+        // Set address - if not provided, use the stop name as fallback
+        stop.setAddress(StringUtils.hasText(address) ? address : stopName);
+        
         stop.setLatitude(latitude);
         stop.setLongitude(longitude);
-        stop.setEstimatedMinutesFromStart(calculateEstimatedMinutes(route.getStops(), sequence - 1));
+        
+        // If estimatedMinutesFromStart is provided, use it; otherwise, calculate it
+        if (estimatedMinutesFromStart != null) {
+            stop.setEstimatedMinutesFromStart(estimatedMinutesFromStart);
+        } else {
+            stop.setEstimatedMinutesFromStart(calculateEstimatedMinutes(route.getStops(), sequence - 1));
+        }
         
         route.getStops().add(sequence - 1, stop);
-        updateEstimatedTimes(route.getStops());
+        
+        // If we've used a custom estimatedMinutesFromStart, don't recalculate everything
+        if (estimatedMinutesFromStart == null) {
+            updateEstimatedTimes(route.getStops());
+        }
+        
         routeRepository.save(route);
     }
 

@@ -1438,19 +1438,6 @@ const StudentsList: React.FC = () => {
 
   return (
     <div className="students-list-container">
-      <div className="list-header">
-        <h2>Students Management</h2>
-        {isAuthenticated && (
-          <button className="btn-primary add-button" onClick={() => openModal('add')}>
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <line x1="12" y1="5" x2="12" y2="19"></line>
-              <line x1="5" y1="12" x2="19" y2="12"></line>
-            </svg>
-            <span>Add New Student</span>
-          </button>
-        )}
-      </div>
-      
       {isAuthenticated && students.length > 0 && (
         <div className="search-filter-container">
           <div className="search-box">
@@ -1476,6 +1463,15 @@ const StudentsList: React.FC = () => {
               ))}
             </select>
           </div>
+          {isAuthenticated && (
+            <button className="btn-primary add-button" onClick={() => openModal('add')}>
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <line x1="12" y1="5" x2="12" y2="19"></line>
+                <line x1="5" y1="12" x2="19" y2="12"></line>
+              </svg>
+              <span>Add New Student</span>
+            </button>
+          )}
         </div>
       )}
       
