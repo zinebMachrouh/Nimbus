@@ -107,7 +107,7 @@ const UsersList: React.FC = () => {
                                       (driver as any).active : true;
                         
                         return {
-                            id: driver.id,
+                        id: driver.id,
                             firstName: driver.firstName || '',
                             lastName: driver.lastName || '',
                             email: driver.email || '',
@@ -115,13 +115,13 @@ const UsersList: React.FC = () => {
                             address: driver.address || '',
                             licenseNumber: driver.licenseNumber || '',
                             licenseExpiryDate: driver.licenseExpiryDate || '',
-                            vehicleId: driver.vehicle?.id,
-                            status: driver.status,
-                            emergencyContact: undefined,
-                            emergencyPhone: undefined,
+                        vehicleId: driver.vehicle?.id,
+                        status: driver.status,
+                        emergencyContact: undefined,
+                        emergencyPhone: undefined,
                             active: isActive,
                             profileImage: driver.profileImage || '',
-                            userType: 'driver'
+                        userType: 'driver'
                         };
                     });
                     allUsers = [...formattedDrivers];
@@ -235,14 +235,13 @@ const UsersList: React.FC = () => {
             }
             const schoolId = JSON.parse(schoolData).id;
             
+            // Use VehicleServiceImpl to get vehicles
             const vehicleService = new VehicleServiceImpl();
             const vehiclesData = await vehicleService.findVehiclesBySchool(schoolId);
             
-            const availableVehicles = vehiclesData.filter((vehicle: Vehicle) => 
-                vehicle.status === 'AVAILABLE' || vehicle.status === 'OUT_OF_SERVICE'
-            );
+            // Only show available vehicles
+            setVehicles(vehiclesData);
             
-            setVehicles(availableVehicles);
         } catch (error) {
             console.error('Error fetching vehicles:', error);
         } finally {
@@ -357,6 +356,39 @@ const UsersList: React.FC = () => {
         }));
     };
 
+    // Get available vehicles for select dropdown
+    const getAvailableVehicles = () => {
+        // If in edit mode and a user is selected, include their currently assigned vehicle
+        // plus all available vehicles
+        if (modalType === 'edit' && selectedUser && selectedUser.vehicleId !== undefined) {
+            return vehicles.filter(v => 
+                v.id.toString() === String(selectedUser.vehicleId) || 
+                !v.driver
+            );
+        }
+        
+        // In add mode, only show truly available vehicles (without a driver)
+        return vehicles.filter(v => !v.driver);
+    };
+
+    // Helper function to check if a vehicle is already assigned to another driver
+    const isVehicleAlreadyAssigned = (vehicleId: string | number | undefined): boolean => {
+        if (!vehicleId) return false;
+        
+        // In edit mode, the vehicle might be assigned to the current driver (which is OK)
+        if (modalType === 'edit' && selectedUser?.vehicleId === vehicleId) {
+            return false;
+        }
+        
+        // Check if any driver (except the currently selected one) has this vehicle
+        return users.some(user => 
+            user.userType === 'driver' && 
+            user.vehicleId === vehicleId && 
+            (!selectedUser || user.id !== selectedUser.id)
+        );
+    };
+
+    // Validate form inputs
     const validateForm = () => {
         setOperationStatus({
             loading: false,
@@ -364,7 +396,7 @@ const UsersList: React.FC = () => {
             message: '',
         });
 
-        const { firstName, lastName, email, password, confirmPassword } = formData;
+        const { firstName, lastName, email, password, confirmPassword, vehicleId } = formData;
         
         if (!firstName || !lastName || !email) {
             setOperationStatus({
@@ -389,6 +421,16 @@ const UsersList: React.FC = () => {
                 loading: false,
                 success: false,
                 message: 'Passwords do not match.',
+            });
+            return false;
+        }
+        
+        // Check if the selected vehicle is already assigned to another driver
+        if (activeTab === 'driver' && vehicleId && isVehicleAlreadyAssigned(vehicleId)) {
+            setOperationStatus({
+                loading: false,
+                success: false,
+                message: 'This vehicle is already assigned to another driver. Please select a different vehicle.',
             });
             return false;
         }
@@ -430,6 +472,20 @@ const UsersList: React.FC = () => {
                 return `${dateString}T00:00:00`;
             };
             
+            // Check if a vehicle is selected and if it's already in use by another driver
+            if (activeTab === 'driver' && formData.vehicleId) {
+                // Use our isVehicleAlreadyAssigned function for consistent validation
+                if (isVehicleAlreadyAssigned(formData.vehicleId)) {
+                    setOperationStatus({
+                        loading: false,
+                        success: false,
+                        message: 'This vehicle is already assigned to another driver. Please select a different vehicle.',
+                    });
+                    return;
+                }
+            }
+            
+            // Continue with create/edit logic
             if (modalType === 'add') {
                 if (activeTab === 'driver') {
                     const driverData = {
@@ -452,7 +508,15 @@ const UsersList: React.FC = () => {
                     
                     console.log("Creating driver with status:", formData.status);
                     await adminService.createDriver(driverData);
+                    
+                    // If a vehicle was assigned, mark it as in use
+                    if (formData.vehicleId) {
+                        const vehicleService = new VehicleServiceImpl();
+                        await vehicleService.markAsUnavailable(parseInt(formData.vehicleId));
+                        console.log(`Vehicle ${formData.vehicleId} marked as IN_USE`);
+                    }
                 } else {
+                    // Parent code remains unchanged
                     const parentData = {
                         firstName: formData.firstName,
                         lastName: formData.lastName,
@@ -478,9 +542,15 @@ const UsersList: React.FC = () => {
                 });
                 
                 await fetchUsers();
+                await fetchVehicles();
                 
             } else if (modalType === 'edit' && selectedUser) {
                 if (activeTab === 'driver') {
+                    // Check if vehicle assignment has changed
+                    const previousVehicleId = selectedUser.vehicleId;
+                    const newVehicleId = formData.vehicleId ? parseInt(formData.vehicleId) : undefined;
+                    const vehicleChanged = previousVehicleId !== newVehicleId;
+                    
                     const driverData = {
                         firstName: formData.firstName,
                         lastName: formData.lastName,
@@ -496,7 +566,25 @@ const UsersList: React.FC = () => {
                     
                     console.log("Updating driver with status:", formData.status);
                     await driverService.updateDriver(selectedUser.id, driverData);
+                    
+                    // Update vehicle status if assignment changed
+                    if (vehicleChanged) {
+                        const vehicleService = new VehicleServiceImpl();
+                        
+                        // If there was a previous vehicle, mark it as available
+                        if (previousVehicleId) {
+                            await vehicleService.markAsAvailable(Number(previousVehicleId));
+                            console.log(`Previous vehicle ${previousVehicleId} marked as AVAILABLE`);
+                        }
+                        
+                        // If there's a new vehicle, mark it as in use
+                        if (newVehicleId) {
+                            await vehicleService.markAsUnavailable(newVehicleId);
+                            console.log(`New vehicle ${newVehicleId} marked as IN_USE`);
+                        }
+                    }
                 } else {
+                    // Parent update code remains unchanged
                     const parentData = {
                         firstName: formData.firstName,
                         lastName: formData.lastName,
@@ -519,18 +607,39 @@ const UsersList: React.FC = () => {
                 });
                 
                 await fetchUsers();
+                await fetchVehicles();
             }
             
             setTimeout(() => {
                 closeModal();
             }, 1500);
             
-        } catch (error) {
+        } catch (error: any) {
             console.error('Operation failed:', error);
+            
+            // Extract error message and provide user-friendly message
+            let errorMessage = `Failed to ${modalType} ${activeTab === 'driver' ? 'driver' : 'parent'}.`;
+            
+            // Check if this is a server error with response data
+            if (error.response?.data?.message) {
+                errorMessage = error.response.data.message;
+            } 
+            // Check if this is an API error with details in the error object
+            else if (error.message) {
+                // Check for specific error types
+                if (error.message.includes("duplicate key value") && error.message.includes("vehicle_id")) {
+                    errorMessage = "This vehicle is already assigned to another driver. Please select a different vehicle.";
+                } else if (error.message.includes("constraint")) {
+                    errorMessage = "There was a database constraint violation. Please check your input.";
+                } else {
+                    errorMessage = error.message;
+                }
+            }
+            
             setOperationStatus({
                 loading: false,
                 success: false,
-                message: `Failed to ${modalType} ${activeTab === 'driver' ? 'driver' : 'parent'}.`,
+                message: errorMessage,
             });
         }
     };
@@ -627,12 +736,12 @@ const UsersList: React.FC = () => {
             <div className="user-card" key={user.id}>
                 <div className="user-card-content">
                     <div className="user-avatar">
-                        {user.profileImage ? (
+                    {user.profileImage ? (
                             <img src={user.profileImage} alt={`${user.firstName} ${user.lastName}`} />
                         ) : (
                             <div className="user-initials">{userInitials}</div>
-                        )}
-                    </div>
+                    )}
+                </div>
                     
                     <div className="user-details">
                         <h3 className="user-name">{user.firstName} {user.lastName}</h3>
@@ -648,8 +757,8 @@ const UsersList: React.FC = () => {
                             <span className={`user-badge user-status-badge ${!user.active ? 'inactive' : ''}`}>
                                 {user.active ? 'Active' : 'Inactive'}
                             </span>
-                        </div>
                     </div>
+                </div>
                 </div>
                 
                 <div className="user-card-actions">
@@ -794,15 +903,26 @@ const UsersList: React.FC = () => {
                                                 name="vehicleId"
                                                 value={formData.vehicleId}
                                                 onChange={handleInputChange}
+                                                className={isVehicleAlreadyAssigned(formData.vehicleId) ? 'vehicle-warning' : ''}
                                             >
                                                 <option value="">-- Select Vehicle --</option>
-                                                {vehicles.map(vehicle => (
-                                                    <option key={vehicle.id} value={vehicle.id}>
+                                                {getAvailableVehicles().map(vehicle => (
+                                                    <option 
+                                                        key={vehicle.id} 
+                                                        value={vehicle.id}
+                                                        disabled={vehicle.driver && modalType === 'add'}
+                                                    >
                                                         {vehicle.licensePlate} - {vehicle.make} {vehicle.model}
+                                                        {vehicle.driver && vehicle.driver.id !== (selectedUser?.id || '') ? ' (Assigned)' : ''}
                                                     </option>
                                                 ))}
                                             </select>
                                             {loadingVehicles && <div className="loading-inline">Loading vehicles...</div>}
+                                            {formData.vehicleId && isVehicleAlreadyAssigned(formData.vehicleId) && (
+                                                <div className="warning-text">
+                                                    This vehicle is already assigned to another driver
+                                                </div>
+                                            )}
                                         </div>
                                         <div className="form-group">
                                             <label htmlFor="status">Status *</label>
@@ -1088,18 +1208,18 @@ const UsersList: React.FC = () => {
     return ( 
         <div className="users-list-container">
             <div className="search-filter-container">
-                <button 
-                    className={`tab-button ${activeTab === 'driver' ? 'active' : ''}`}
-                    onClick={() => setActiveTab('driver')}
-                >
-                    Drivers
-                </button>
-                <button 
-                    className={`tab-button ${activeTab === 'parent' ? 'active' : ''}`}
-                    onClick={() => setActiveTab('parent')}
-                >
-                    Parents
-                </button>
+                    <button 
+                        className={`tab-button ${activeTab === 'driver' ? 'active' : ''}`}
+                        onClick={() => setActiveTab('driver')}
+                    >
+                        Drivers
+                    </button>
+                    <button 
+                        className={`tab-button ${activeTab === 'parent' ? 'active' : ''}`}
+                        onClick={() => setActiveTab('parent')}
+                    >
+                        Parents
+                    </button>
                 <div className="search-input-container">
                     <FaSearch className="search-icon" />
                     <input

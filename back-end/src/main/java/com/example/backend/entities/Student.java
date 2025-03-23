@@ -27,9 +27,6 @@ public class Student extends BaseEntity {
     @Column(nullable = false)
     private LocalDate dateOfBirth;
 
-    @Column(nullable = false, unique = true)
-    private String studentId;
-
     @ManyToOne
     @JoinColumn(name = "parent_id", nullable = false)
     @JsonBackReference("parent-student")
@@ -40,7 +37,7 @@ public class Student extends BaseEntity {
     @JsonBackReference("school-student")
     private School school;
 
-    @Column(nullable = false)
+    @Column
     private Integer seatNumber;
 
     @Column
@@ -51,11 +48,14 @@ public class Student extends BaseEntity {
     @Transient
     private Double attendancePercentage;
 
-    @PrePersist
-    private void generateQRCode() {
-        if (qrCode == null) {
-            // Generate QR code based on student ID and other information
-            this.qrCode = String.format("NIMBUS-STD-%s-%d", studentId, seatNumber);
+    /**
+     * QR code will be generated after a route is assigned to the student
+     * This is called programmatically, not via PrePersist
+     */
+    public void generateQRCode() {
+        if (this.getId() != null) {
+            // Generate QR code based on student ID
+            this.qrCode = String.format("NIMBUS-STD-%d", this.getId());
         }
     }
 } 

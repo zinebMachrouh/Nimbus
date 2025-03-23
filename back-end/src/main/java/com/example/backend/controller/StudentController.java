@@ -3,6 +3,8 @@ package com.example.backend.controller;
 import com.example.backend.dto.response.ApiResponse;
 import com.example.backend.dto.student.StudentRequest;
 import com.example.backend.entities.Student;
+import com.example.backend.service.ParentService;
+import com.example.backend.service.SchoolService;
 import com.example.backend.service.StudentService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -25,6 +27,8 @@ import java.util.Optional;
 @SecurityRequirement(name = "bearerAuth")
 public class StudentController {
     private final StudentService studentService;
+    private final SchoolService schoolService;
+    private final ParentService parentService;
 
     @Operation(summary = "Get all students")
     @GetMapping
@@ -57,10 +61,12 @@ public class StudentController {
         student.setFirstName(studentRequest.getFirstName());
         student.setLastName(studentRequest.getLastName());
         student.setDateOfBirth(studentRequest.getDateOfBirth());
-        student.setStudentId(generateStudentId(studentRequest.getFirstName(), studentRequest.getLastName()));
-        student.setSeatNumber(1); 
         student.setGrade(studentRequest.getGrade());
         student.setActive(true);
+        
+        // Add school and parent
+        student.setSchool(schoolService.findById(studentRequest.getSchoolId()));
+        student.setParent(parentService.findById(studentRequest.getParentId()));
         
         return ResponseEntity.ok(ApiResponse.success(studentService.save(student)));
     }
@@ -100,15 +106,6 @@ public class StudentController {
     @PreAuthorize("hasAnyRole('ADMIN', 'PARENT')")
     public ResponseEntity<ApiResponse<List<Student>>> findByParentId(@PathVariable Long parentId) {
         return ResponseEntity.ok(ApiResponse.success(studentService.findByParentId(parentId)));
-    }
-
-    @Operation(summary = "Find student by student ID")
-    @GetMapping("/student-id/{studentId}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'DRIVER')")
-    public ResponseEntity<ApiResponse<Student>> findByStudentId(@PathVariable String studentId) {
-        Optional<Student> student = studentService.findByStudentId(studentId);
-        return student.map(s -> ResponseEntity.ok(ApiResponse.success(s)))
-                .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
     @Operation(summary = "Find student by QR code")
@@ -219,12 +216,15 @@ public class StudentController {
     public ResponseEntity<ApiResponse<List<Student>>> findStudentsByRoute(@PathVariable Long routeId) {
         return ResponseEntity.ok(ApiResponse.success(studentService.findStudentsByRoute(routeId)));
     }
-    
-    /**
-     * Helper method to generate a student ID
-     */
-    private String generateStudentId(String firstName, String lastName) {
-        String initials = firstName.substring(0, 1) + lastName.substring(0, 1);
-        return initials.toUpperCase() + "-" + System.currentTimeMillis() % 10000;
+
+    @Operation(summary = "Set student active status")
+    @PutMapping("/{id}/active")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<ApiResponse<Student>> setStudentActive(
+            @PathVariable Long id,
+            @RequestParam boolean active) {
+        Student student = studentService.findById(id);
+        student.setActive(active);
+        return ResponseEntity.ok(ApiResponse.success(studentService.save(student)));
     }
 } 

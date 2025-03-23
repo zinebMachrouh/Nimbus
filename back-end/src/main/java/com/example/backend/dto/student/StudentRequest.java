@@ -24,13 +24,6 @@ public class StudentRequest {
     @NotBlank(message = "Grade is required")
     private String grade;
 
-    private String address;
-    private String city;
-    private String state;
-    private String zipCode;
-    private String emergencyContact;
-    private String emergencyPhone;
-    private String medicalNotes;
 
     @NotNull(message = "School ID is required")
     private Long schoolId;

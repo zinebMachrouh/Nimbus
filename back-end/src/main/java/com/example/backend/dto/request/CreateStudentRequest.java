@@ -29,10 +29,8 @@ public class CreateStudentRequest {
     @NotNull(message = "Date of birth is required")
     private LocalDate dateOfBirth;
 
-    @NotNull(message = "Student ID is required")
     private Long studentId;
 
-    @NotNull(message = "Seat number is required")
     private Integer seatNumber;
 
     private String pickupAddress;

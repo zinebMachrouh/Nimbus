@@ -183,8 +183,7 @@ public class AdminController {
     public ResponseEntity<ApiResponse<Student>> createStudent(@Valid @RequestBody CreateStudentRequest request) {
         Student student = userService.createStudent(
             request.getFirstName(), request.getLastName(), request.getDateOfBirth(),
-            String.valueOf(request.getStudentId()), request.getParentId(), request.getSchoolId(),
-            request.getSeatNumber()
+            request.getParentId(), request.getSchoolId(), request.getSeatNumber()
         );
         return ResponseEntity.ok(ApiResponse.success("Student created successfully", student));
     }

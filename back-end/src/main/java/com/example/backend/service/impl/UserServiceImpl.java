@@ -360,22 +360,17 @@ public class UserServiceImpl extends BaseServiceImpl<User, UserRepository> imple
     @Transactional
     @Override
     public Student createStudent(String firstName, String lastName, LocalDate dateOfBirth,
-                               String studentId, Long parentId, Long schoolId, Integer seatNumber) {
+                               Long parentId, Long schoolId, Integer seatNumber) {
         Parent parent = parentRepository.findByIdAndActiveTrue(parentId)
             .orElseThrow(() -> new IllegalArgumentException("Parent not found"));
 
         School school = schoolRepository.findByIdAndActiveTrue(schoolId)
             .orElseThrow(() -> new IllegalArgumentException("School not found"));
 
-        if (studentRepository.findByStudentIdAndActiveTrue(studentId).isPresent()) {
-            throw new IllegalArgumentException("Student ID already exists");
-        }
-
         Student student = new Student();
         student.setFirstName(firstName);
         student.setLastName(lastName);
         student.setDateOfBirth(dateOfBirth);
-        student.setStudentId(studentId);
         student.setParent(parent);
         student.setSchool(school);
         student.setSeatNumber(seatNumber);

@@ -32,7 +32,7 @@ public interface UserService extends BaseService<User>, UserDetailsService {
                        LocalDateTime licenseExpiryDate, Long schoolId, Long vehicleId, String username);
 
     Student createStudent(String firstName, String lastName, LocalDate dateOfBirth,
-                         String studentId, Long parentId, Long schoolId, Integer seatNumber);
+                         Long parentId, Long schoolId, Integer seatNumber);
 
     Optional<User> findByUsername(String username);
     boolean existsByUsername(String username);

@@ -9,6 +9,7 @@ import Dashboard from './components/dashboard/Dashboard'
 import AdminDashboard from './components/dashboard/admin/AdminDashboard'
 import VehiclesList from './components/dashboard/admin/vehicles/VehiclesList'
 import UsersList from './components/dashboard/admin/users/UsersList'
+import StudentsList from './components/dashboard/admin/students/StudentsList'
 
 const App: React.FC = () => {
   return (
@@ -21,6 +22,7 @@ const App: React.FC = () => {
           <Route path="admin" element={<AdminDashboard />} />
           <Route path='vehicles' element={<VehiclesList />} />
           <Route path='users' element={<UsersList />} />
+          <Route path='students' element={<StudentsList />} />
         </Route>
         <Route path="*" element={<Navigate to="/" />} />
       </Routes>

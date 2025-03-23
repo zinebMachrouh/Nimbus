@@ -10,7 +10,6 @@ import java.util.Optional;
 public interface StudentService extends BaseService<Student> {
     List<Student> findBySchoolId(Long schoolId);
     List<Student> findByParentId(Long parentId);
-    Optional<Student> findByStudentId(String studentId);
     Optional<Student> findByQrCode(String qrCode);
     Optional<Student> findByIdWithDetails(Long id);
     List<Student> searchStudents(String query);
