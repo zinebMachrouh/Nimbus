@@ -20,6 +20,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -32,6 +33,13 @@ public class DriverController {
     private final DriverService driverService;
     private final VehicleService vehicleService;
     private final AttendanceService attendanceService;
+
+    @Operation(summary = "Get All Drivers By School")
+    @GetMapping("/school/{schoolId}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<List<Driver>> getAllDriversBySchoolId(@PathVariable Long schoolId) {
+        return ResponseEntity.ok(driverService.findBySchoolId(schoolId));
+    }
 
     @PostMapping("/trips/{tripId}/start")
     @PreAuthorize("hasRole('DRIVER')")

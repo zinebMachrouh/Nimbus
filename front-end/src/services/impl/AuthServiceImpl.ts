@@ -30,12 +30,15 @@ export class AuthServiceImpl extends BaseHttpService implements AuthService {
     async logout(): Promise<void> {
         try {
             const token = this.getToken();
-            await this.post('/logout', {}, {
-                headers: {
-                    Authorization: `Bearer ${token}`
-                }
-            });
             this.clearTokens();
+            
+            if (token) {
+                await this.post('/logout', {}, {
+                    headers: {
+                        Authorization: `Bearer ${token}`
+                    }
+                });
+            }
         } catch (error) {
             console.error('Logout failed:', error);
             this.clearTokens();

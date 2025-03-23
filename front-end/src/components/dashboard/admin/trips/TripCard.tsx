@@ -80,7 +80,7 @@ const TripCard = ({trip}: {trip: Trip}) => {
                 </div>
             </div>
         </div>
-    );
+     );
 }
-
+ 
 export default TripCard;

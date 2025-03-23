@@ -2,13 +2,10 @@ package com.example.backend.dto.request;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 
-import java.util.List;
-
 @Data
-public class CreateParentRequest {
+public class UpdateParentRequest {
     @NotBlank(message = "First name is required")
     private String firstName;
 
@@ -19,19 +16,15 @@ public class CreateParentRequest {
     @Email(message = "Invalid email format")
     private String email;
 
-    @NotBlank(message = "Password is required")
-    private String password;
-
     @NotBlank(message = "Phone number is required")
     private String phoneNumber;
 
     @NotBlank(message = "Address is required")
     private String address;
-
-    @NotNull(message = "School ID is required")
-    private Long schoolId;
-
-    private List<Long> studentIds;
+    
+    // Additional fields specific to parents
+    private String emergencyContact;
+    private String emergencyPhone;
     
     private Boolean isActive = true; // Default to true
 } 

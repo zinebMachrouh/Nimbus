@@ -83,7 +83,7 @@ export class HttpInterceptor {
       console.error('Details:', apiError);
     }
     
-    if (apiError.isAuthError) {
+    if (apiError.statusCode === 401) {
       localStorage.removeItem('token');
       localStorage.removeItem('currentUser');
       

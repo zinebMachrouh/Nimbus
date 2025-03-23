@@ -2,6 +2,7 @@ package com.example.backend.entities;
 
 import com.example.backend.entities.base.BaseEntity;
 import com.example.backend.entities.user.Parent;
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import lombok.Getter;
@@ -31,10 +32,12 @@ public class Student extends BaseEntity {
 
     @ManyToOne
     @JoinColumn(name = "parent_id", nullable = false)
+    @JsonBackReference("parent-student")
     private Parent parent;
 
     @ManyToOne
     @JoinColumn(name = "school_id", nullable = false)
+    @JsonBackReference("school-student")
     private School school;
 
     @Column(nullable = false)

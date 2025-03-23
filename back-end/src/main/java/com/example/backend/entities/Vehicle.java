@@ -2,6 +2,9 @@ package com.example.backend.entities;
 
 import com.example.backend.entities.base.BaseEntity;
 import com.example.backend.entities.user.Driver;
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import lombok.Getter;
@@ -48,13 +51,16 @@ public class Vehicle extends BaseEntity {
     private Double currentMileage;
 
     @OneToOne(mappedBy = "vehicle")
+    @JsonBackReference("driver-vehicle")
     private Driver driver;
 
     @ManyToOne
     @JoinColumn(name = "school_id")
+    @JsonBackReference("school-vehicle")
     private School school;
 
     @OneToMany(mappedBy = "vehicle")
+    @JsonIgnore
     private Set<Trip> trips = new HashSet<>();
 
     @Column

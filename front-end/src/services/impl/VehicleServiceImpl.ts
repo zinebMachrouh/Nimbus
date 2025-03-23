@@ -20,6 +20,15 @@ export class VehicleServiceImpl extends BaseHttpService implements VehicleServic
   }
 
   async create(vehicleRequest: CreateVehicleRequest): Promise<Vehicle> {
+    // Ensure coordinates are passed correctly to both fields
+    if (vehicleRequest.initialLatitude !== undefined && vehicleRequest.initialLatitude !== 0) {
+      vehicleRequest.currentLatitude = vehicleRequest.initialLatitude;
+    }
+    
+    if (vehicleRequest.initialLongitude !== undefined && vehicleRequest.initialLongitude !== 0) {
+      vehicleRequest.currentLongitude = vehicleRequest.initialLongitude;
+    }
+    
     const response = await this.post<ApiResponse<Vehicle>>('', vehicleRequest);
     return response.data;
   }
@@ -129,4 +138,3 @@ export class VehicleServiceImpl extends BaseHttpService implements VehicleServic
     return response.data;
   }
 }
-

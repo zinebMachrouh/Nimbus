@@ -71,4 +71,12 @@ public interface ParentRepository extends EmailAwareRepository<Parent> {
     long countActiveUsersByRole(@Param("role") Parent.Role role);
     
     Optional<Parent> findByEmail(String email);
+    
+    // Find all active parents
+    @Query("SELECT p FROM Parent p WHERE p.active = true")
+    List<Parent> findByActiveTrue();
+    
+    // Find all parents including inactive ones
+    @Query("SELECT p FROM Parent p")
+    List<Parent> findAllIncludingInactive();
 }

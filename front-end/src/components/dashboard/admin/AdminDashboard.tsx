@@ -19,19 +19,19 @@ const AdminDashboard = () => {
                 <div className="stats">
                     <div className="stat">
                         <h3>Vehicles</h3>
-                        <p>{vehicles.length}</p>
+                        <p>{vehicles?.length || 0}</p>
                     </div>
                     <div className="stat">
                         <h3>Routes</h3>
-                        <p>{routes.length}</p>
+                        <p>{routes?.length || 0}</p>
                     </div>
                     <div className="stat">
                         <h3>Active Trips</h3>
-                        <p>{activeTripsPercentage}%</p>
+                        <p>{activeTripsPercentage || 0}%</p>
                     </div>
                     <div className="stat">
                         <h3>Attendance</h3>
-                        <p>{attendancePercentage}%</p>
+                        <p>{attendancePercentage || 0}%</p>
                     </div>
                     
                 </div>
@@ -39,21 +39,21 @@ const AdminDashboard = () => {
                     <div className="big-stat">
                         <p>
                             <PiStudent className="stat-icon"/>
-                            <strong>{students.length.toString().padStart(2, '0')}</strong>
+                            <strong>{(students?.length || 0).toString().padStart(2, '0')}</strong>
                         </p>
                         <span>Students</span>
                     </div>
                     <div className="big-stat">
                         <p>
                             <RiParentLine className="stat-icon"/>
-                            <strong>{parents.length.toString().padStart(2, '0')}</strong>
+                            <strong>{(parents?.length || 0).toString().padStart(2, '0')}</strong>
                         </p>
                         <span>Parents</span>
                     </div>
                     <div className="big-stat">
                         <p>
                             <CiRoute className="stat-icon"/>
-                            <strong>{drivers.length.toString().padStart(2, '0')}</strong>
+                            <strong>{(drivers?.length || 0).toString().padStart(2, '0')}</strong>
                         </p>
                         <span>Drivers</span>
                     </div>
@@ -66,10 +66,10 @@ const AdminDashboard = () => {
                 <div className="active-trips-container">
                     <h3>Current Trips</h3>
                     <div className="active-trips-list">
-                        {trips.filter(trip => trip.active && trip.status === TripStatus.IN_PROGRESS).map(trip => (
+                        {trips?.filter(trip => trip.active && trip.status === TripStatus.IN_PROGRESS).map(trip => (
                             <TripCard key={trip.id} trip={trip} />
                         ))}
-                        {trips.filter(trip => trip.active && trip.status === TripStatus.IN_PROGRESS).length === 0 && (
+                        {(trips?.filter(trip => trip.active && trip.status === TripStatus.IN_PROGRESS).length || 0) === 0 && (
                             <div className="active-trips-list-empty">
                                 <p>No active trips</p>
                             </div>

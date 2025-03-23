@@ -2,6 +2,8 @@ package com.example.backend.entities;
 
 import com.example.backend.entities.base.BaseEntity;
 import com.example.backend.entities.user.Driver;
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -18,14 +20,17 @@ public class Trip extends BaseEntity {
     
     @ManyToOne
     @JoinColumn(name = "route_id", nullable = false)
+    @JsonBackReference("route-trip")
     private Route route;
 
     @ManyToOne
     @JoinColumn(name = "driver_id", nullable = false)
+    @JsonBackReference("driver-trip")
     private Driver driver;
 
     @ManyToOne
     @JoinColumn(name = "vehicle_id", nullable = false)
+    @JsonBackReference("vehicle-trip")
     private Vehicle vehicle;
 
     @Column(nullable = false)
@@ -42,6 +47,7 @@ public class Trip extends BaseEntity {
     private TripStatus status = TripStatus.SCHEDULED;
 
     @OneToMany(mappedBy = "trip")
+    @JsonIgnore
     private Set<Attendance> attendances = new HashSet<>();
 
     @Column

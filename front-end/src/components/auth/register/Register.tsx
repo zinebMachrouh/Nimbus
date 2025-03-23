@@ -1122,10 +1122,17 @@ const Register = () => {
                 registrationExpiryDate: vehicleData.registrationExpiryDate,
                 lastMaintenanceDate: vehicleData.lastMaintenanceDate,
                 trackingDeviceId: vehicleData.trackingDeviceId || undefined,
-                currentLatitude: vehicleData.initialLatitude || undefined,
-                currentLongitude: vehicleData.initialLongitude || undefined,
                 //@ts-ignore
                 schoolId: schoolId,
+            }
+            
+            // Add coordinates only if they are defined and not zero
+            if (vehicleData.initialLatitude && vehicleData.initialLatitude !== 0) {
+                vehicleRequest.initialLatitude = vehicleData.initialLatitude;
+            }
+            
+            if (vehicleData.initialLongitude && vehicleData.initialLongitude !== 0) {
+                vehicleRequest.initialLongitude = vehicleData.initialLongitude;
             }
 
             console.log('Vehicle creation request:', vehicleRequest);
@@ -1176,8 +1183,17 @@ const Register = () => {
                 registrationExpiryDate: vehicleData.registrationExpiryDate,
                 lastMaintenanceDate: vehicleData.lastMaintenanceDate,
                 trackingDeviceId: vehicleData.trackingDeviceId || undefined,
-                currentLatitude: vehicleData.initialLatitude || undefined,
-                currentLongitude: vehicleData.initialLongitude || undefined,
+                //@ts-ignore
+                schoolId: schoolId,
+            }
+            
+            // Add coordinates only if they are defined and not zero
+            if (vehicleData.initialLatitude && vehicleData.initialLatitude !== 0) {
+                vehicleRequest.initialLatitude = vehicleData.initialLatitude;
+            }
+            
+            if (vehicleData.initialLongitude && vehicleData.initialLongitude !== 0) {
+                vehicleRequest.initialLongitude = vehicleData.initialLongitude;
             }
 
             console.log('Vehicle creation request:', vehicleRequest);
@@ -1207,8 +1223,8 @@ const Register = () => {
                     lastMaintenanceDate: "",
                     currentMileage: 0,
                     trackingDeviceId: "",
-                    initialLatitude: 0,
-                    initialLongitude: 0,
+                    currentLatitude: 0,
+                    currentLongitude: 0,
                 }
                 
                 setRegistrationData(resetVehicleData)

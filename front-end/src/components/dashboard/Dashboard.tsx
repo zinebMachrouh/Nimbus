@@ -1,5 +1,5 @@
 import { NavLink, Outlet, useNavigate } from "react-router-dom";
-import { useAdminService, useAttendanceService, useAuthService, useRouteService, useSchoolService, useStudentService, useTripService, useVehicleService } from "../../contexts/ServiceContext";
+import { useAdminService, useAttendanceService, useAuthService, useDriverService, useParentService, useRouteService, useSchoolService, useStudentService, useTripService, useVehicleService } from "../../contexts/ServiceContext";
 import { FiSettings, FiLogOut } from "react-icons/fi";
 import { BiBell, BiUser } from "react-icons/bi";
 import './Dashboard.css';
@@ -24,7 +24,9 @@ const Dashboard = () => {
     const tripService = useTripService();
     const schoolService = useSchoolService();
     const attendanceService = useAttendanceService();
+    const driverService = useDriverService();
     const adminService = useAdminService();
+    const parentService = useParentService();
 
     const [vehicles, setVehicles] = useState<Vehicle[]>([]);
     const [routes, setRoutes] = useState<Route[]>([]);
@@ -60,7 +62,11 @@ const Dashboard = () => {
     });
     
     useEffect(() => {
-        vehicleService.findVehiclesBySchool(schoolId).then(setVehicles);
+        vehicleService.findVehiclesBySchool(schoolId).then(
+            vehicles => {
+                setVehicles(vehicles);
+            }
+        );
         routeService.findBySchoolId(schoolId).then(setRoutes);
         studentService.findBySchoolId(schoolId).then(setStudents);
         
@@ -92,11 +98,18 @@ const Dashboard = () => {
             });
         });
 
-        adminService.getUsersByRole("PARENT").then(users => {
-            setParents(users.map(user => user as Parent));
+        adminService.getAllParents().then(users => {
+            setParents(users);
+        }).catch(error => {
+            console.warn("Could not fetch parents:", error);
+            setParents([]);
         });
-        adminService.getUsersByRole("DRIVER").then(users => {
-            setDrivers(users.map(user => user as Driver));
+        
+        driverService.getAllDriversBySchoolId(schoolId).then(users => {
+            setDrivers(users);
+        }).catch(error => {
+            console.warn("Could not fetch drivers:", error);
+            setDrivers([]);
         });
     }, []);
     
@@ -118,15 +131,20 @@ const Dashboard = () => {
     }, []);
 
     useEffect(() => {
-        if(user?.role === UserRole.ADMIN){
+        if(user?.role.toString() === "ROLE_ADMIN"){
             navigate("/dashboard/admin");
         }
     }, [user]);
 
-    const logout = () => {
-        setShowProfileMenu(false);
-        authService.logout();        
-        navigate('/login');
+    const logout = async () => {
+        try {
+            setShowProfileMenu(false);
+            await authService.logout();
+            navigate('/login');
+        } catch (error) {
+            console.error('Error during logout:', error);
+            navigate('/login');
+        }
     }
 
     return ( 
@@ -140,12 +158,12 @@ const Dashboard = () => {
                             authService.isAuthenticated() && authService.hasRole('ROLE_ADMIN') && (
                                 <>
                                     <NavLink to="/dashboard/admin">Dashboard</NavLink>
-                                    <NavLink to="/users">Users</NavLink>
-                                    <NavLink to="/students">Students</NavLink>
+                                    <NavLink to="users">Users</NavLink>
+                                    <NavLink to="students">Students</NavLink>
                                     <NavLink to="vehicles">Vehicles</NavLink>
-                                    <NavLink to="/trips">Trips</NavLink>
-                                    <NavLink to="/routes">Routes</NavLink>
-                                    <NavLink to="/reports">Reports</NavLink>
+                                    <NavLink to="trips">Trips</NavLink>
+                                    <NavLink to="routes">Routes</NavLink>
+                                    <NavLink to="reports">Reports</NavLink>
                                 </>
                             )
                         }
@@ -153,10 +171,10 @@ const Dashboard = () => {
                             authService.isAuthenticated() && authService.hasRole('ROLE_DRIVER') && (
                                 <>
                                     <NavLink to="/dashboard/driver">Dashboard</NavLink>
-                                    <NavLink to="/trips">Trips</NavLink>
-                                    <NavLink to="/routes">Routes</NavLink>
-                                    <NavLink to="/history">History</NavLink>
-                                    <NavLink to="/reports">Reports</NavLink>
+                                    <NavLink to="trips">Trips</NavLink>
+                                    <NavLink to="routes">Routes</NavLink>
+                                    <NavLink to="history">History</NavLink>
+                                    <NavLink to="reports">Reports</NavLink>
                                 </>
                             )
                         }
@@ -164,10 +182,10 @@ const Dashboard = () => {
                             authService.isAuthenticated() && authService.hasRole('ROLE_PARENT') && (
                                 <>
                                     <NavLink to="/dashboard/parent">Dashboard</NavLink>
-                                    <NavLink to="/trips">Trips</NavLink>
-                                    <NavLink to="/routes">Routes</NavLink>
-                                    <NavLink to="/attendance">Attendance</NavLink>
-                                    <NavLink to="/reports">Reports</NavLink>
+                                    <NavLink to="trips">Trips</NavLink>
+                                    <NavLink to="routes">Routes</NavLink>
+                                    <NavLink to="attendance">Attendance</NavLink>
+                                    <NavLink to="reports">Reports</NavLink>
                                 </>
                             )
                         }
@@ -196,7 +214,9 @@ const Dashboard = () => {
                                     <span className="user-email">{user?.email}</span>
                                 </div>
                                 <hr />
-                                <button onClick={()=>logout()} className="logout-btn">
+                                <button onClick={()=> {
+                                    logout().catch(err => console.error('Error in logout handler:', err));
+                                }} className="logout-btn">
                                     <FiLogOut /> Logout
                                 </button>
                             </div>

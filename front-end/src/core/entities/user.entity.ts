@@ -1,9 +1,9 @@
 import { BaseEntity } from './base.entity';
 
 export enum UserRole {
-  ADMIN = 'ROLE_ADMIN',
-  DRIVER = 'ROLE_DRIVER',
-  PARENT = 'ROLE_PARENT'
+  ADMIN = 'ADMIN',
+  DRIVER = 'DRIVER',
+  PARENT = 'PARENT'
 }
 
 export interface User extends BaseEntity {

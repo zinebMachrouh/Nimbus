@@ -77,7 +77,7 @@ export class ApiError extends Error {
   }
 
   public get isAuthError(): boolean {
-    return this.statusCode === 401 || this.statusCode === 403;
+    return this.statusCode === 401;
   }
 
   public getValidationError(field: string): string | undefined {

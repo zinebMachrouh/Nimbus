@@ -38,8 +38,8 @@ const VehicleRegistration: React.FC<VehicleRegistrationProps> = ({ vehicleData, 
             lastMaintenanceDate: vehicleData.lastMaintenanceDate || '',
             currentMileage: vehicleData.currentMileage || 0,
             trackingDeviceId: vehicleData.trackingDeviceId || '',
-            initialLatitude: vehicleData.initialLatitude || 0,
-            initialLongitude: vehicleData.initialLongitude || 0
+            initialLatitude: vehicleData.initialLatitude === 0 ? undefined : vehicleData.initialLatitude,
+            initialLongitude: vehicleData.initialLongitude === 0 ? undefined : vehicleData.initialLongitude
         }
     });
     

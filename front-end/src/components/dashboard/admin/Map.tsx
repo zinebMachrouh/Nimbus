@@ -141,7 +141,7 @@ const Map = () => {
       
       tripService.findBySchoolId(schoolId).then(tripsData => {
         console.log("Fetched trips:", tripsData);
-        setTrips(tripsData);
+        setTrips(tripsData || []);
         
         vehicleService.findVehiclesBySchool(schoolId).then(vehiclesData => {
           console.log("Fetched vehicles:", vehiclesData);
@@ -149,11 +149,18 @@ const Map = () => {
           routeService.findBySchoolId(schoolId).then(routes => {
             console.log("Fetched routes:", routes);
             
+            if (!vehiclesData || !vehiclesData.length) {
+              console.log("No vehicles data available");
+              setVehicles([]);
+              return;
+            }
+            
             const vehiclesWithRoutes: VehicleWithRoute[] = vehiclesData.map(vehicle => {
-              const vehicleTrip = tripsData.find(trip => trip.vehicle?.id === vehicle.id);
-              const vehicleRoute = vehicleTrip?.route || routes.find(route => 
-                tripsData.some(trip => trip.vehicle?.id === vehicle.id && trip.route?.id === route.id)
-              );
+              const vehicleTrip = (tripsData || []).find(trip => trip.vehicle?.id === vehicle.id);
+              const vehicleRoute = vehicleTrip?.route || 
+                (routes && routes.find(route => 
+                  (tripsData || []).some(trip => trip.vehicle?.id === vehicle.id && trip.route?.id === route.id)
+                ));
               
               return {
                 ...vehicle,
@@ -184,6 +191,11 @@ const Map = () => {
       
       const interval = setInterval(() => {
         vehicleService.findVehiclesBySchool(schoolId).then(updatedVehicles => {
+          if (!updatedVehicles || updatedVehicles.length === 0) {
+            console.log("No updated vehicles data available");
+            return;
+          }
+          
           setVehicles(prev => {
             const updated = updatedVehicles.map(vehicle => {
               const existingVehicle = prev.find(v => v.id === vehicle.id);

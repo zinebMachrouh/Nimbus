@@ -4,6 +4,7 @@ import com.example.backend.dto.response.ApiResponse;
 import com.example.backend.dto.request.CreateDriverRequest;
 import com.example.backend.dto.request.CreateParentRequest;
 import com.example.backend.dto.request.CreateStudentRequest;
+import com.example.backend.dto.request.UpdateParentRequest;
 import com.example.backend.dto.school.SchoolRequest;
 import com.example.backend.dto.vehicle.VehicleRequest;
 import com.example.backend.entities.*;
@@ -47,14 +48,122 @@ public class AdminController {
         return ResponseEntity.ok(ApiResponse.success(userService.findAll()));
     }
 
+    @Operation(summary = "Get users by role")
+    @GetMapping("/users/role/{role}")
+    public ResponseEntity<ApiResponse<List<User>>> getUsersByRole(@PathVariable String role) {
+        User.Role userRole;
+        try {
+            userRole = User.Role.valueOf(role);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(ApiResponse.error("Invalid role: " + role, "INVALID_ROLE"));
+        }
+        
+        List<User> users = userService.findByRole(userRole);
+        return ResponseEntity.ok(ApiResponse.success(users));
+    }
+    
+    @Operation(summary = "Get all drivers")
+    @GetMapping("/drivers")
+    public ResponseEntity<ApiResponse<List<Driver>>> getAllDrivers() {
+        List<Driver> drivers = driverService.findAll();
+        return ResponseEntity.ok(ApiResponse.success(drivers));
+    }
+    
+    @Operation(summary = "Get all parents (both active and inactive)")
+    @GetMapping("/parents")
+    public ResponseEntity<ApiResponse<List<Parent>>> getAllParents() {
+        List<Parent> parents = userService.findAllParentsIncludingInactive();
+        return ResponseEntity.ok(ApiResponse.success(parents));
+    }
+
     @Operation(summary = "Create a new parent account")
     @PostMapping("/parents")
     public ResponseEntity<ApiResponse<Parent>> createParent(@Valid @RequestBody CreateParentRequest request) {
+        // Create parent directly, not casting from User
         Parent parent = userService.createParent(
             request.getFirstName(), request.getLastName(), request.getEmail(),
             request.getPassword(), request.getPhoneNumber(), request.getAddress()
         );
+        // Ensure parent is active
+        if (request.getIsActive() != null) {
+            parent.setActive(request.getIsActive());
+            parent = userService.save(parent);
+        }
+        // Ensure active status is not null
+        parent = userService.ensureActiveStatus(parent);
         return ResponseEntity.ok(ApiResponse.success("Parent account created successfully", parent));
+    }
+
+    @Operation(summary = "Update parent account")
+    @PatchMapping("/parents/{parentId}")
+    public ResponseEntity<ApiResponse<Parent>> updateParent(
+            @PathVariable Long parentId, 
+            @RequestBody CreateParentRequest request) {
+        // Call without casting
+        Parent parent = userService.updateParent(
+            parentId,
+            request.getFirstName(), 
+            request.getLastName(), 
+            request.getEmail(),
+            request.getPhoneNumber(), 
+            request.getAddress(),
+            null, // emergencyContact
+            null  // emergencyPhone
+        );
+        // Ensure parent is active if explicitly provided
+        if (request.getIsActive() != null) {
+            parent.setActive(request.getIsActive());
+            // Use save method that returns Parent
+            parent = userService.save(parent);
+        }
+        // Ensure active status is not null
+        parent = userService.ensureActiveStatus(parent);
+        return ResponseEntity.ok(ApiResponse.success("Parent account updated successfully", parent));
+    }
+    
+    @Operation(summary = "Update parent account with detailed information")
+    @PatchMapping("/parents/{parentId}/update")
+    public ResponseEntity<ApiResponse<Parent>> updateParentWithDetails(
+            @PathVariable Long parentId, 
+            @Valid @RequestBody UpdateParentRequest request) {
+        // Call without casting
+        Parent parent = userService.updateParent(
+            parentId,
+            request.getFirstName(),
+            request.getLastName(),
+            request.getEmail(),
+            request.getPhoneNumber(),
+            request.getAddress(),
+            request.getEmergencyContact(),
+            request.getEmergencyPhone()
+        );
+        // Ensure parent is active if explicitly provided
+        if (request.getIsActive() != null) {
+            parent.setActive(request.getIsActive());
+            // Use save method that returns Parent
+            parent = userService.save(parent);
+        }
+        // Ensure active status is not null
+        parent = userService.ensureActiveStatus(parent);
+        return ResponseEntity.ok(ApiResponse.success("Parent account updated successfully", parent));
+    }
+
+    @Operation(summary = "Delete parent account")
+    @DeleteMapping("/parents/{parentId}")
+    public ResponseEntity<ApiResponse<Void>> deleteParent(@PathVariable Long parentId) {
+        userService.deleteParent(parentId);
+        return ResponseEntity.ok(ApiResponse.success("Parent account deleted successfully"));
+    }
+    
+    @Operation(summary = "Toggle parent status")
+    @PatchMapping("/parents/{parentId}/status")
+    public ResponseEntity<ApiResponse<Parent>> toggleParentStatus(
+            @PathVariable Long parentId, 
+            @RequestParam boolean isActive) {
+        Parent parent = userService.toggleParentStatus(parentId, isActive);
+        return ResponseEntity.ok(ApiResponse.success(
+            isActive ? "Parent account activated successfully" : "Parent account deactivated successfully", 
+            parent));
     }
 
     @Operation(summary = "Create a new driver account")
@@ -63,7 +172,8 @@ public class AdminController {
         Driver driver = userService.createDriver(
             request.getFirstName(), request.getLastName(), request.getEmail(),
             request.getPassword(), request.getPhoneNumber(), request.getLicenseNumber(),
-            request.getLicenseExpiryDate(), request.getSchoolId(), request.getVehicleId()
+            request.getLicenseExpiryDate(), request.getSchoolId(), request.getVehicleId(),
+            request.getUsername()
         );
         return ResponseEntity.ok(ApiResponse.success("Driver account created successfully", driver));
     }
