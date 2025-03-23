@@ -143,17 +143,24 @@ const RoutesList: React.FC = () => {
     try {
       // First get all routes basic info
       const allRoutes = await routeService.getAllRoutes();
+      console.log('Successfully fetched basic routes list:', allRoutes.length, 'routes');
       
       // Then load detailed information for each route with stops
       const detailedRoutes = await Promise.all(
         allRoutes.map(async (route) => {
           try {
             // Get route details with stops
+            console.log(`Fetching details for route ${route.id}`);
             const detailedRoute = await routeService.findByIdWithStops(route.id);
             return detailedRoute;
           } catch (err) {
             console.warn(`Could not load details for route ${route.id}:`, err);
-            return route;
+            
+            // If we couldn't get details, return the basic route info we already have
+            return {
+              ...route,
+              stops: [] // Ensure there's at least an empty stops array
+            };
           }
         })
       );
@@ -161,8 +168,11 @@ const RoutesList: React.FC = () => {
       // Log routes for debugging
       console.log('Loaded routes with details:', detailedRoutes);
       
+      // Filter out any undefined or null routes that might have occurred during errors
+      const validRoutes = detailedRoutes.filter(route => route !== undefined && route !== null && route.active === true);
+      
       // Log school info for each route
-      detailedRoutes.forEach(route => {
+      validRoutes.forEach(route => {
         if (route.school) {
           console.log(`Route ${route.id} assigned to school:`, route.school.id, route.school.name);
         } else {
@@ -170,7 +180,7 @@ const RoutesList: React.FC = () => {
         }
       });
       
-      setRoutes(detailedRoutes);
+      setRoutes(validRoutes);
     } catch (err: any) {
       console.error('Error fetching routes:', err);
       
@@ -355,9 +365,9 @@ const RoutesList: React.FC = () => {
     } else if (type === 'edit' && route) {
       // Initialize form for editing an existing route
       setFormData({
-        name: route.name,
+        name: route.name || '',
         description: route.description || '',
-        type: route.type as RouteType,
+        type: route.type as RouteType || RouteType.MORNING_PICKUP,
         schoolId: route.school?.id || getSchoolIdFromLocalStorage(),
         stops: (route.stops || []).map(stop => {
           // Ensure all stops have required fields
@@ -366,7 +376,7 @@ const RoutesList: React.FC = () => {
             address: stop.address || stop.name || '',
             latitude: stop.latitude !== null ? stop.latitude : 0,
             longitude: stop.longitude !== null ? stop.longitude : 0,
-            estimatedMinutesFromStart: stop.estimatedMinutesFromStart || 0,
+            estimatedMinutesFromStart: stop.estimatedMinutesFromStart ?? 0,
             sequence: (stop as any).sequence || 0
           };
         })
@@ -493,15 +503,42 @@ const RoutesList: React.FC = () => {
         setSuccessMessage("Route updated successfully");
       } 
       else if (modalType === 'delete' && selectedRoute) {
-        console.log('Deleting route:', selectedRoute.id);
-        await routeService.deleteRoute(selectedRoute.id);
-        setSuccessMessage("Route deleted successfully");
+        try {
+          // First check if route is associated with any trips
+          const tripAssociations = await routeService.checkRouteTrips(selectedRoute.id);
+          
+          if (tripAssociations && tripAssociations.tripCount > 0) {
+            console.log(`Route ${selectedRoute.id} has ${tripAssociations.tripCount} trips, cannot be deleted`);
+            throw new Error(`Cannot delete route: it is associated with ${tripAssociations.tripCount} trip(s).`);
+          }
+          
+          // No trips, proceed with deletion
+          console.log('Deleting route:', selectedRoute.id);
+          await routeService.deleteRoute(selectedRoute.id);
+          
+          // Remove the route from state immediately
+          setRoutes(prevRoutes => prevRoutes.filter(r => r.id !== selectedRoute.id));
+          
+          setSuccessMessage("Route deleted successfully");
+          
+          // Close the modal after successful operation
+          setIsModalOpen(false);
+          setModalVisible(false);
+        } catch (err) {
+          console.error('Error in delete operation:', err);
+          setErrorMessage(`Operation failed: ${err instanceof Error ? err.message : 'Unknown error'}`);
+          // Don't close modal on error
+          return;
+        }
       }
       
       // Common operations for all types
-      setIsModalOpen(false);
       resetForm();
-      fetchRoutes();
+      if (modalType !== 'delete') {
+        // Only fetch routes again for non-delete operations
+        // For delete, we already updated the state
+        await fetchRoutes();
+      }
       setTimeout(() => setSuccessMessage(""), 3000);
     } catch (error: unknown) {
       console.error(`Error ${modalType === 'add' ? 'creating' : modalType === 'edit' ? 'updating' : 'deleting'} route:`, error);
@@ -1114,7 +1151,7 @@ const RoutesList: React.FC = () => {
               </div>
             </div>
             
-            <p className="warning">⚠️ This action cannot be undone. All associated data will be permanently deleted.</p>
+            <p className="warning">⚠️ This action cannot be undone. Routes with trips cannot be deleted.</p>
             
             {errorMessage && (
               <div className="operation-message error">
@@ -1132,7 +1169,7 @@ const RoutesList: React.FC = () => {
                 onClick={handleSubmit}
                 disabled={isLoading}
               >
-                {isLoading ? 'Deleting...' : 'Delete Route'}
+                {isLoading ? 'Processing...' : 'Delete Route'}
               </button>
             </div>
           </div>
