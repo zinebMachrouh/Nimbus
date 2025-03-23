@@ -259,12 +259,6 @@ const VehiclesList = () => {
                                         {getSortIcon('currentMileage')}
                                     </div>
                                 </th>
-                                <th onClick={() => handleSort('status')} className="sortable-header">
-                                    <div className="header-content">
-                                        <span>Status</span>
-                                        {getSortIcon('status')}
-                                    </div>
-                                </th>
                                 <th>Actions</th>
                             </tr>
                         </thead>
@@ -280,11 +274,6 @@ const VehiclesList = () => {
                                     <td>{vehicle.year}</td>
                                     <td>{vehicle.capacity} seats</td>
                                     <td>{vehicle.currentMileage} km</td>
-                                    <td>
-                                        <span className={`status-badge ${vehicle.status.toLowerCase()}`}>
-                                            {vehicle.status}
-                                        </span>
-                                    </td>
                                     <td>
                                         <div className="table-action-buttons">
                                             <button 

@@ -9,6 +9,8 @@ import './AdminDashboard.css';
 import { FaBus } from "react-icons/fa6";
 import SchoolForm from "./school/SchoolForm.tsx";
 import { MyContext } from "../Dashboard.tsx";
+import StudentsList from './students/StudentsList';
+import RoutesList from './routes/RoutesList';
 
 const AdminDashboard = () => {
     const [isSchoolFormOpen, setIsSchoolFormOpen] = useState(false);

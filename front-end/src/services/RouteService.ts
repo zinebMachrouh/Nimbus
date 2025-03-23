@@ -4,6 +4,7 @@ export interface RouteService {
   getAllRoutes(): Promise<Route[]>;
   getRouteById(id: number): Promise<Route>;
   createRoute(routeData: any): Promise<Route>;
+  createRouteWithSchool(routeData: any): Promise<Route>;
   updateRoute(id: number, routeData: any): Promise<Route>;
   deleteRoute(id: number): Promise<void>;
   findBySchoolId(schoolId: number): Promise<Route[]>;

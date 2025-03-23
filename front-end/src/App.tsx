@@ -10,6 +10,7 @@ import AdminDashboard from './components/dashboard/admin/AdminDashboard'
 import VehiclesList from './components/dashboard/admin/vehicles/VehiclesList'
 import UsersList from './components/dashboard/admin/users/UsersList'
 import StudentsList from './components/dashboard/admin/students/StudentsList'
+import RoutesList from './components/dashboard/admin/routes/RoutesList'
 
 const App: React.FC = () => {
   return (
@@ -23,6 +24,7 @@ const App: React.FC = () => {
           <Route path='vehicles' element={<VehiclesList />} />
           <Route path='users' element={<UsersList />} />
           <Route path='students' element={<StudentsList />} />
+          <Route path='routes' element={<RoutesList />} />
         </Route>
         <Route path="*" element={<Navigate to="/" />} />
       </Routes>

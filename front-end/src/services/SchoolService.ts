@@ -17,5 +17,11 @@ export interface SchoolService {
   removeRoute(schoolId: number, routeId: number): Promise<void>
   getSchoolsWithStats(): Promise<School[]>
   countActiveSchools(): Promise<number>
+  
+  // These aliases are used in the UI components
+  getAllSchools(): Promise<School[]>
+  getSchoolById(id: number): Promise<School>
+  createSchool(schoolData: any): Promise<School>
+  updateSchool(id: number, schoolData: any): Promise<School>
 }
 
