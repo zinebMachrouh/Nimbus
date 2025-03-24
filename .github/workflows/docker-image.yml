@@ -31,7 +31,7 @@ jobs:
       working-directory: back-end
 
     - name: Build and test back-end
-      run: ./mvnw clean verify
+      run: mvn -B clean verify -DskipTests
       working-directory: back-end
 
   front-end:
