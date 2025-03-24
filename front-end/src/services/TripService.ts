@@ -15,6 +15,7 @@ export interface TripService {
   countActiveTripsForSchool(schoolId: number): Promise<number>;
   assignDriver(tripId: number, driverId: number): Promise<void>;
   assignVehicle(tripId: number, vehicleId: number): Promise<void>;
+  assignRoute(tripId: number, routeId: number): Promise<void>;
   updateTripStatus(tripId: number, status: string): Promise<void>;
   updateTripSchedule(tripId: number, departureTime: string, estimatedArrivalTime: string): Promise<void>;
   findTripsWithStats(schoolId: number, start: string, end: string): Promise<Trip[]>;
@@ -31,4 +32,6 @@ export interface TripService {
   getTripHistory(page: number, size: number): Promise<Trip[]>;
   findCurrentTripByStudentId(studentId: number): Promise<Trip>;
   findTripsByStudentId(studentId: number, page: number, size: number): Promise<Trip[]>;
+  assignStudents(tripId: number, studentIds: number[]): Promise<Trip>;
+  getTripRequestSchema(): Promise<any>;
 } 

@@ -17,7 +17,7 @@ body {
   position: absolute;
   top: 30px;
   left: 30px;
-  background-color: var(--primary-color);
+  background-color: #28887A !important;
   border-radius: 200px;
   width: 50px;
   height: 50px;
@@ -105,7 +105,7 @@ body {
 
 /* Content styles */
 .signup-content h1 {
-  color: var(--primary-color);
+  color: #28887A;
   font-size: 0.875rem;
   font-weight: 600;
   margin-bottom: 1rem;
@@ -120,7 +120,7 @@ body {
 }
 
 .signup-content h2 span {
-  color: var(--primary-color);
+  color: #28887A;
 }
 
 .signup-content .login-link {
@@ -130,7 +130,7 @@ body {
 }
 
 .signup-content .login-link a {
-  color: var(--primary-color);
+  color: #28887A;
   text-decoration: none;
   font-weight: 500;
 }
@@ -180,8 +180,8 @@ body {
 
 .login-form .form-field .input-wrapper input:focus {
   outline: none;
-  border-color: var(--primary-color);
-  box-shadow: 0 0 0 4px rgba(40, 136, 122, 0.1);
+    border-color: #28887A;
+    box-shadow: 0 0 0 4px rgba(40, 136, 122, 0.1);
 }
 
 .login-form .form-field .input-wrapper input.error {
@@ -265,7 +265,7 @@ body {
 }
 
 .action-buttons .btn.btn-primary {
-  background-color: var(--primary-color);
+  background-color: #28887A;
   color: var(--bg-color);
   border: none;
   padding: 0.875rem 4rem;
@@ -345,8 +345,8 @@ body {
 }
 
 .form-options .remember-me input[type="checkbox"]:checked ~ .checkmark {
-  background-color: var(--primary-color);
-  border-color: var(--primary-color);
+  background-color: #28887A;
+  border-color: #28887A;
 }
 
 .form-options .remember-me input[type="checkbox"]:checked ~ .checkmark:after {
@@ -381,11 +381,11 @@ body {
 }
 
 .form-options .remember-me:hover .checkmark {
-  border-color: var(--primary-color);
+  border-color: #28887A;
 }
 
 .form-options .forgot-password {
-  color: var(--primary-color);
+  color: #28887A;
   font-size: 0.875rem;
   text-decoration: none;
   transition: all 0.2s ease;

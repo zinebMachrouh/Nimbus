@@ -11,6 +11,8 @@ import VehiclesList from './components/dashboard/admin/vehicles/VehiclesList'
 import UsersList from './components/dashboard/admin/users/UsersList'
 import StudentsList from './components/dashboard/admin/students/StudentsList'
 import RoutesList from './components/dashboard/admin/routes/RoutesList'
+import TripsList from './components/dashboard/admin/trips/TripsList'
+import AttendanceManagement from './components/dashboard/admin/attendance/AttendanceManagement'
 
 const App: React.FC = () => {
   return (
@@ -25,6 +27,8 @@ const App: React.FC = () => {
           <Route path='users' element={<UsersList />} />
           <Route path='students' element={<StudentsList />} />
           <Route path='routes' element={<RoutesList />} />
+          <Route path='trips' element={<TripsList />} />
+          <Route path='attendance' element={<AttendanceManagement />} />
         </Route>
         <Route path="*" element={<Navigate to="/" />} />
       </Routes>

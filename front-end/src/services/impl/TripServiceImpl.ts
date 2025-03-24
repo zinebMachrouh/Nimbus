@@ -157,4 +157,18 @@ export class TripServiceImpl extends BaseHttpService implements TripService {
     const response = await this.get<ApiResponse<Trip[]>>(`/student/${studentId}/history?page=${page}&size=${size}`);
     return response.data;
   }
+
+  async assignRoute(tripId: number, routeId: number): Promise<void> {
+    return this.put(`/trips/${tripId}/route/${routeId}`, {});
+  }
+
+  async assignStudents(tripId: number, studentIds: number[]): Promise<Trip> {
+    const response = await this.put<ApiResponse<Trip>>(`/${tripId}/students`, studentIds);
+    return response.data;
+  }
+
+  async getTripRequestSchema(): Promise<any> {
+    const response = await this.get<ApiResponse<any>>('/schema');
+    return response.data;
+  }
 } 

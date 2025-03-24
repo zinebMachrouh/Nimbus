@@ -37,6 +37,12 @@ public class Attendance extends BaseEntity {
     @Column
     private Boolean parentNotified = false;
 
+    @Column
+    private Integer seatNumber;
+
+    @Column
+    private String qrCode;
+
     public enum AttendanceStatus {
         PENDING,
         PRESENT,

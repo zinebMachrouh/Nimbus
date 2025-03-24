@@ -20,7 +20,7 @@ body{
   position: absolute;
   top: 30px;
   left: 30px;
-  background-color: var(--primary-color);
+  background-color: #28887A;
   border-radius: 200px;
   width: 50px;
   height: 50px;
@@ -142,9 +142,9 @@ body{
 }
 
 .registration-progress .step.active .step-number {
-  background-color: var(--primary-color);
+  background-color: #28887A;
   color: white;
-  border-color: var(--primary-color);
+  border-color: #28887A;
 }
 
 .registration-progress .step-text {
@@ -154,7 +154,7 @@ body{
 }
 
 .registration-progress .step.active .step-text {
-  color: var(--primary-color);
+  color: #28887A;
   font-weight: 600;
 }
 
@@ -220,7 +220,7 @@ body{
 .registration-form .form-field .input-wrapper input:focus,
 .registration-form .form-field .input-wrapper select:focus {
   outline: none;
-  border-color: var(--primary-color);
+  border-color: #28887A;
   box-shadow: 0 0 0 4px rgba(40, 136, 122, 0.1);
 }
 
@@ -340,7 +340,7 @@ body{
 }
 
 .action-buttons .btn-next {
-  background-color: var(--primary-color);
+  background-color: #28887A;
   color: white;
 }
 
@@ -378,7 +378,7 @@ body{
 
 /* Content styles */
 .step-content h1 {
-  color: var(--primary-color);
+  color: #28887A;
   font-size: 0.875rem;
   font-weight: 600;
   margin-bottom: 1rem;
@@ -393,7 +393,7 @@ body{
 }
 
 .step-content h2 span {
-  color: var(--primary-color);
+  color: #28887A;
 }
 
 .step-content .login-link {
@@ -403,7 +403,7 @@ body{
 }
 
 .step-content .login-link a {
-  color: var(--primary-color);
+  color: #28887A;
   text-decoration: none;
   font-weight: 500;
 }
@@ -418,11 +418,11 @@ body{
   border-radius: 12px;
   padding: 0.75rem 1rem;
   margin-bottom: 1.5rem;
-  color: var(--primary-color);
+  color: #28887A;
   font-size: 0.875rem;
   display: flex;
   align-items: center;
-  border-left: 4px solid var(--primary-color);
+  border-left: 4px solid #28887A;
 }
 
 .vehicle-count-indicator .vehicle-count {

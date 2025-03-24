@@ -51,9 +51,15 @@ const Dashboard = () => {
 
     const [schoolId, setSchoolId] = useState<number>(() => {
         const storedSchool = localStorage.getItem("school");
+        console.log('Raw school from localStorage:', storedSchool);
+        
         if (storedSchool) {
             try {
-                return JSON.parse(storedSchool)?.id || 0;
+                const school = JSON.parse(storedSchool);
+                console.log('Parsed school object:', school);
+                const id = school?.id;
+                console.log('Extracted school ID:', id);
+                return id || 0;
             } catch (error) {
                 console.error("Error parsing school from localStorage:", error);
             }
@@ -62,28 +68,72 @@ const Dashboard = () => {
     });
     
     useEffect(() => {
+        console.log('Dashboard useEffect triggered with schoolId:', schoolId);
+        
+        if (!schoolId) {
+            console.error('No school ID available, skipping data fetch');
+            return;
+        }
+
         vehicleService.findVehiclesBySchool(schoolId).then(
             vehicles => {
+                console.log('Fetched vehicles:', vehicles);
                 setVehicles(vehicles);
             }
         );
-        routeService.findBySchoolId(schoolId).then(setRoutes);
-        studentService.findBySchoolId(schoolId).then(setStudents);
         
-        tripService.findBySchoolId(schoolId).then(trips => {
-            setTrips(trips);
-            
-            tripService.countActiveTripsForSchool(schoolId).then(activeCount => {
-                setActiveTrips(activeCount);
-                
-                if (trips.length > 0) {
-                    const percentage = (activeCount / trips.length) * 100;
-                    setActiveTripsPercentage(Math.round(percentage));
-                } else {
-                    setActiveTripsPercentage(0);
-                }
-            });
+        routeService.findBySchoolId(schoolId).then(routes => {
+            console.log('Fetched routes:', routes);
+            setRoutes(routes);
         });
+        
+        studentService.findBySchoolId(schoolId).then(students => {
+            console.log('Fetched students:', students);
+            setStudents(students);
+        });
+
+        tripService.getAllTrips().then(trips => {
+            console.log('All trips from API:', JSON.stringify(trips, null, 2));
+            console.log('Current schoolId:', schoolId);
+            
+            if (!trips || trips.length === 0) {
+                console.log('No trips returned from API');
+                setTrips([]);
+                return;
+            }
+            
+            // Filter trips by school ID
+            const filteredTrips = trips.filter(trip => {
+                const tripSchoolId = trip.driver?.school?.id;
+                console.log('Comparing trip school ID:', tripSchoolId, 'with current school ID:', schoolId, 'for trip:', trip.id);
+                return tripSchoolId === schoolId;
+            });
+        
+            console.log('Filtered trips for school:', JSON.stringify(filteredTrips, null, 2));
+            console.log('Number of filtered trips:', filteredTrips.length);
+        
+            setTrips(filteredTrips);
+        
+            // Count active trips (trips that are not completed or cancelled)
+            const activeCount = filteredTrips.filter(trip => 
+                trip.status !== 'COMPLETED' && trip.status !== 'CANCELLED'
+            ).length;
+            
+            console.log('Active trips count:', activeCount);
+            setActiveTrips(activeCount);
+    
+            const percentage = filteredTrips.length > 0 
+                ? Math.round((activeCount / filteredTrips.length) * 100) 
+                : 0;
+    
+            console.log('Active trips percentage:', percentage);
+            setActiveTripsPercentage(percentage);
+        }).catch(error => {
+            console.error('Error fetching trips:', error);
+            setTrips([]);
+        });
+        
+
         
         attendanceService.countTodaysPresentAttendance(schoolId).then(presentCount => {
             setAttendance(presentCount);
@@ -158,11 +208,12 @@ const Dashboard = () => {
                             authService.isAuthenticated() && authService.hasRole('ROLE_ADMIN') && (
                                 <>
                                     <NavLink to="/dashboard/admin">Dashboard</NavLink>
+                                    <NavLink to="vehicles">Vehicles</NavLink>
                                     <NavLink to="users">Users</NavLink>
                                     <NavLink to="students">Students</NavLink>
-                                    <NavLink to="vehicles">Vehicles</NavLink>
-                                    <NavLink to="trips">Trips</NavLink>
                                     <NavLink to="routes">Routes</NavLink>
+                                    <NavLink to="trips">Trips</NavLink>
+                                    <NavLink to="attendance">Attendance</NavLink>
                                     <NavLink to="reports">Reports</NavLink>
                                 </>
                             )
