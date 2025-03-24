@@ -1,13 +1,18 @@
 package com.example.backend.service.impl;
 
+import com.example.backend.dto.trip.TripRequest;
 import com.example.backend.entities.Trip;
 import com.example.backend.entities.Vehicle;
 import com.example.backend.entities.Route;
 import com.example.backend.entities.user.Driver;
+import com.example.backend.entities.Student;
+import com.example.backend.entities.Attendance;
 import com.example.backend.repository.DriverRepository;
 import com.example.backend.repository.TripRepository;
 import com.example.backend.repository.VehicleRepository;
 import com.example.backend.repository.RouteRepository;
+import com.example.backend.repository.StudentRepository;
+import com.example.backend.repository.AttendanceRepository;
 import com.example.backend.service.TripService;
 import com.example.backend.service.base.BaseServiceImpl;
 import jakarta.persistence.EntityNotFoundException;
@@ -21,6 +26,7 @@ import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -30,6 +36,8 @@ public class TripServiceImpl extends BaseServiceImpl<Trip, TripRepository> imple
     private final DriverRepository driverRepository;
     private final VehicleRepository vehicleRepository;
     private final RouteRepository routeRepository;
+    private final StudentRepository studentRepository;
+    private final AttendanceRepository attendanceRepository;
 
     // Constants for business rules
     private static final int MIN_TRIP_DURATION_MINUTES = 15;
@@ -40,11 +48,32 @@ public class TripServiceImpl extends BaseServiceImpl<Trip, TripRepository> imple
     public TripServiceImpl(TripRepository repository,
                           DriverRepository driverRepository,
                           VehicleRepository vehicleRepository,
-                          RouteRepository routeRepository) {
+                          RouteRepository routeRepository,
+                          StudentRepository studentRepository,
+                          AttendanceRepository attendanceRepository) {
         super(repository);
         this.driverRepository = driverRepository;
         this.vehicleRepository = vehicleRepository;
         this.routeRepository = routeRepository;
+        this.studentRepository = studentRepository;
+        this.attendanceRepository = attendanceRepository;
+    }
+
+    @Override
+    @Transactional
+    public Trip create(TripRequest trip) {
+        log.debug("Creating new trip");
+
+        Trip newTrip = new Trip();
+        newTrip.setRoute(findRouteById(trip.getRouteId()));
+        newTrip.setDriver(findDriverById(trip.getDriverId()));
+        newTrip.setVehicle(findVehicleById(trip.getVehicleId()));
+        newTrip.setStatus(Trip.TripStatus.SCHEDULED);
+        newTrip.setScheduledDepartureTime(trip.getScheduledDepartureTime());
+        newTrip.setNotes(trip.getNotes());
+
+
+        return repository.save(newTrip);
     }
 
     @Override
@@ -217,12 +246,12 @@ public class TripServiceImpl extends BaseServiceImpl<Trip, TripRepository> imple
     @Override
     @Transactional
     public Trip createAndStartTrip(Long routeId) {
-        log.debug("Creating and starting trip for route {}", routeId);
         validateRouteExists(routeId);
         
         Trip trip = new Trip();
         trip.setRoute(findRouteById(routeId));
-        trip.setStatus(Trip.TripStatus.IN_PROGRESS);
+        trip.setStatus(Trip.TripStatus.SCHEDULED);
+
         trip.setActualDepartureTime(LocalDateTime.now());
         
         return repository.save(trip);
@@ -288,6 +317,77 @@ public class TripServiceImpl extends BaseServiceImpl<Trip, TripRepository> imple
         log.debug("Finding trips for school {}", schoolId);
         validateSchoolExists(schoolId);
         return repository.findBySchoolId(schoolId);
+    }
+
+    @Override
+    @Transactional
+    public Trip assignStudents(Long tripId, List<Long> studentIds) {
+        log.debug("Assigning students {} to trip {}", studentIds, tripId);
+        
+        Trip trip = findTripById(tripId);
+        
+        // Validate that the trip is in SCHEDULED status
+        if (trip.getStatus() != Trip.TripStatus.SCHEDULED) {
+            throw new ValidationException("Cannot assign students to a trip that is not in SCHEDULED status");
+        }
+        
+        // Get the students from the database
+        List<Student> students = studentRepository.findAllById(studentIds);
+        if (students.size() != studentIds.size()) {
+            throw new EntityNotFoundException("One or more students not found");
+        }
+        
+        // Validate that all students belong to the same school as the trip's route
+        Long schoolId = trip.getRoute().getSchool().getId();
+        for (Student student : students) {
+            if (!student.getSchool().getId().equals(schoolId)) {
+                throw new ValidationException("Cannot assign students from different schools to the same trip");
+            }
+        }
+
+        // Get vehicle capacity
+        Vehicle vehicle = trip.getVehicle();
+        if (vehicle == null) {
+            throw new ValidationException("Trip must have a vehicle assigned before assigning students");
+        }
+        int vehicleCapacity = vehicle.getCapacity();
+        
+        // Get existing attendances to determine next seat number
+        List<Attendance> existingAttendances = attendanceRepository.findByTripIdOrderBySeatNumberAsc(tripId);
+        int nextSeatNumber = 1;
+        if (!existingAttendances.isEmpty()) {
+            Attendance lastAttendance = existingAttendances.get(existingAttendances.size() - 1);
+            if (lastAttendance.getSeatNumber() != null) {
+                nextSeatNumber = lastAttendance.getSeatNumber() + 1;
+            }
+        }
+        
+        // Validate total capacity
+        if (existingAttendances.size() + students.size() > vehicleCapacity) {
+            throw new ValidationException("Cannot assign more students than vehicle capacity. Available seats: " + 
+                (vehicleCapacity - existingAttendances.size()));
+        }
+        
+        // Create attendance records for each student
+        for (Student student : students) {
+            Attendance attendance = new Attendance();
+            attendance.setStudent(student);
+            attendance.setTrip(trip);
+            attendance.setStatus(Attendance.AttendanceStatus.PENDING);
+            
+            // Assign seat number
+            attendance.setSeatNumber(nextSeatNumber++);
+            
+            // Generate QR code
+            String qrData = String.format("trip:%d,student:%d,seat:%d", 
+                trip.getId(), student.getId(), attendance.getSeatNumber());
+            attendance.setQrCode(qrData);
+            
+            attendanceRepository.save(attendance);
+        }
+        
+        log.info("Successfully assigned {} students to trip {}", studentIds.size(), tripId);
+        return trip;
     }
 
     // Private validation methods
@@ -481,7 +581,10 @@ public class TripServiceImpl extends BaseServiceImpl<Trip, TripRepository> imple
     }
 
     private Route findRouteById(Long routeId) {
-        // Implementation to find route by ID
-        return null; // TODO: Implement this method
+        if (routeId == null) {
+            throw new ValidationException("Route ID cannot be null");
+        }
+        return routeRepository.findById(routeId)
+                .orElseThrow(() -> new EntityNotFoundException("Route not found with id: " + routeId));
     }
 } 

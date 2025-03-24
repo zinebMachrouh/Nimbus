@@ -2,9 +2,10 @@ import { Student } from './student.entity';
 import { Trip } from './trip.entity';
 
 export enum AttendanceStatus {
+  PENDING = 'PENDING',
   PRESENT = 'PRESENT',
   ABSENT = 'ABSENT',
-  LATE = 'LATE',
+  ABSENT_NOTIFIED = 'ABSENT_NOTIFIED',
   EXCUSED = 'EXCUSED'
 }
 
@@ -15,9 +16,10 @@ export interface Attendance {
   status: AttendanceStatus;
   scanTime: string;
   notes?: string;
-  notified: boolean;
-  notificationTime?: string;
+  parentNotified: boolean;
+  seatNumber?: number;
+  qrCode?: string;
   active: boolean;
-  createdAt?: string;
-  updatedAt?: string;
+  createdAt: string;
+  updatedAt: string;
 } 

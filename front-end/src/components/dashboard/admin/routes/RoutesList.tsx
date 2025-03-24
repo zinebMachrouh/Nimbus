@@ -581,7 +581,7 @@ const RoutesList: React.FC = () => {
     return routes.filter(route => {
       const nameMatch = route.name.toLowerCase().includes(searchQuery.toLowerCase());
       const typeMatch = !filterType || route.type === filterType;
-      const schoolMatch = !filterSchool || (route.school && route.school.id === filterSchool);
+      const schoolMatch =route.school && route.school.id === getSchoolId();
       
       return nameMatch && typeMatch && schoolMatch;
     });
@@ -1274,6 +1274,11 @@ const RoutesList: React.FC = () => {
     }
   };
 
+  const getSchoolId = () => {
+    const schoolFromStorage = JSON.parse(localStorage.getItem('school') || '{}');
+    return schoolFromStorage.id;
+  };
+
   // Main render
   if (!isAuthenticated) {
     return (
@@ -1324,16 +1329,16 @@ const RoutesList: React.FC = () => {
           />
         </div>
         <div className="filters">
-          <select
-            className="filter-select"
-            value={filterType}
-            onChange={(e) => setFilterType(e.target.value)}
+            <select
+              className="filter-select"
+              value={filterType}
+              onChange={(e) => setFilterType(e.target.value)}
             aria-label="Filter by type"
-          >
+            >
             <option value="">All Types</option>
             <option value={RouteType.MORNING_PICKUP}>Morning Pickup</option>
             <option value={RouteType.AFTERNOON_DROPOFF}>Afternoon Dropoff</option>
-          </select>
+            </select>
           
           <button className="btn-primary add-button" onClick={() => openModal('add')}>
             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -1344,7 +1349,7 @@ const RoutesList: React.FC = () => {
           </button>
         </div>
       </div>
-      
+
       {filteredRoutes.length === 0 ? (
         <div className="empty-state">
           <p>No routes found matching your criteria.</p>
@@ -1387,21 +1392,21 @@ const RoutesList: React.FC = () => {
                   <td>{route.school?.name || 'Not assigned'}</td>
                   <td>{route.stops?.length || 0}</td>
                   <td className="actions-cell">
-                    <button 
+                    <button
                       className="action-btn view"
                       onClick={() => openModal('view', route)}
                       aria-label="View route details"
                     >
                       View
                     </button>
-                    <button 
+                    <button
                       className="action-btn edit"
                       onClick={() => openModal('edit', route)}
                       aria-label="Edit route"
                     >
                       Edit
                     </button>
-                    <button 
+                    <button
                       className="action-btn delete"
                       onClick={() => openModal('delete', route)}
                       aria-label="Delete route"
@@ -1415,22 +1420,22 @@ const RoutesList: React.FC = () => {
           </table>
         </div>
       )}
-      
+
       {/* Modal */}
       {(modalVisible || isModalOpen) && (
         <div className="modal-overlay">
           <div className="modal">
             {renderModalContent(modalType)}
-          </div>
-        </div>
-      )}
+              </div>
+                  </div>
+                )}
 
       {/* Success and error messages - fixed positioning */}
       {successMessage && (
         <div className="success-message">
           {successMessage}
-        </div>
-      )}
+                  </div>
+                )}
 
       {/* Only show floating error message when no modal is open */}
       {errorMessage && !isModalOpen && !modalVisible && (

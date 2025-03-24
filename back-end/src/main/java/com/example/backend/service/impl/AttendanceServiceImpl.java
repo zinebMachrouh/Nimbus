@@ -198,7 +198,7 @@ public class AttendanceServiceImpl extends BaseServiceImpl<Attendance, Attendanc
     }
 
     private Trip findTripById(Long tripId) {
-        return tripRepository.findById(tripId)
+        return tripRepository.findByIdAndActiveTrue(tripId)
                 .orElseThrow(() -> new EntityNotFoundException("Trip not found with id: " + tripId));
     }
 

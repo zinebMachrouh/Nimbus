@@ -50,13 +50,8 @@ public class TripController {
     @PostMapping
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<Trip>> createTrip(@Valid @RequestBody TripRequest tripRequest) {
-        Trip trip = new Trip();
-        trip.setScheduledDepartureTime(tripRequest.getScheduledDepartureTime());
-        trip.setStatus(Trip.TripStatus.SCHEDULED);
-        trip.setNotes(tripRequest.getNotes());
-        trip.setActive(true);
         
-        return ResponseEntity.ok(ApiResponse.success(tripService.save(trip)));
+        return ResponseEntity.ok(ApiResponse.success(tripService.create(tripRequest)));
     }
 
     @Operation(summary = "Delete a trip")
@@ -270,5 +265,14 @@ public class TripController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
         return ResponseEntity.ok(ApiResponse.success(tripService.findTripsByStudentId(studentId, page, size)));
+    }
+
+    @Operation(summary = "Assign students to trip")
+    @PutMapping("/{tripId}/students")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<ApiResponse<Trip>> assignStudents(
+            @PathVariable Long tripId,
+            @RequestBody List<Long> studentIds) {
+        return ResponseEntity.ok(ApiResponse.success(tripService.assignStudents(tripId, studentIds)));
     }
 } 

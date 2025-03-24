@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import './StudentsList.css';
 import { QRCodeSVG } from 'qrcode.react';
 import axios from 'axios';
-import { useAdminService, useTripService } from '../../../../contexts/ServiceContext';
+import { useAdminService, useStudentService, useTripService } from '../../../../contexts/ServiceContext';
 
 interface Student {
   id: number;
@@ -80,6 +80,7 @@ const StudentsList: React.FC = () => {
   ]);
   const adminService = useAdminService();
   const tripService = useTripService();
+  const studentService = useStudentService();
 
   // Check authentication on component mount
   useEffect(() => {
@@ -197,34 +198,11 @@ const StudentsList: React.FC = () => {
     setError(null);
     
     try {
-      // Get the JWT token from localStorage
-      const token = localStorage.getItem('token');
-      
-      // Create headers with the JWT token
-      const headers = {
-        'Authorization': `Bearer ${token}`
-      };
-      
-      console.log("Fetching students...");
-      const response = await axios.get('http://localhost:8080/api/v1/students', { headers });
+
+      const response = await studentService.findBySchoolId(getSchoolId());
       console.log("API response received:", response);
       
-      // Handle the response format properly
-      let studentsData = [];
-      if (response.data && response.data.data && Array.isArray(response.data.data)) {
-        studentsData = response.data.data;
-        console.log("Students loaded:", response.data.data.length);
-      } else if (Array.isArray(response.data)) {
-        studentsData = response.data;
-        console.log("Students loaded:", response.data.length);
-      } else if (response.data && Array.isArray(response.data.content)) {
-        // Some APIs nest the array under a 'content' property
-        studentsData = response.data.content;
-        console.log("Students loaded from content:", response.data.content.length);
-      } else {
-        console.warn('Unexpected API response format:', response.data);
-        studentsData = [];
-      }
+      const studentsData = response;
       
       // Check if each student has trips assigned
       const studentsWithTripInfo = await Promise.all(
@@ -248,7 +226,8 @@ const StudentsList: React.FC = () => {
             return {
               ...student,
               hasTrip: trips && trips.length > 0,
-              isActive: isActive
+              isActive: isActive,
+              schoolId: getSchoolId()
             };
           } catch (err) {
             console.warn(`Could not fetch trips for student ${student.id}:`, err);
@@ -257,7 +236,8 @@ const StudentsList: React.FC = () => {
             return {
               ...student,
               hasTrip: false,
-              isActive: false
+              isActive: false,
+              schoolId: getSchoolId()
             };
           }
         })
@@ -283,6 +263,11 @@ const StudentsList: React.FC = () => {
       console.log("Setting loading to false");
       setLoading(false);
     }
+  };
+
+  const getSchoolId = () => {
+    const schoolFromStorage = JSON.parse(localStorage.getItem('school') || '{}');
+    return schoolFromStorage.id;
   };
 
   // Fetch all parents using adminService
@@ -594,8 +579,10 @@ const StudentsList: React.FC = () => {
       
       const matchesAttendance = filterAttendance === '' || 
         student.grade === filterAttendance;
+
+      const matchesSchool = getSchoolId() === '' || student.schoolId === getSchoolId();
         
-      return matchesSearch && matchesGrade && matchesAttendance;
+      return matchesSearch && matchesGrade && matchesAttendance && matchesSchool;
     });
   };
 
@@ -1273,13 +1260,6 @@ const StudentsList: React.FC = () => {
     }
   };
 
-  // Add a test token for development
-  const addTestToken = () => {
-    // This is just for testing and should be removed in production
-    localStorage.setItem('token', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ0ZXN0VXNlciIsImlhdCI6MTIzNDU2Nzg5MCwiZXhwIjo0MTAyNDQ0ODAwfQ.HwlC8qnF1AyZ_5DTKs5E4wPhpfbAIlL5ZmPt7O7ypQE');
-    setIsAuthenticated(true);
-    fetchStudents();
-  };
 
   // Add a handler for the restore action
   const handleRestore = async (studentId: number) => {
@@ -1369,19 +1349,7 @@ const StudentsList: React.FC = () => {
     }
   };
 
-  // Render main content based on loading and error states
   const renderContent = () => {
-    if (!isAuthenticated) {
-      return (
-        <div className="authentication-reminder">
-          <h3>Authentication Required</h3>
-          <p>Please log in to access the students management system.</p>
-          <button className="btn-primary" onClick={addTestToken}>
-            Login with Test Token
-          </button>
-        </div>
-      );
-    }
     
     if (loading) {
       return (

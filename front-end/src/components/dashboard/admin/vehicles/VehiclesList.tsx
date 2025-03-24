@@ -32,34 +32,32 @@ const VehiclesList = () => {
             setVehicles(contextVehicles);
             setLoading(false);
         } else {
-            loadVehicles();
+            fetchVehicles();
         }
     }, [contextVehicles]);
 
-    const loadVehicles = () => {
-        const storedSchool = localStorage.getItem("school");
-        let schoolId = 0;
-        
-        if (storedSchool) {
-            try {
-                schoolId = JSON.parse(storedSchool)?.id || 0;
-            } catch (error) {
-                console.error("Error parsing school from localStorage:", error);
+    const fetchVehicles = async () => {
+        try {
+            console.log('Starting to fetch vehicles...');
+            const schoolId = localStorage.getItem('schoolId');
+            if (!schoolId) {
+                console.error('No school ID found in localStorage');
+                setError('School ID not found. Please log in again.');
+                return;
             }
-        }
-        
-        if (schoolId) {
-            vehicleService.findVehiclesBySchool(schoolId)
-                .then(data => {
-                    setVehicles(data);
-                })
-                .catch(error => {
-                    console.error("Failed to fetch vehicles:", error);
-                })
-                .finally(() => {
-                    setLoading(false);
-                });
-        } else {
+
+            const response = await vehicleService.getAllVehicles();
+            console.log('Raw vehicles response:', response);
+            
+            // Filter vehicles by school ID
+            const filteredVehicles = response.filter(vehicle => vehicle.schoolId === schoolId);
+            console.log('Filtered vehicles:', filteredVehicles);
+            
+            setVehicles(filteredVehicles);
+            setLoading(false);
+        } catch (error) {
+            console.error('Error fetching vehicles:', error);
+            setError('Failed to fetch vehicles');
             setLoading(false);
         }
     };
