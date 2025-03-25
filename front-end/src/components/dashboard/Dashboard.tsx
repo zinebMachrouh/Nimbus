@@ -247,7 +247,7 @@ const Dashboard = () => {
                     </button>
                     <button type="button" className="notification-btn" title="Notifications">
                         <BiBell />
-                        <span className="notification-badge"></span>
+                        <span style={{width: "10px", height: "10px", backgroundColor: "#28887A", borderRadius: "50%", position: "absolute", top: "5px", right: "0px"}}></span>
                     </button>
                     <div className="profile-menu-container" ref={profileMenuRef}>
                         <button 

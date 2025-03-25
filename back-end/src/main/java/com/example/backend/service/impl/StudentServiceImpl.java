@@ -173,8 +173,7 @@ public class StudentServiceImpl extends BaseServiceImpl<Student, StudentReposito
         log.debug("Generating QR code for student {}", studentId);
         Student student = findStudentById(studentId);
         
-        // Only generate QR code after a seat number is assigned
-        if (student.getSeatNumber() != null) {
+        if (student.getSchool().getId() != null) {
             student.generateQRCode();
             repository.save(student);
             log.info("Generated QR code for student {}: {}", studentId, student.getQrCode());

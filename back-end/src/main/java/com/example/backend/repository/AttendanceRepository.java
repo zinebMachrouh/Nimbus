@@ -110,4 +110,6 @@ public interface AttendanceRepository extends BaseRepository<Attendance> {
     long countByStatus(Attendance.AttendanceStatus status);
 
     List<Attendance> findByTripIdOrderBySeatNumberAsc(Long tripId);
-} 
+
+    Attendance findByStudentIdAndTripId(Long studentId, Long tripId);
+}

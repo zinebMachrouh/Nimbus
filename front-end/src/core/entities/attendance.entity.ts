@@ -5,8 +5,9 @@ export enum AttendanceStatus {
   PENDING = 'PENDING',
   PRESENT = 'PRESENT',
   ABSENT = 'ABSENT',
-  ABSENT_NOTIFIED = 'ABSENT_NOTIFIED',
-  EXCUSED = 'EXCUSED'
+  LATE = 'LATE',
+  EXCUSED = 'EXCUSED',
+  ABSENT_NOTIFIED = 'ABSENT_NOTIFIED'
 }
 
 export interface Attendance {
@@ -22,4 +23,12 @@ export interface Attendance {
   active: boolean;
   createdAt: string;
   updatedAt: string;
+  tripId: number;
+  studentId: number;
+  schoolId: number;
+  parentId: number;
+  notificationSentAt?: string;
+  notificationMethod?: 'SMS' | 'EMAIL' | 'APP';
+  notificationStatus?: 'PENDING' | 'SENT' | 'FAILED';
+  notificationError?: string;
 } 

@@ -63,12 +63,14 @@ public class StudentController {
         student.setDateOfBirth(studentRequest.getDateOfBirth());
         student.setGrade(studentRequest.getGrade());
         student.setActive(true);
-        
-        // Add school and parent
+
         student.setSchool(schoolService.findById(studentRequest.getSchoolId()));
         student.setParent(parentService.findById(studentRequest.getParentId()));
-        
-        return ResponseEntity.ok(ApiResponse.success(studentService.save(student)));
+
+        Student savedStudent = studentService.save(student);
+        studentService.generateQrCode(savedStudent.getId());
+
+        return ResponseEntity.ok(ApiResponse.success(savedStudent));
     }
 
     @Operation(summary = "Update a student")

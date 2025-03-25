@@ -343,6 +343,10 @@ public class TripServiceImpl extends BaseServiceImpl<Trip, TripRepository> imple
             if (!student.getSchool().getId().equals(schoolId)) {
                 throw new ValidationException("Cannot assign students from different schools to the same trip");
             }
+            // Validate that each student has a QR code
+            if (student.getQrCode() == null) {
+                throw new ValidationException("Student " + student.getId() + " does not have a QR code");
+            }
         }
 
         // Get vehicle capacity
@@ -378,10 +382,8 @@ public class TripServiceImpl extends BaseServiceImpl<Trip, TripRepository> imple
             // Assign seat number
             attendance.setSeatNumber(nextSeatNumber++);
             
-            // Generate QR code
-            String qrData = String.format("trip:%d,student:%d,seat:%d", 
-                trip.getId(), student.getId(), attendance.getSeatNumber());
-            attendance.setQrCode(qrData);
+            // Use student's QR code
+            attendance.setQrCode(student.getQrCode());
             
             attendanceRepository.save(attendance);
         }

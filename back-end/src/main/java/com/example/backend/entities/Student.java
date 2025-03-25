@@ -7,8 +7,10 @@ import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import lombok.Getter;
 import lombok.Setter;
+import org.springframework.util.StringUtils;
 
 import java.time.LocalDate;
+import java.util.UUID;
 
 @Getter
 @Setter
@@ -27,6 +29,9 @@ public class Student extends BaseEntity {
     @Column(nullable = false)
     private LocalDate dateOfBirth;
 
+    @Column(unique = true)
+    private String studentId;
+
     @ManyToOne
     @JoinColumn(name = "parent_id", nullable = false)
     @JsonBackReference("parent-student")
@@ -43,19 +48,34 @@ public class Student extends BaseEntity {
     @Column
     private String grade;
 
+    @Column(unique = true)
     private String qrCode;
 
-    @Transient
+    @Column
     private Double attendancePercentage;
+
+    @Column(nullable = false)
+    private boolean active = true;
 
     /**
      * QR code will be generated after a route is assigned to the student
      * This is called programmatically, not via PrePersist
      */
     public void generateQRCode() {
-        if (this.getId() != null) {
-            // Generate QR code based on student ID
-            this.qrCode = String.format("NIMBUS-STD-%d", this.getId());
+        // Generate a unique QR code using student ID and school ID
+        String uniqueId = UUID.randomUUID().toString().substring(0, 8);
+        this.qrCode = String.format("STUDENT-%s-%d-%d", 
+            uniqueId,
+            this.school != null ? this.school.getId() : 0,
+            this.id != null ? this.id : 0
+        );
+    }
+
+    public void setSeatNumber(Integer seatNumber) {
+        this.seatNumber = seatNumber;
+        // Generate QR code when seat number is set
+        if (seatNumber != null) {
+            generateQRCode();
         }
     }
 } 

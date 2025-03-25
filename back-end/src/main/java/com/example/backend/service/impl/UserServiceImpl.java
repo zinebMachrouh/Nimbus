@@ -376,7 +376,27 @@ public class UserServiceImpl extends BaseServiceImpl<User, UserRepository> imple
         student.setSeatNumber(seatNumber);
         student.setActive(true);
 
+        // Generate student ID
+        String studentId = generateStudentId(schoolId);
+        student.setStudentId(studentId);
+
         return studentRepository.save(student);
+    }
+
+    private String generateStudentId(Long schoolId) {
+        // Get current year
+        String year = String.valueOf(LocalDate.now().getYear());
+        
+        // Get school code (first 3 letters of school name or ID)
+        School school = schoolRepository.findById(schoolId)
+            .orElseThrow(() -> new IllegalArgumentException("School not found"));
+        String schoolCode = school.getName().substring(0, Math.min(3, school.getName().length())).toUpperCase();
+        
+        // Get next sequence number for this school
+        long nextSequence = studentRepository.countBySchoolIdAndActiveTrue(schoolId) + 1;
+        
+        // Format: YYYY-SCHOOL-XXXX (e.g., 2024-ABC-0001)
+        return String.format("%s-%s-%04d", year, schoolCode, nextSequence);
     }
 
     /**

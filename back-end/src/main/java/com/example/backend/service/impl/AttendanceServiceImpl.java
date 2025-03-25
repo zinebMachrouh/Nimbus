@@ -111,14 +111,12 @@ public class AttendanceServiceImpl extends BaseServiceImpl<Attendance, Attendanc
         validateNotes(notes);
         validateAttendanceRecording(student, trip);
 
-        Attendance attendance = new Attendance();
-        attendance.setStudent(student);
-        attendance.setTrip(trip);
+        Attendance attendance = repository.findByStudentIdAndTripId(studentId, tripId);
+
         attendance.setStatus(Attendance.AttendanceStatus.valueOf(status));
         attendance.setNotes(notes);
         attendance.setScanTime(LocalDateTime.now());
         attendance.setParentNotified(false);
-        attendance.setActive(true);
 
         repository.save(attendance);
         log.info("Successfully recorded attendance for student {} on trip {}", studentId, tripId);
@@ -234,23 +232,14 @@ public class AttendanceServiceImpl extends BaseServiceImpl<Attendance, Attendanc
     }
 
     private void validateAttendanceRecording(Student student, Trip trip) {
-        // Validate if student belongs to the school associated with the trip
-        if (!student.getSchool().equals(trip.getRoute().getSchool())) {
-            throw new ValidationException("Student does not belong to the school associated with this trip");
+        // Validate that student belongs to the same school as the trip's route
+        if (!student.getSchool().getId().equals(trip.getRoute().getSchool().getId())) {
+            throw new ValidationException("Student does not belong to the same school as the trip's route");
         }
 
-        // Validate if attendance is being recorded within acceptable time range
-        LocalDateTime now = LocalDateTime.now();
-        LocalDateTime tripTime = trip.getScheduledDepartureTime();
-        long minutesDifference = Math.abs(ChronoUnit.MINUTES.between(now, tripTime));
-        
-        if (minutesDifference > MAX_SCAN_TIME_DIFFERENCE_MINUTES) {
-            throw new ValidationException("Attendance can only be recorded within " + 
-                MAX_SCAN_TIME_DIFFERENCE_MINUTES + " minutes of scheduled trip time");
-        }
-
-        if (repository.existsByStudentAndTripAndActiveTrue(student, trip)) {
-            throw new ValidationException("Attendance already recorded for this student on this trip");
+        // Validate that student has a QR code
+        if (student.getQrCode() == null) {
+            throw new ValidationException("Student does not have a QR code");
         }
     }
 

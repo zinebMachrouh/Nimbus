@@ -1,0 +1,237 @@
+.attendance-management {
+  padding: 20px;
+  background-color: #ffffff;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.attendance-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.attendance-header h2 {
+  margin: 0;
+  color: #333;
+  font-size: 24px;
+}
+
+.attendance-controls {
+  display: flex;
+  gap: 20px;
+  align-items: center;
+}
+
+.date-picker-container {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.date-picker-container label {
+  font-weight: 500;
+  color: #666;
+}
+
+.date-picker {
+  padding: 8px 12px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 14px;
+}
+
+.bulk-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.bulk-button {
+  padding: 8px 16px;
+  border: none;
+  border-radius: 4px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.bulk-button.present {
+  background-color: #4CAF50;
+  color: white;
+}
+
+.bulk-button.absent {
+  background-color: #F44336;
+  color: white;
+}
+
+.bulk-button:hover {
+  opacity: 0.9;
+}
+
+.attendance-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 20px;
+  margin-bottom: 30px;
+  padding: 20px;
+  background-color: #f8f9fa;
+  border-radius: 8px;
+}
+
+.stat-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.stat-label {
+  font-size: 14px;
+  color: #666;
+  margin-bottom: 5px;
+}
+
+.stat-value {
+  font-size: 24px;
+  font-weight: 600;
+  color: #333;
+}
+
+.stat-value.present { color: #4CAF50; }
+.stat-value.absent { color: #F44336; }
+.stat-value.late { color: #FF9800; }
+.stat-value.excused { color: #9C27B0; }
+
+.attendance-table {
+  overflow-x: auto;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 20px;
+}
+
+th, td {
+  padding: 12px;
+  text-align: left;
+  border-bottom: 1px solid #ddd;
+}
+
+th {
+  background-color: #f8f9fa;
+  font-weight: 600;
+  color: #333;
+}
+
+tr:hover {
+  background-color: #f5f5f5;
+}
+
+.status-badge {
+  display: inline-block;
+  padding: 4px 8px;
+  border-radius: 12px;
+  color: white;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.action-buttons {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.action-button {
+  padding: 6px 12px;
+  border: none;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.action-button.present {
+  background-color: #4CAF50;
+  color: white;
+}
+
+.action-button.absent {
+  background-color: #F44336;
+  color: white;
+}
+
+.action-button.late {
+  background-color: #FF9800;
+  color: white;
+}
+
+.action-button.excused {
+  background-color: #9C27B0;
+  color: white;
+}
+
+.action-button:hover {
+  opacity: 0.9;
+}
+
+.attendance-loading {
+  text-align: center;
+  padding: 40px;
+  color: #666;
+  font-size: 16px;
+}
+
+.attendance-error {
+  text-align: center;
+  padding: 40px;
+  color: #F44336;
+}
+
+.retry-button {
+  margin-top: 20px;
+  padding: 8px 16px;
+  background-color: #2196F3;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.retry-button:hover {
+  background-color: #1976D2;
+}
+
+@media (max-width: 768px) {
+  .attendance-header {
+    flex-direction: column;
+    gap: 15px;
+  }
+
+  .attendance-controls {
+    flex-direction: column;
+    width: 100%;
+  }
+
+  .bulk-actions {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .attendance-stats {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .action-buttons {
+    flex-direction: column;
+  }
+
+  .action-button {
+    width: 100%;
+  }
+} 

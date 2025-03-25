@@ -43,6 +43,9 @@ public class Attendance extends BaseEntity {
     @Column
     private String qrCode;
 
+    @Column(nullable = false)
+    private boolean active = true;
+
     public enum AttendanceStatus {
         PENDING,
         PRESENT,
