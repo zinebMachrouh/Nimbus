@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Welcome to Nimbus</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .header {
+            background-color: #28887A;
+            color: white;
+            padding: 20px;
+            text-align: center;
+            border-radius: 5px 5px 0 0;
+        }
+        .content {
+            background-color: #f9f9f9;
+            padding: 20px;
+            border-radius: 0 0 5px 5px;
+            border: 1px solid #ddd;
+        }
+        .button {
+            display: inline-block;
+            padding: 10px 20px;
+            background-color: #28887A;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            margin: 20px 0;
+        }
+        .footer {
+            text-align: center;
+            margin-top: 20px;
+            font-size: 12px;
+            color: #666;
+        }
+        .credentials {
+            background-color: #fff;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 20px 0;
+            border: 1px solid #ddd;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Welcome to Nimbus!</h1>
+        </div>
+        
+        <div class="content">
+            <p>Dear <span th:text="${name}">Parent</span>,</p>
+            
+            <p>Welcome to Nimbus! Your parent account has been successfully created. We're excited to have you join our community.</p>
+            
+            <div class="credentials">
+                <h3>Your Account Credentials:</h3>
+                <p><strong>Email:</strong> <span th:text="${to}">email@example.com</span></p>
+                <p><strong>Password:</strong> <span th:text="${password}">your-password</span></p>
+            </div>
+            
+            <p>For security reasons, we recommend changing your password after your first login.</p>
+            
+            <p>You can now log in to your account to:</p>
+            <ul>
+                <li>View your children's attendance</li>
+                <li>Track their trips</li>
+                <li>Manage your profile</li>
+            </ul>
+            
+            <p>If you have any questions or need assistance, please don't hesitate to contact our support team.</p>
+            
+            <p>Best regards,<br>The Nimbus Team</p>
+        </div>
+        
+        <div class="footer">
+            <p>This is an automated message, please do not reply to this email.</p>
+        </div>
+    </div>
+</body>
+</html> 

@@ -7,6 +7,7 @@ import com.example.backend.entities.user.Driver;
 import com.example.backend.entities.user.Parent;
 import com.example.backend.entities.user.User;
 import com.example.backend.repository.*;
+import com.example.backend.service.EmailService;
 import com.example.backend.service.UserService;
 import com.example.backend.service.base.BaseServiceImpl;
 import jakarta.persistence.EntityNotFoundException;
@@ -33,11 +34,12 @@ public class UserServiceImpl extends BaseServiceImpl<User, UserRepository> imple
     private final StudentRepository studentRepository;
     private final SchoolRepository schoolRepository;
     private final VehicleRepository vehicleRepository;
+    private final EmailService emailService;    
 
     public UserServiceImpl(@Qualifier("userRepository") UserRepository repository, PasswordEncoder passwordEncoder,
                           ParentRepository parentRepository, DriverRepository driverRepository,
                           StudentRepository studentRepository, SchoolRepository schoolRepository,
-                          VehicleRepository vehicleRepository) {
+                          VehicleRepository vehicleRepository, EmailService emailService) {
         super(repository);
         this.passwordEncoder = passwordEncoder;
         this.parentRepository = parentRepository;
@@ -45,6 +47,7 @@ public class UserServiceImpl extends BaseServiceImpl<User, UserRepository> imple
         this.studentRepository = studentRepository;
         this.schoolRepository = schoolRepository;
         this.vehicleRepository = vehicleRepository;
+        this.emailService = emailService;
     }
 
     @Override
@@ -284,7 +287,13 @@ public class UserServiceImpl extends BaseServiceImpl<User, UserRepository> imple
         parent.setRole(User.Role.PARENT);
         parent.setActive(true);
 
-        return parentRepository.save(parent);
+        Parent savedParent = parentRepository.save(parent);
+
+        if (savedParent != null) {
+            emailService.sendWelcomeEmail(email, savedParent.getFirstName(), password, "Parent");
+        }
+
+        return savedParent;
     }
 
     @Transactional
@@ -354,7 +363,11 @@ public class UserServiceImpl extends BaseServiceImpl<User, UserRepository> imple
         driver.setStatus(Driver.DriverStatus.AVAILABLE);
         driver.setActive(true);
 
-        return driverRepository.save(driver);
+        Driver savedDriver = driverRepository.save(driver);
+        if (savedDriver != null) {
+            emailService.sendWelcomeEmail(email, savedDriver.getFirstName(), password, "Driver");
+        }
+        return savedDriver;
     }
 
     @Transactional

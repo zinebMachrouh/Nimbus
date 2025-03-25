@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Welcome to Nimbus</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            margin: 0;
+            padding: 0;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .header {
+            background-color: #28887A;
+            color: white;
+            padding: 30px 20px;
+            text-align: center;
+            border-radius: 5px 5px 0 0;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 28px;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.2);
+        }
+        .content {
+            background-color: white;
+            padding: 30px;
+            border-radius: 0 0 5px 5px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .button {
+            display: inline-block;
+            padding: 12px 24px;
+            background-color: #28887A;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            margin: 20px 0;
+            font-weight: bold;
+            transition: background-color 0.3s;
+        }
+        .button:hover {
+            background-color: #1f6b5f;
+        }
+        .footer {
+            text-align: center;
+            margin-top: 20px;
+            font-size: 12px;
+            color: #666;
+            padding: 20px;
+        }
+        .credentials {
+            background-color: #f8f9fa;
+            padding: 20px;
+            border-radius: 5px;
+            margin: 20px 0;
+            border: 1px solid #e9ecef;
+        }
+        .credentials h3 {
+            color: #28887A;
+            margin-top: 0;
+        }
+        .feature-list {
+            background-color: #f8f9fa;
+            padding: 20px;
+            border-radius: 5px;
+            margin: 20px 0;
+        }
+        .feature-list h3 {
+            color: #28887A;
+            margin-top: 0;
+        }
+        .feature-list ul {
+            list-style-type: none;
+            padding: 0;
+        }
+        .feature-list li {
+            padding: 10px 0;
+            border-bottom: 1px solid #e9ecef;
+            display: flex;
+            align-items: center;
+        }
+        .feature-list li:last-child {
+            border-bottom: none;
+        }
+        .feature-list li::before {
+            content: '✓';
+            color: #28887A;
+            margin-right: 10px;
+            font-weight: bold;
+        }
+        .important-note {
+            background-color: #fff3cd;
+            border: 1px solid #ffeeba;
+            color: #856404;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Welcome to Nimbus!</h1>
+        </div>
+        
+        <div class="content">
+            <p>Dear <span th:text="${name}">Driver</span>,</p>
+            
+            <p>Welcome to Nimbus! Your driver account has been successfully created. We're excited to have you join our team of professional drivers.</p>
+            
+            <div class="credentials">
+                <h3>Your Account Credentials</h3>
+                <p><strong>Email:</strong> <span th:text="${to}">email@example.com</span></p>
+                <p><strong>Password:</strong> <span th:text="${password}">your-password</span></p>
+            </div>
+            
+            <div class="important-note">
+                <p>⚠️ For security reasons, please change your password after your first login.</p>
+            </div>
+            
+            <div class="feature-list">
+                <h3>What You Can Do With Your Account</h3>
+                <ul>
+                    <li>View and manage your assigned trips</li>
+                    <li>Track student attendance using QR codes</li>
+                    <li>Access real-time navigation and route information</li>
+                    <li>View your schedule and upcoming assignments</li>
+                </ul>
+            </div>
+            
+            <p><strong>Getting Started:</strong></p>
+            <ol>
+                <li>Log in to your account using the credentials above</li>
+                <li>Complete your driver profile</li>
+                <li>Review the safety guidelines and procedures</li>
+                <li>Familiarize yourself with the mobile app features</li>
+                <li>Check your assigned routes and schedules</li>
+            </ol>
+            
+            <p>Our support team is here to help you get started. If you have any questions or need assistance, please don't hesitate to contact us.</p>
+            
+            <p>Best regards,<br>The Nimbus Team</p>
+        </div>
+        
+        <div class="footer">
+            <p>This is an automated message, please do not reply to this email.</p>
+            <p>© 2024 Nimbus. All rights reserved.</p>
+        </div>
+    </div>
+</body>
+</html> 

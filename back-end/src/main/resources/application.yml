@@ -16,6 +16,25 @@ spring:
     livereload:
       enabled: false
 
+  mail:
+    host: sandbox.smtp.mailtrap.io
+    port: 2525
+    username: 1849285065f4e0
+    password: 03c30b1b2afae0
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+
+  thymeleaf:
+    cache: false
+    prefix: classpath:/templates/
+    suffix: .html
+    encoding: UTF-8
+    mode: HTML5
+
 nimbus:
   app:
     jwtSecret: 404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970
@@ -26,3 +45,4 @@ logging:
     root: INFO
     com.example.backend: DEBUG
     org.springframework.security: DEBUG
+
