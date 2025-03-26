@@ -7,6 +7,7 @@ import com.example.backend.entities.Route;
 import com.example.backend.entities.user.Driver;
 import com.example.backend.entities.Student;
 import com.example.backend.entities.Attendance;
+import com.example.backend.exception.ResourceNotFoundException;
 import com.example.backend.repository.DriverRepository;
 import com.example.backend.repository.TripRepository;
 import com.example.backend.repository.VehicleRepository;
@@ -27,6 +28,8 @@ import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import java.util.Set;
+import java.util.HashSet;
 
 @Slf4j
 @Service
@@ -372,6 +375,9 @@ public class TripServiceImpl extends BaseServiceImpl<Trip, TripRepository> imple
                 (vehicleCapacity - existingAttendances.size()));
         }
         
+        // Add students to the trip's students set
+        trip.getStudents().addAll(students);
+        
         // Create attendance records for each student
         for (Student student : students) {
             Attendance attendance = new Attendance();
@@ -388,8 +394,42 @@ public class TripServiceImpl extends BaseServiceImpl<Trip, TripRepository> imple
             attendanceRepository.save(attendance);
         }
         
+        // Save the updated trip
+        trip = repository.save(trip);
+        
         log.info("Successfully assigned {} students to trip {}", studentIds.size(), tripId);
         return trip;
+    }
+
+    @Override
+    public List<Student> getAssignedStudents(Long tripId) {
+        log.debug("Getting assigned students for trip {}", tripId);
+        
+        Trip trip = findTripById(tripId);
+        List<Attendance> attendances = attendanceRepository.findByTripIdOrderBySeatNumberAsc(tripId);
+        
+        return attendances.stream()
+            .map(Attendance::getStudent)
+            .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<Student> findUnassignedStudents(Long tripId, Long schoolId) {
+        Trip trip = findById(tripId);
+        if (trip == null) {
+            throw new ResourceNotFoundException("Trip not found with id: " + tripId);
+        }
+
+        // Get all active students from the school
+        List<Student> schoolStudents = studentRepository.findBySchoolIdAndActiveTrue(schoolId);
+        
+        // Get students already assigned to this trip
+        Set<Student> assignedStudents = new HashSet<>(trip.getStudents());
+        
+        // Return students that are not in the assigned set
+        return schoolStudents.stream()
+                .filter(student -> !assignedStudents.contains(student))
+                .collect(Collectors.toList());
     }
 
     // Private validation methods

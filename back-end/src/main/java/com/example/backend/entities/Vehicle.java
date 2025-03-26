@@ -60,7 +60,7 @@ public class Vehicle extends BaseEntity {
     private School school;
 
     @OneToMany(mappedBy = "vehicle")
-    @JsonIgnore
+    @JsonBackReference("vehicle-trip")
     private Set<Trip> trips = new HashSet<>();
 
     @Column

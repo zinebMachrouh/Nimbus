@@ -13,6 +13,7 @@ import { School } from "../../core/entities/school.entity";
 import { Student } from "../../core/entities/student.entity";
 import { Vehicle } from "../../core/entities/vehicle.entity";
 import { Trip } from "../../core/entities/trip.entity";
+import DriverDashboard from './driver/DriverDashboard';
 
 export const MyContext = createContext<any>(null);
 const Dashboard = () => {
@@ -33,7 +34,7 @@ const Dashboard = () => {
     const [students, setStudents] = useState<Student[]>([]);
     const [parents, setParents] = useState<Parent[]>([]);
     const [drivers, setDrivers] = useState<Driver[]>([]);
-    const [school, setSchool] = useState<School | null>(JSON.parse(localStorage.getItem("school") || "{}"));
+    const [school, setSchool] = useState<School | null>();
 
     
     const [user, setUser] = useState<User | null>(null);
@@ -50,18 +51,22 @@ const Dashboard = () => {
 
 
     const [schoolId, setSchoolId] = useState<number>(() => {
-        const storedSchool = localStorage.getItem("school");
-        console.log('Raw school from localStorage:', storedSchool);
-        
-        if (storedSchool) {
+        const school = localStorage.getItem('school');
+        const schoolData = JSON.parse(school || '{}');
+        if (schoolData) {
             try {
-                const school = JSON.parse(storedSchool);
-                console.log('Parsed school object:', school);
-                const id = school?.id;
-                console.log('Extracted school ID:', id);
-                return id || 0;
+                localStorage.setItem('schoolId', schoolData.id);
+                return schoolData.id;
             } catch (error) {
                 console.error("Error parsing school from localStorage:", error);
+            }
+        }
+        const storedSchoolId = localStorage.getItem('schoolId') || schoolData.id;
+        if (storedSchoolId) {
+            try {
+                return parseInt(storedSchoolId, 10);
+            } catch (error) {
+                console.error("Error parsing schoolId from localStorage:", error);
             }
         }
         return 0;
@@ -81,6 +86,10 @@ const Dashboard = () => {
                 setVehicles(vehicles);
             }
         );
+
+        schoolService.getSchoolById(schoolId).then(school => {
+            setSchool(school);
+        });
         
         routeService.findBySchoolId(schoolId).then(routes => {
             console.log('Fetched routes:', routes);
@@ -104,8 +113,7 @@ const Dashboard = () => {
             
             // Filter trips by school ID
             const filteredTrips = trips.filter(trip => {
-                const tripSchoolId = trip.driver?.school?.id;
-                console.log('Comparing trip school ID:', tripSchoolId, 'with current school ID:', schoolId, 'for trip:', trip.id);
+                const tripSchoolId = trip.vehicle?.school?.id;
                 return tripSchoolId === schoolId;
             });
         
@@ -134,33 +142,36 @@ const Dashboard = () => {
         });
         
 
-        
-        attendanceService.countTodaysPresentAttendance(schoolId).then(presentCount => {
-            setAttendance(presentCount);
-            
-            studentService.findBySchoolId(schoolId).then(students => {
-                if (students.length > 0) {
-                    const percentage = (presentCount / students.length) * 100;
-                    setAttendancePercentage(Math.round(percentage));
-                } else {
-                    setAttendancePercentage(0);
-                }
+   
+        if(authService.isAuthenticated() && authService.hasRole('ROLE_ADMIN')){
+                 
+            attendanceService.countTodaysPresentAttendance(schoolId).then(presentCount => {
+                setAttendance(presentCount);
+                
+                studentService.findBySchoolId(schoolId).then(students => {
+                    if (students.length > 0) {
+                        const percentage = (presentCount / students.length) * 100;
+                        setAttendancePercentage(Math.round(percentage));
+                    } else {
+                        setAttendancePercentage(0);
+                    }
+                });
             });
-        });
 
-        adminService.getAllParents().then(users => {
-            setParents(users);
-        }).catch(error => {
-            console.warn("Could not fetch parents:", error);
-            setParents([]);
-        });
-        
-        driverService.getAllDriversBySchoolId(schoolId).then(users => {
-            setDrivers(users);
-        }).catch(error => {
-            console.warn("Could not fetch drivers:", error);
-            setDrivers([]);
-        });
+            adminService.getAllParents().then(users => {
+                setParents(users);
+            }).catch(error => {
+                console.warn("Could not fetch parents:", error);
+                setParents([]);
+            });
+            
+            driverService.getAllDriversBySchoolId(schoolId).then(users => {
+                setDrivers(users);
+            }).catch(error => {
+                console.warn("Could not fetch drivers:", error);
+                setDrivers([]);
+            });
+        }
     }, []);
     
     useEffect(() => {
@@ -183,6 +194,10 @@ const Dashboard = () => {
     useEffect(() => {
         if(user?.role.toString() === "ROLE_ADMIN"){
             navigate("/dashboard/admin");
+        } else if(user?.role.toString() === "ROLE_DRIVER"){
+            navigate("/dashboard/driver");
+        } else if(user?.role.toString() === "ROLE_PARENT"){
+            navigate("/dashboard/parent");
         }
     }, [user]);
 
@@ -214,7 +229,6 @@ const Dashboard = () => {
                                     <NavLink to="routes">Routes</NavLink>
                                     <NavLink to="trips">Trips</NavLink>
                                     <NavLink to="attendance">Attendance</NavLink>
-                                    <NavLink to="reports">Reports</NavLink>
                                 </>
                             )
                         }
@@ -225,7 +239,6 @@ const Dashboard = () => {
                                     <NavLink to="trips">Trips</NavLink>
                                     <NavLink to="routes">Routes</NavLink>
                                     <NavLink to="history">History</NavLink>
-                                    <NavLink to="reports">Reports</NavLink>
                                 </>
                             )
                         }
@@ -236,7 +249,6 @@ const Dashboard = () => {
                                     <NavLink to="trips">Trips</NavLink>
                                     <NavLink to="routes">Routes</NavLink>
                                     <NavLink to="attendance">Attendance</NavLink>
-                                    <NavLink to="reports">Reports</NavLink>
                                 </>
                             )
                         }

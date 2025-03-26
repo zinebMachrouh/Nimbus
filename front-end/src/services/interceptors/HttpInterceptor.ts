@@ -86,6 +86,7 @@ export class HttpInterceptor {
     if (apiError.statusCode === 401) {
       localStorage.removeItem('token');
       localStorage.removeItem('currentUser');
+      localStorage.removeItem('schoolId');
       
       const currentPath = window.location.pathname;
       if (currentPath !== '/login') {

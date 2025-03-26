@@ -27,4 +27,5 @@ export interface AuthResponse {
   lastName: string;
   phoneNumber: string;
   role: string;
+  schoolId: number | null;
 }

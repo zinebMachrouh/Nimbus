@@ -4,6 +4,7 @@ import com.example.backend.entities.base.BaseEntity;
 import com.example.backend.entities.user.Driver;
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -20,17 +21,17 @@ public class Trip extends BaseEntity {
     
     @ManyToOne
     @JoinColumn(name = "route_id", nullable = false)
-    @JsonBackReference("route-trip")
+    @JsonManagedReference("route-trip")
     private Route route;
 
     @ManyToOne
     @JoinColumn(name = "driver_id", nullable = false)
-    @JsonBackReference("driver-trip")
+    @JsonManagedReference("driver-trip")
     private Driver driver;
 
     @ManyToOne
     @JoinColumn(name = "vehicle_id", nullable = false)
-    @JsonBackReference("vehicle-trip")
+    @JsonManagedReference("vehicle-trip")
     private Vehicle vehicle;
 
     @Column(nullable = false)
@@ -49,6 +50,15 @@ public class Trip extends BaseEntity {
     @OneToMany(mappedBy = "trip")
     @JsonIgnore
     private Set<Attendance> attendances = new HashSet<>();
+
+    @ManyToMany
+    @JoinTable(
+        name = "trip_students",
+        joinColumns = @JoinColumn(name = "trip_id"),
+        inverseJoinColumns = @JoinColumn(name = "student_id")
+    )
+    @JsonBackReference("trips-students")
+    private Set<Student> students = new HashSet<>();
 
     @Column
     private String notes;

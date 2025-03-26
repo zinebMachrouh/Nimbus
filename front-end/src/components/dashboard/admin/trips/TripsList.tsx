@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { format } from 'date-fns';
 import './TripsList.css';
 import './TripsListStyles.css';
+import '../../../../styles/shared/Modal.css';
 import { useTripService, useRouteService, useDriverService, useVehicleService, useStudentService } from '../../../../contexts/ServiceContext';
 import { TripStatus } from '../../../../core/entities/trip.entity';
 import { Route } from '../../../../core/entities/route.entity';
@@ -53,6 +54,9 @@ interface TripService {
   cancelTrip(id: number, reason: string): Promise<Trip>;
   assignStudents(tripId: number, studentIds: number[]): Promise<Trip>;
   getTripRequestSchema(): Promise<any>;
+  findByDriverId(driverId: number): Promise<Trip[]>;
+  getAssignedStudents(tripId: number): Promise<Student[]>;
+  getUnassignedStudents(tripId: number, schoolId: number): Promise<Student[]>;
 }
 
 // Update the Trip interface to include students
@@ -75,6 +79,12 @@ interface Trip {
   attendances?: Attendance[];
 }
 
+// Add this interface for student assignment
+interface StudentAssignment {
+  tripId: number;
+  studentId: number;
+}
+
 // Function to format date and time
 const formatDateTime = (dateTimeString: string) => {
   if (!dateTimeString) return 'N/A';
@@ -83,7 +93,6 @@ const formatDateTime = (dateTimeString: string) => {
     const date = new Date(dateTimeString);
     return format(date, 'MMM d, yyyy h:mm a');
   } catch (error) {
-    console.error('Error formatting date:', error);
     return dateTimeString;
   }
 };
@@ -133,6 +142,8 @@ const TripsList: React.FC = () => {
   const [cancelReason, setCancelReason] = useState('');
   const [selectedStudents, setSelectedStudents] = useState<number[]>([]);
   const [availableStudents, setAvailableStudents] = useState<Student[]>([]);
+  const [userRole, setUserRole] = useState<string>('');
+  const [userId, setUserId] = useState<number | null>(null);
 
   // Services
   const tripService = useTripService();
@@ -163,6 +174,14 @@ const TripsList: React.FC = () => {
     });
   };
 
+  // Load user role and ID on component mount
+  useEffect(() => {
+    const role = localStorage.getItem('role');
+    const id = localStorage.getItem('userId');
+    setUserRole(role || '');
+    setUserId(id ? parseInt(id) : null);
+  }, []);
+
   // Load data on component mount
   useEffect(() => {
     const checkAndLoad = async () => {
@@ -174,16 +193,35 @@ const TripsList: React.FC = () => {
       }
 
       try {
+        // Check for school ID first
+        const schoolId = localStorage.getItem('schoolId');
+        if (!schoolId) {
+          setError('School ID not found. Please log in again.');
+          setLoading(false);
+          // Redirect to login after a short delay
+          setTimeout(() => {
+            window.location.href = '/login';
+          }, 2000);
+          return;
+        }
+
         await Promise.all([
           fetchTrips(),
           fetchRoutes(),
           fetchDrivers(),
-          fetchVehicles(),
-          fetchAvailableStudents()
+          fetchVehicles()
         ]);
       } catch (err) {
         console.error('Error loading data:', err);
-        setError('Failed to load data. Please try again later.');
+        if (err instanceof Error && err.message.includes('School ID not found')) {
+          setError('School ID not found. Please log in again.');
+          // Redirect to login after a short delay
+          setTimeout(() => {
+            window.location.href = '/login';
+          }, 2000);
+        } else {
+          setError('Failed to load data. Please try again later.');
+        }
       } finally {
         setLoading(false);
       }
@@ -207,40 +245,91 @@ const TripsList: React.FC = () => {
   // Fetch routes for dropdown
   const fetchRoutes = async () => {
     try {
-      console.log('Fetching routes');
       const schoolId = getSchoolIdFromLocalStorage();
       if (!schoolId) {
-        console.error('No school ID found');
         setError('School ID not found. Please log in again.');
         return;
       }
 
       try {
         const allRoutes = await routeService.getAllRoutes();
-        console.log('Fetched routes:', allRoutes);
-        
-        // Filter routes by school ID
         const filteredRoutes = allRoutes.filter(route => route.school?.id === schoolId);
-        console.log('Filtered routes for school:', filteredRoutes);
         
         if (!filteredRoutes || filteredRoutes.length === 0) {
-          console.log('No routes found for school');
+          setRoutes([]);
         } else {
           setRoutes(filteredRoutes);
         }
       } catch (apiErr) {
-        console.error('API error fetching routes:', apiErr);
+        setError('Failed to fetch routes');
       }
     } catch (err) {
-      console.error('Error in fetchRoutes:', err);
+      setError('Error fetching routes');
     }
   };
 
   // Get school ID from local storage
   const getSchoolIdFromLocalStorage = (): number => {
-    const school = JSON.parse(localStorage.getItem('school') || '{}');
-    const schoolId = school.id;
-    return schoolId;
+    console.log('Getting school ID from localStorage...');
+    
+    // Try to get the school object first
+    const schoolStr = localStorage.getItem('school');
+    console.log('School object from localStorage:', schoolStr);
+    if (schoolStr) {
+      try {
+        const school = JSON.parse(schoolStr);
+        if (school && school.id) {
+          console.log('Found school ID from school object:', school.id);
+          return school.id;
+        }
+      } catch (err) {
+        console.error('Error parsing school object:', err);
+      }
+    }
+    
+    // Try to get the schoolId directly
+    const schoolId = localStorage.getItem('schoolId');
+    console.log('Direct schoolId from localStorage:', schoolId);
+    if (schoolId) {
+      const parsedId = parseInt(schoolId, 10);
+      if (!isNaN(parsedId)) {
+        console.log('Found school ID from schoolId:', parsedId);
+        return parsedId;
+      }
+    }
+    
+    // Try to get from userProfile
+    const userProfileStr = localStorage.getItem('userProfile');
+    console.log('UserProfile from localStorage:', userProfileStr);
+    if (userProfileStr) {
+      try {
+        const userProfile = JSON.parse(userProfileStr);
+        if (userProfile && userProfile.schoolId) {
+          console.log('Found school ID from userProfile:', userProfile.schoolId);
+          return userProfile.schoolId;
+        }
+      } catch (err) {
+        console.error('Error parsing userProfile:', err);
+      }
+    }
+    
+    // Try to get from userData
+    const userDataStr = localStorage.getItem('userData');
+    console.log('UserData from localStorage:', userDataStr);
+    if (userDataStr) {
+      try {
+        const userData = JSON.parse(userDataStr);
+        if (userData && userData.schoolId) {
+          console.log('Found school ID from userData:', userData.schoolId);
+          return userData.schoolId;
+        }
+      } catch (err) {
+        console.error('Error parsing userData:', err);
+      }
+    }
+    
+    
+    throw new Error('School ID not found in localStorage');
   };
 
   // Fetch drivers for dropdown
@@ -248,20 +337,15 @@ const TripsList: React.FC = () => {
     try {
       const schoolId = getSchoolIdFromLocalStorage();
       if (!schoolId) {
-        console.warn('Skipping driver fetch - no valid school ID');
         return;
       }
       
-      console.log('Fetching drivers for school ID:', schoolId);
       try {
         const allDrivers = await driverService.getAllDriversBySchoolId(schoolId);
-        console.log('Fetched drivers:', allDrivers);
         
-        // If API returned empty array, use mock data
         if (!allDrivers || allDrivers.length === 0) {
-          console.log('No drivers returned from API');
+          setDrivers([]);
         } else {
-          // Make sure each driver has a name property or construct one from firstName/lastName
           const processedDrivers = allDrivers.map(driver => {
             if (driver.firstName || driver.lastName) {
               return {
@@ -272,14 +356,13 @@ const TripsList: React.FC = () => {
             return driver;
           });
           
-          console.log('Processed drivers with names:', processedDrivers);
           setDrivers(processedDrivers);
         }
       } catch (apiErr) {
-        console.error('API error fetching drivers:', apiErr);
+        setError('Failed to fetch drivers');
       }
     } catch (err) {
-      console.error('Error in fetchDrivers:', err);
+      setError('Error fetching drivers');
     }
   };
 
@@ -288,48 +371,106 @@ const TripsList: React.FC = () => {
     try {
       const schoolId = getSchoolIdFromLocalStorage();
       if (!schoolId) {
-        console.warn('Skipping vehicle fetch - no valid school ID');
         return;
       }
       
-      console.log('Fetching vehicles for school ID:', schoolId);
       try {
         const allVehicles = await vehicleService.findVehiclesBySchool(schoolId);
-        console.log('Fetched vehicles:', allVehicles);
         
         if (!allVehicles || allVehicles.length === 0) {
-          console.log('No vehicles returned from API, using mock data');
+          setVehicles([]);
         } else {
           setVehicles(allVehicles);
         }
       } catch (apiErr) {
-        console.error('API error fetching vehicles:', apiErr);
+        setError('Failed to fetch vehicles');
       }
     } catch (err) {
-      console.error('Error in fetchVehicles:', err);
+      setError('Error fetching vehicles');
     }
   };
 
-  // Fetch available students
-  const fetchAvailableStudents = async () => {
+  // Update the fetchAvailableStudents function
+  const fetchAvailableStudents = async (tripId?: number) => {
     try {
-      const schoolId = getSchoolIdFromLocalStorage();
+      console.log('Starting fetchAvailableStudents...', { tripId });
+      
+      // Get school ID from localStorage
+      const schoolId = localStorage.getItem('schoolId');
+      console.log('School ID from localStorage:', schoolId);
+      
       if (!schoolId) {
-        console.error('No school ID found');
+        console.error('School ID not found in localStorage');
         setError('School ID not found. Please log in again.');
         return;
       }
-      
-      const allStudents = await studentService.getAllStudents();
-      console.log('Fetched students:', allStudents);
-      
-      // Filter students by school ID
-      const filteredStudents = allStudents.filter(student => student.school?.id === schoolId);
-      console.log('Filtered students for school:', filteredStudents);
-      
-      setAvailableStudents(filteredStudents);
+
+      if (tripId) {
+        try {
+          console.log('Fetching unassigned students for trip:', tripId, 'and school:', schoolId);
+          const unassignedStudents = await tripService.getUnassignedStudents(tripId, parseInt(schoolId));
+          console.log('Response from getUnassignedStudents:', unassignedStudents);
+          
+          // Ensure unassignedStudents is an array
+          const students = Array.isArray(unassignedStudents) ? unassignedStudents : [];
+          
+          if (students.length === 0) {
+            console.log('No unassigned students found');
+            setError('All students from this school are already assigned to this trip.');
+          } else {
+            console.log(`Found ${students.length} unassigned students:`, 
+              students.map(s => ({
+                id: s.id,
+                name: `${s.firstName} ${s.lastName}`,
+                active: s.active
+              }))
+            );
+          }
+          
+          setAvailableStudents(students);
+        } catch (err) {
+          console.error('Error fetching unassigned students:', err);
+          setError('Failed to fetch available students. Please try again.');
+        setAvailableStudents([]);
+        }
+      } else {
+        // If no tripId, get all active students from the school
+        try {
+          console.log('No tripId provided, fetching all active students for school:', schoolId);
+          const allStudents = await studentService.findBySchoolId(parseInt(schoolId));
+          console.log('Response from findBySchoolId:', allStudents);
+          
+          // Ensure allStudents is an array
+          const students = Array.isArray(allStudents) ? allStudents : [];
+          const activeStudents = students.filter(student => student.active);
+          console.log(`Found ${activeStudents.length} active students out of ${students.length} total`);
+          
+          setAvailableStudents(activeStudents);
+        } catch (err) {
+          console.error('Error fetching students:', err);
+          setError('Failed to fetch students. Please try again.');
+          setAvailableStudents([]);
+        }
+      }
     } catch (err) {
-      console.error('Error fetching students:', err);
+      console.error('Error in fetchAvailableStudents:', err);
+      setError(err instanceof Error ? err.message : 'Error fetching available students');
+      setAvailableStudents([]);
+    }
+  };
+
+  // Handle starting a trip
+  const handleStartTrip = async (tripId: number) => {
+    try {
+      await tripService.startTrip(tripId);
+      await fetchTrips(); // Refresh the trips list
+    } catch (err) {
+      console.error('Error starting trip:', err);
+      setOperationStatus({
+        loading: false,
+        success: false,
+        error: 'Failed to start trip.'
+      });
     }
   };
 
@@ -342,10 +483,45 @@ const TripsList: React.FC = () => {
     });
   };
 
-  // Open modal
-  const openModal = (type: ModalType, trip: Trip | null = null) => {
+  // Update the openModal function
+  const openModal = async (type: ModalType, trip: Trip | null = null) => {
+    console.log('openModal called with:', { type, tripId: trip?.id });
     setModalType(type);
     setSelectedTrip(trip);
+    
+    if (type === 'assign') {
+      console.log('Opening assign modal...');
+      if (!trip || !trip.id) {
+        console.error('Cannot assign students: No trip ID provided');
+        setOperationStatus({
+          loading: false,
+          success: false,
+          error: 'Invalid trip selected'
+        });
+        return;
+      }
+      
+      console.log('Opening assign modal for trip:', trip.id);
+      // Clear previous students and show loading state
+      setAvailableStudents([]);
+      setSelectedStudents([]);
+      setOperationStatus({ loading: true, success: false, error: null });
+      
+      try {
+        console.log('About to call fetchAvailableStudents with tripId:', trip.id);
+        // Fetch available students when opening the assign modal
+        await fetchAvailableStudents(trip.id);
+        console.log('fetchAvailableStudents completed');
+        setOperationStatus({ loading: false, success: true, error: null });
+      } catch (err) {
+        console.error('Error fetching students in openModal:', err);
+        setOperationStatus({
+          loading: false,
+          success: false,
+          error: 'Failed to load available students'
+        });
+      }
+    }
     
     // Calculate a future time (1 hour from now) for scheduled departure
     const futureTime = new Date();
@@ -375,7 +551,6 @@ const TripsList: React.FC = () => {
         if (routes.length === 0) fetchRoutes();
         if (drivers.length === 0) fetchDrivers();
         if (vehicles.length === 0) fetchVehicles();
-        
       }
       
       // Final check - if we still don't have valid IDs, show an error but provide a reasonable default
@@ -397,15 +572,15 @@ const TripsList: React.FC = () => {
         scheduledArrivalTime: arrivalTime.toISOString().slice(0, 16),
         notes: ''
       });
-    } else if (trip) {
+    } else if (type === 'edit' && trip) {
       // Format dates for the datetime-local input
       const scheduledDep = trip.scheduledDepartureTime ? new Date(trip.scheduledDepartureTime).toISOString().slice(0, 16) : '';
       const scheduledArr = trip.scheduledArrivalTime ? new Date(trip.scheduledArrivalTime).toISOString().slice(0, 16) : '';
       
       // Ensure IDs are valid numbers - never allow null or 0
-      const routeId = trip.id || (trip.route ? trip.route.id : 0);
-      const driverId = trip.id || (trip.driver ? trip.driver.id : 0);
-      const vehicleId = trip.id || (trip.vehicle ? trip.vehicle.id : 0);
+      const routeId = trip.routeId || (trip.route ? trip.route.id : 0);
+      const driverId = trip.driverId || (trip.driver ? trip.driver.id : 0);
+      const vehicleId = trip.vehicleId || (trip.vehicle ? trip.vehicle.id : 0);
       
       // If any ID is missing, use the first available option
       const finalRouteId = routeId > 0 ? routeId : (routes.length > 0 ? routes[0].id : 1);
@@ -423,6 +598,7 @@ const TripsList: React.FC = () => {
         notes: trip.notes || ''
       });
     }
+    
     setIsModalOpen(true);
   };
 
@@ -644,30 +820,11 @@ const TripsList: React.FC = () => {
 
   // Filter trips based on search query and filters
   const getFilteredTrips = () => {
-    console.log('Starting getFilteredTrips with:', {
-      totalTrips: trips.length,
-      searchQuery,
-      filterStatus,
-      filterRoute,
-      trips: JSON.stringify(trips, null, 2)
-    });
-
     if (!trips || trips.length === 0) {
-      console.log('No trips to filter');
       return [];
     }
 
-    const filteredTrips = trips.filter(trip => {
-      // Log each trip being filtered
-      console.log('Filtering trip:', {
-        id: trip.id,
-        route: trip.route?.name,
-        driver: trip.driver ? `${trip.driver.firstName} ${trip.driver.lastName}` : 'No driver',
-        status: trip.status,
-        schoolId: trip.driver?.school?.id
-      });
-
-      // Filter by search query
+    return trips.filter(trip => {
       const searchLower = searchQuery.toLowerCase();
       const searchMatches = 
         trip.route?.name?.toLowerCase().includes(searchLower) || 
@@ -678,32 +835,11 @@ const TripsList: React.FC = () => {
         trip.vehicle?.licensePlate?.toLowerCase().includes(searchLower) ||
         true;
       
-      // Filter by status
       const statusMatches = !filterStatus || trip.status === filterStatus;
-      
-      // Filter by route
       const routeMatches = !filterRoute || trip.route?.id === filterRoute;
       
-      const matches = searchMatches && statusMatches && routeMatches;
-      
-      if (matches) {
-        console.log('Trip matches all filters:', {
-          id: trip.id,
-          route: trip.route?.name,
-          driver: `${trip.driver?.firstName} ${trip.driver?.lastName}`,
-          status: trip.status
-        });
-      }
-      
-      return matches;
+      return searchMatches && statusMatches && routeMatches;
     });
-
-    console.log('Filtered trips result:', {
-      totalFiltered: filteredTrips.length,
-      trips: JSON.stringify(filteredTrips, null, 2)
-    });
-
-    return filteredTrips;
   };
 
   // Format date for display
@@ -720,15 +856,16 @@ const TripsList: React.FC = () => {
   // Update the handleAssignStudents function
   const handleAssignStudents = async (tripId: number) => {
     try {
-      console.log('Starting student assignment for trip:', tripId);
+      console.log('Starting student assignment process...');
       console.log('Selected students:', selectedStudents);
+      console.log('Trip ID:', tripId);
       
       if (!selectedStudents || selectedStudents.length === 0) {
+        console.log('No students selected');
         setOperationStatus({
           loading: false,
           success: false,
-          error: 'Please select at least one student to assign',
-          message: 'No students selected'
+          error: 'Please select at least one student to assign'
         });
         return;
       }
@@ -736,35 +873,40 @@ const TripsList: React.FC = () => {
       setOperationStatus({
         loading: true,
         success: false,
-        error: null,
-        message: 'Assigning students...'
+        error: null
       });
 
-      const response = await tripService.assignStudents(tripId, selectedStudents);
-      console.log('Student assignment response:', response);
-      
+      console.log('Calling tripService.assignStudents with:', {
+        tripId,
+        selectedStudents
+      });
+
+      // Call the service to assign students
+      await tripService.assignStudents(tripId, selectedStudents);
+      console.log('Successfully assigned students');
+
       setOperationStatus({
         loading: false,
         success: true,
         error: null,
-        message: `Successfully assigned ${selectedStudents.length} students`
+        message: 'Students successfully assigned to trip'
       });
 
-      // Refresh trips to show updated student assignments
+      // Refresh the trips and available students
       await fetchTrips();
+      await fetchAvailableStudents(tripId);
       
       // Close modal after a short delay
       setTimeout(() => {
         closeModal();
-        setSelectedStudents([]); // Reset selected students
+        setSelectedStudents([]);
       }, 1500);
     } catch (err) {
       console.error('Error assigning students:', err);
       setOperationStatus({
         loading: false,
         success: false,
-        error: err instanceof Error ? err.message : 'Failed to assign students',
-        message: 'Assignment failed'
+        error: err instanceof Error ? err.message : 'Failed to assign students'
       });
     }
   };
@@ -776,43 +918,64 @@ const TripsList: React.FC = () => {
         return (
           <div className="modal-content">
             <h2>Assign Students to Trip</h2>
-            <div className="form-group">
-              <label>Select Students</label>
-              <div className="student-selection">
-                {availableStudents.length === 0 ? (
-                  <p className="no-students">No students available for assignment</p>
-                ) : (
-                  availableStudents.map(student => (
-                    <div key={student.id} className="student-checkbox">
-                      <input
-                        type="checkbox"
-                        id={`student-${student.id}`}
-                        checked={selectedStudents.includes(student.id)}
-                        onChange={(e) => {
-                          if (e.target.checked) {
-                            setSelectedStudents([...selectedStudents, student.id]);
-                          } else {
-                            setSelectedStudents(selectedStudents.filter(id => id !== student.id));
-                          }
-                        }}
-                      />
-                      <label htmlFor={`student-${student.id}`}>
-                        {student.firstName} {student.lastName}
-                      </label>
+            {operationStatus.loading ? (
+              <div className="loading-indicator">Loading available students...</div>
+            ) : (
+              <div className="form-group">
+                <label>Available Students</label>
+                <div className="student-selection">
+                  {availableStudents.length === 0 ? (
+                    <div className="no-students-message">
+                      <p>No students available for assignment</p>
+                      <small>This could be because:</small>
+                      <ul>
+                        <li>All students are already assigned to this trip</li>
+                        <li>No students are registered in the system</li>
+                        <li>Students are not properly assigned to the school</li>
+                      </ul>
                     </div>
-                  ))
-                )}
+                  ) : (
+                    <>
+                      <div className="selection-header">
+                        <span>{availableStudents.length} students available</span>
+                        <span>{selectedStudents.length} students selected</span>
+                      </div>
+                      <div className="students-list">
+                        {availableStudents.map(student => (
+                          <div key={student.id} className="student-checkbox">
+                            <input
+                              type="checkbox"
+                              id={`student-${student.id}`}
+                              checked={selectedStudents.includes(student.id)}
+                              onChange={(e) => {
+                                if (e.target.checked) {
+                                  console.log('Adding student to selection:', student.id);
+                                  setSelectedStudents([...selectedStudents, student.id]);
+                                } else {
+                                  console.log('Removing student from selection:', student.id);
+                                  setSelectedStudents(selectedStudents.filter(id => id !== student.id));
+                                }
+                              }}
+                            />
+                            <label htmlFor={`student-${student.id}`}>
+                              {student.firstName} {student.lastName}
+                              {student.studentId && <span className="student-id">({student.studentId})</span>}
+                            </label>
+                          </div>
+                        ))}
+                      </div>
+                    </>
+                  )}
+                </div>
               </div>
-            </div>
+            )}
             
             {operationStatus.error && (
               <div className="error-message">{operationStatus.error}</div>
             )}
             
-            {operationStatus.message && (
-              <div className={`message ${operationStatus.success ? 'success' : 'error'}`}>
-                {operationStatus.message}
-              </div>
+            {operationStatus.success && (
+              <div className="success-message">{operationStatus.message}</div>
             )}
             
             <div className="modal-footer">
@@ -827,10 +990,10 @@ const TripsList: React.FC = () => {
               <button
                 type="button"
                 className="btn btn-primary"
-                onClick={() => handleAssignStudents(selectedTrip?.id || 0)}
+                onClick={() => selectedTrip && handleAssignStudents(selectedTrip.id)}
                 disabled={operationStatus.loading || selectedStudents.length === 0}
               >
-                {operationStatus.loading ? 'Assigning...' : 'Assign Students'}
+                {operationStatus.loading ? 'Assigning...' : `Assign ${selectedStudents.length} Student${selectedStudents.length !== 1 ? 's' : ''}`}
               </button>
             </div>
           </div>
@@ -1023,6 +1186,15 @@ const TripsList: React.FC = () => {
               >
                 Edit Trip
               </button>
+              {selectedTrip.status === TripStatus.SCHEDULED && (
+                <button 
+                  type="button" 
+                  className="start-btn"
+                  onClick={() => selectedTrip && handleStartTrip(selectedTrip.id)}
+                >
+                  Start Trip
+                </button>
+              )}
             </div>
           </div>
         );
@@ -1098,292 +1270,49 @@ const TripsList: React.FC = () => {
   // Add fetchTrips function
   const fetchTrips = async () => {
     try {
-      console.log('Starting to fetch trips...');
       const schoolId = getSchoolIdFromLocalStorage();
-      console.log('School ID from localStorage:', schoolId);
       
       if (!schoolId) {
-        console.error('No school ID available');
         setError('School ID not found. Please log in again.');
         return;
       }
 
-      const allTrips = await tripService.getAllTrips();
-      console.log('Raw trips from API:', JSON.stringify(allTrips, null, 2));
+      let allTrips: Trip[] = [];
+      
+      if (userRole === 'DRIVER' && userId) {
+        allTrips = await tripService.findByDriverId(userId);
+      } else {
+        allTrips = await tripService.getAllTrips();
+      }
       
       if (!allTrips || allTrips.length === 0) {
-        console.log('No trips returned from API');
         setTrips([]);
       } else {
-        // Filter trips by school ID
-        const filteredTrips = allTrips.filter(trip => {
-          const tripSchoolId = trip.driver?.school?.id || trip.route?.school?.id;
-          return tripSchoolId === schoolId;
-        });
+        let filteredTrips = allTrips;
+        if (userRole !== 'DRIVER') {
+          filteredTrips = allTrips.filter(trip => {
+            const tripSchoolId = trip.driver?.school?.id || trip.route?.school?.id;
+            return tripSchoolId === schoolId;
+          });
+        }
         
-        console.log('Filtered trips for school:', filteredTrips.length);
         setTrips(filteredTrips);
       }
     } catch (err) {
-      console.error('Error fetching trips:', err);
       setError('Failed to load trips. Please try again later.');
     }
   };
-
-  // Add styles for student selection
-  const styles = `
-    .student-selection {
-      max-height: 300px;
-      overflow-y: auto;
-      border: 1px solid #ddd;
-      border-radius: 4px;
-      padding: 1rem;
-      margin-top: 0.5rem;
-    }
-
-    .student-checkbox {
-      display: flex;
-      align-items: center;
-      padding: 0.5rem;
-      border-bottom: 1px solid #eee;
-    }
-
-    .student-checkbox:last-child {
-      border-bottom: none;
-    }
-
-    .student-checkbox input[type="checkbox"] {
-      margin-right: 0.5rem;
-    }
-
-    .student-checkbox label {
-      cursor: pointer;
-    }
-
-    .trip-card {
-      background: white;
-      border-radius: 8px;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-      padding: 1rem;
-      margin-bottom: 1rem;
-      transition: transform 0.2s, box-shadow 0.2s;
-    }
-
-    .trip-card:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 4px 8px rgba(0,0,0,0.15);
-    }
-
-    .trip-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 1rem;
-    }
-
-    .trip-title {
-      font-size: 1.2rem;
-      font-weight: 600;
-      color: #2c3e50;
-    }
-
-    .trip-status {
-      padding: 0.25rem 0.75rem;
-      border-radius: 20px;
-      font-size: 0.875rem;
-      font-weight: 500;
-    }
-
-    .trip-status.scheduled {
-      background-color: #e3f2fd;
-      color: #1976d2;
-    }
-
-    .trip-status.in-progress {
-      background-color: #e8f5e9;
-      color: #2e7d32;
-    }
-
-    .trip-status.completed {
-      background-color: #f5f5f5;
-      color: #616161;
-    }
-
-    .trip-status.cancelled {
-      background-color: #ffebee;
-      color: #c62828;
-    }
-
-    .trip-details {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-      gap: 1rem;
-      margin-bottom: 1rem;
-    }
-
-    .trip-detail-item {
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-    }
-
-    .trip-detail-item i {
-      color: #666;
-    }
-
-    .trip-actions {
-      display: flex;
-      gap: 0.5rem;
-      justify-content: flex-end;
-    }
-
-    .btn {
-      padding: 0.5rem 1rem;
-      border-radius: 4px;
-      border: none;
-      cursor: pointer;
-      font-weight: 500;
-      transition: background-color 0.2s;
-    }
-
-    .btn-primary {
-      background-color: #1976d2;
-      color: white;
-    }
-
-    .btn-primary:hover {
-      background-color: #1565c0;
-    }
-
-    .btn-secondary {
-      background-color: #f5f5f5;
-      color: #333;
-    }
-
-    .btn-secondary:hover {
-      background-color: #e0e0e0;
-    }
-
-    .btn-danger {
-      background-color: #d32f2f;
-      color: white;
-    }
-
-    .btn-danger:hover {
-      background-color: #c62828;
-    }
-
-    .modal {
-      position: fixed;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      background-color: rgba(0,0,0,0.5);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      z-index: 1000;
-    }
-
-    .modal-content {
-      background: white;
-      border-radius: 8px;
-      padding: 2rem;
-      max-width: 500px;
-      width: 90%;
-      max-height: 90vh;
-      overflow-y: auto;
-    }
-
-    .form-group {
-      margin-bottom: 1rem;
-    }
-
-    .form-group label {
-      display: block;
-      margin-bottom: 0.5rem;
-      font-weight: 500;
-    }
-
-    .form-group input,
-    .form-group select {
-      width: 100%;
-      padding: 0.5rem;
-      border: 1px solid #ddd;
-      border-radius: 4px;
-      font-size: 1rem;
-    }
-
-    .form-group input:focus,
-    .form-group select:focus {
-      outline: none;
-      border-color: #1976d2;
-      box-shadow: 0 0 0 2px rgba(25,118,210,0.2);
-    }
-
-    .field-error {
-      color: #d32f2f;
-      font-size: 0.875rem;
-      margin-top: 0.25rem;
-    }
-
-    .invalid-input {
-      border-color: #d32f2f !important;
-    }
-
-    .modal-footer {
-      display: flex;
-      justify-content: flex-end;
-      gap: 1rem;
-      margin-top: 2rem;
-    }
-
-    .assigned-student {
-      display: flex;
-      align-items: center;
-      gap: 1rem;
-      padding: 0.5rem;
-      border-bottom: 1px solid #eee;
-    }
-
-    .assigned-student:last-child {
-      border-bottom: none;
-    }
-
-    .seat-number {
-      background-color: #e6f7ff;
-      padding: 0.25rem 0.5rem;
-      border-radius: 4px;
-      font-size: 0.875rem;
-    }
-
-    .qr-code {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 0.25rem;
-    }
-
-    .qr-label {
-      font-size: 0.75rem;
-      color: #666;
-    }
-  `;
-
-  // Add the styles to the document
-  const styleSheet = document.createElement('style');
-  styleSheet.textContent = styles;
-  document.head.appendChild(styleSheet);
 
   return (
     <div className="trips-container">
       <div className="list-header">
         <h2>Trips Management</h2>
         <div className="header-actions">
-          <button className="add-button" onClick={() => openModal('add')}>
-            Add Trip
-          </button>
+          {userRole !== 'DRIVER' && (
+            <button className="add-button" onClick={() => openModal('add')}>
+              Add Trip
+            </button>
+          )}
         </div>
       </div>
       
@@ -1442,9 +1371,11 @@ const TripsList: React.FC = () => {
           <div className="empty-state-icon">🚌</div>
           <h3>No trips found</h3>
           <p>No trips match your current filters or there are no trips scheduled yet.</p>
-          <button className="add-button" onClick={() => openModal('add')}>
-            Schedule a New Trip
-          </button>
+          {userRole !== 'DRIVER' && (
+            <button className="add-button" onClick={() => openModal('add')}>
+              Schedule a New Trip
+            </button>
+          )}
         </div>
       ) : getFilteredTrips().length === 0 ? (
         <div className="empty-state">
@@ -1463,7 +1394,6 @@ const TripsList: React.FC = () => {
                 <th>Driver</th>
                 <th>Vehicle</th>
                 <th>Status</th>
-                <th>Students</th>
                 <th className="actions-header">Actions</th>
               </tr>
             </thead>
@@ -1476,30 +1406,9 @@ const TripsList: React.FC = () => {
                   <td>{trip.driver ? `${trip.driver.firstName} ${trip.driver.lastName}` : 'Unassigned'}</td>
                   <td>{trip.vehicle ? `${trip.vehicle.make} ${trip.vehicle.model}` : 'Unassigned'}</td>
                   <td>
-                    <span className={`status-badge ${trip.status.toLowerCase()}`}>
+                    <span>
                       {trip.status}
                     </span>
-                  </td>
-                  <td>
-                    <div>
-                      {trip.attendances?.map(attendance => (
-                        attendance && attendance.student ? (
-                          <div key={attendance.id} className="assigned-student">
-                            <span>{attendance.student.firstName} {attendance.student.lastName}</span>
-                            <span className="seat-number">
-                              {attendance.seatNumber ? `Seat ${attendance.seatNumber}` : 'Seat Unassigned'}
-                            </span>
-                            <div className="qr-code">
-                              <QRCodeSVG 
-                                value={attendance.qrCode || `trip:${trip.id},student:${attendance.student.id}`} 
-                                size={64} 
-                              />
-                              <span className="qr-label">Scan for attendance</span>
-                            </div>
-                          </div>
-                        ) : null
-                      ))}
-                    </div>
                   </td>
                   <td className="actions-cell">
                     <button 
@@ -1524,9 +1433,8 @@ const TripsList: React.FC = () => {
                           className="action-btn assign" 
                           title="Assign Students"
                           onClick={() => {
-                            setSelectedTrip(trip);
-                            setModalType('assign');
-                            setIsModalOpen(true);
+                            console.log('Assign Students button clicked for trip:', trip);
+                            openModal('assign', trip);
                           }}
                         >
                           Assign Students

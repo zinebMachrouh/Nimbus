@@ -3,6 +3,7 @@ package com.example.backend.controller;
 import com.example.backend.dto.response.ApiResponse;
 import com.example.backend.dto.trip.TripRequest;
 import com.example.backend.entities.Trip;
+import com.example.backend.entities.Student;
 import com.example.backend.service.TripService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -274,5 +275,23 @@ public class TripController {
             @PathVariable Long tripId,
             @RequestBody List<Long> studentIds) {
         return ResponseEntity.ok(ApiResponse.success(tripService.assignStudents(tripId, studentIds)));
+    }
+
+    @Operation(summary = "Get assigned students for a trip")
+    @GetMapping("/{tripId}/students")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<ApiResponse<List<Student>>> getAssignedStudents(
+            @PathVariable Long tripId) {
+        return ResponseEntity.ok(ApiResponse.success(tripService.getAssignedStudents(tripId)));
+    }
+
+    @Operation(summary = "Get unassigned students for a trip")
+    @GetMapping("/{tripId}/unassigned-students")
+    @PreAuthorize("hasAnyRole('ADMIN', 'SUPERVISOR')")
+    public ResponseEntity<List<Student>> getUnassignedStudents(
+            @PathVariable Long tripId,
+            @RequestParam Long schoolId) {
+        List<Student> unassignedStudents = tripService.findUnassignedStudents(tripId, schoolId);
+        return ResponseEntity.ok(unassignedStudents);
     }
 } 

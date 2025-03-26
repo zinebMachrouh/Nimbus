@@ -2,6 +2,7 @@ package com.example.backend.controller;
 
 import com.example.backend.dto.request.ReportIssueRequest;
 import com.example.backend.dto.response.ApiResponse;
+import com.example.backend.dto.response.DriverResponseDTO;
 import com.example.backend.entities.Trip;
 import com.example.backend.entities.Vehicle;
 import com.example.backend.entities.user.Driver;
@@ -146,6 +147,14 @@ public class DriverController {
         long completedTrips = driverService.countCompletedTripsInPeriod(driverId, start, end);
         return ResponseEntity.ok(ApiResponse.success("Driver statistics retrieved successfully", 
             Map.of("completedTrips", completedTrips)));
+    }
+
+    @Operation(summary = "Get driver by ID")
+    @GetMapping("/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'DRIVER')")
+    public ResponseEntity<ApiResponse<DriverResponseDTO>> getDriverById(@PathVariable Long id) {
+        Driver driver = driverService.findById(id);
+        return ResponseEntity.ok(ApiResponse.success(DriverResponseDTO.fromDriver(driver)));
     }
 
     @Operation(summary = "Report an issue")

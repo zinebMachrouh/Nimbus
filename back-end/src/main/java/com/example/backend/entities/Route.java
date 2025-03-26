@@ -29,12 +29,12 @@ public class Route extends BaseEntity {
     private String description;
 
     @OneToMany(mappedBy = "route")
-    @JsonManagedReference("route-trip")
+    @JsonBackReference("route-trip")
     private Set<Trip> trips = new HashSet<>();
 
     @ManyToOne
     @JoinColumn(name = "school_id", nullable = false)
-    @JsonBackReference("school-route")
+    @JsonManagedReference("school-route")
     private School school;
 
     @Column(nullable = false)

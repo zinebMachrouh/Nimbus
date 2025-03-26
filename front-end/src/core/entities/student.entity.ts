@@ -1,5 +1,6 @@
 import { School } from './school.entity';
 import { Parent } from './parent.entity';
+import { Trip } from './trip.entity';
 
 export interface Student {
   id: number;
@@ -16,4 +17,6 @@ export interface Student {
   active: boolean;
   createdAt?: string;
   updatedAt?: string;
+  hasTrip?: boolean;
+  currentTrip?: Trip;
 } 

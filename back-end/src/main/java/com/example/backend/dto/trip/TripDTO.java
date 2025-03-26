@@ -7,6 +7,7 @@ import lombok.Setter;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Set;
 
 @Getter
 @Setter
@@ -23,6 +24,8 @@ public class TripDTO extends BaseDTO {
     private Trip.TripStatus status;
     private String notes;
     private List<TripAttendanceDTO> attendances;
+    private Set<Long> studentIds;
+    private Set<String> studentNames;
     private Double currentLatitude;
     private Double currentLongitude;
     private Double currentSpeed;
@@ -32,7 +35,6 @@ public class TripDTO extends BaseDTO {
     public static class TripAttendanceDTO {
         private Long studentId;
         private String studentName;
-        private Integer seatNumber;
         private String attendanceStatus;
         private LocalDateTime scanTime;
     }

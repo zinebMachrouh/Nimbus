@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { FC, useState, useEffect } from 'react';
 import './StudentsList.css';
 import { QRCodeSVG } from 'qrcode.react';
 import { 
@@ -11,6 +11,8 @@ import {
 import { useToast } from '../../../../contexts/ToastContext';
 import { Student } from '../../../../core/entities/student.entity';
 import { AttendanceStatus } from '../../../../core/entities/attendance.entity';
+import { Parent } from '../../../../core/entities/parent.entity';
+import { School } from '../../../../core/entities/school.entity';
 
 // Types
 interface FormData {
@@ -22,13 +24,16 @@ interface FormData {
   parentId: number;
   schoolId: number;
   seatNumber?: number | null;
-  isActive?: boolean;
+  active: boolean;
+  parent?: Parent;
+  school?: School;
 }
 
 interface OperationStatus {
   loading: boolean;
   success: boolean;
   error: string | null;
+  message?: string;
 }
 
 type ModalType = 'add' | 'edit' | 'view' | 'delete' | 'restore' | 'record-attendance';
@@ -39,7 +44,7 @@ const GRADES = [
   'Grade 07', 'Grade 08', 'Grade 09', 'Grade 10', 'Grade 11', 'Grade 12'
 ];
 
-const StudentsList: React.FC = () => {
+const StudentsList: FC = () => {
   // Services
   const adminService = useAdminService();
   const tripService = useTripService();
@@ -50,6 +55,7 @@ const StudentsList: React.FC = () => {
 
   // State
   const [students, setStudents] = useState<Student[]>([]);
+  const [filteredStudents, setFilteredStudents] = useState<Student[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
@@ -57,13 +63,23 @@ const StudentsList: React.FC = () => {
   const [modalVisible, setModalVisible] = useState(false);
   const [modalType, setModalType] = useState<ModalType>('add');
   const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
-  const [parents, setParents] = useState<{id: number, firstName: string, lastName: string}[]>([]);
-  const [formData, setFormData] = useState<FormData>(getInitialFormData());
+  const [parents, setParents] = useState<Parent[]>([]);
+  const [formData, setFormData] = useState<FormData>({
+    firstName: '',
+    lastName: '',
+    dateOfBirth: '',
+    grade: '',
+    parentId: 0,
+    schoolId: 0,
+    seatNumber: null,
+    active: true
+  });
   const [operationStatus, setOperationStatus] = useState<OperationStatus>({
     loading: false,
     success: false,
     error: null
   });
+  const [filter, setFilter] = useState('');
 
   // Effects
   useEffect(() => {
@@ -81,6 +97,13 @@ const StudentsList: React.FC = () => {
     initializeData();
   }, []);
 
+  useEffect(() => {
+    console.log('Filters changed:', { searchQuery, filterGrade, filter });
+    const filtered = getFilteredStudents();
+    console.log('Filtered students:', filtered.length);
+    setFilteredStudents(filtered);
+  }, [students, searchQuery, filterGrade, filter]);
+
   // Helper Functions
   function getInitialFormData(): FormData {
     const schoolId = getSchoolId();
@@ -92,7 +115,7 @@ const StudentsList: React.FC = () => {
         parentId: 0,
       schoolId : schoolId,
         seatNumber: null,
-        isActive: true
+        active: true
     };
   }
 
@@ -109,15 +132,17 @@ const StudentsList: React.FC = () => {
   // Data Fetching Functions
   const fetchStudents = async () => {
     try {
-    setLoading(true);
-    setError(null);
+      setLoading(true);
+      setError(null);
     
       const schoolId = getSchoolId();
+      console.log('Fetching students for school:', schoolId);
       if (!schoolId) {
         throw new Error('School ID not found');
       }
 
       const studentsData = await studentService.findBySchoolId(schoolId);
+      console.log('Raw students data:', studentsData);
       
       const studentsWithTripInfo = await Promise.all(
         studentsData.map(async (student) => {
@@ -125,25 +150,34 @@ const StudentsList: React.FC = () => {
             const trips = await tripService.findByStudentId(student.id);
             return {
               ...student,
-              hasTrip: trips && trips.length > 0,
-              isActive: Boolean(student.active),
-              schoolId
+              hasTrip: Boolean(trips && trips.length > 0),
+              active: student.active === true,
+              school: student.school || { id: schoolId },
+              grade: student.grade || '',
+              firstName: student.firstName || '',
+              lastName: student.lastName || ''
             };
           } catch (err) {
             console.warn(`Could not fetch trips for student ${student.id}:`, err);
             return {
               ...student,
               hasTrip: false,
-              isActive: false,
-              schoolId
+              active: student.active === true,
+              school: student.school || { id: schoolId },
+              grade: student.grade || '',
+              firstName: student.firstName || '',
+              lastName: student.lastName || ''
             };
           }
         })
       );
       
+      console.log('Processed students with trip info:', studentsWithTripInfo);
       setStudents(studentsWithTripInfo);
+      setFilteredStudents(studentsWithTripInfo);
     } catch (err: any) {
       const errorMessage = err.response?.data?.message || 'Error fetching students';
+      console.error('Error in fetchStudents:', err);
       setError(errorMessage);
       showToast('error', errorMessage);
     } finally {
@@ -172,37 +206,59 @@ const StudentsList: React.FC = () => {
     }));
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleFilterChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const value = e.target.value;
+    setFilter(value);
+    
+    let filtered = students;
+    if (value === 'active') {
+      filtered = students.filter(student => student.active);
+    } else if (value === 'inactive') {
+      filtered = students.filter(student => !student.active);
+    } else if (value === 'withTrip') {
+      filtered = students.filter(student => student.hasTrip);
+    } else if (value === 'withoutTrip') {
+      filtered = students.filter(student => !student.hasTrip);
+    }
+    
+    setFilteredStudents(filtered);
+  };
+
+  const handleFormSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    setOperationStatus({ loading: true, success: false, error: null });
+    await handleSubmitAction();
+  };
+
+  const handleButtonClick = async () => {
+    await handleSubmitAction();
+  };
+
+  const handleSubmitAction = async () => {
+    setLoading(true);
+    setError(null);
 
     try {
-      switch (modalType) {
-        case 'add':
-          await handleCreate();
-          break;
-        case 'edit':
-          await handleUpdate();
-          break;
-        case 'delete':
-          await handleDelete();
-          break;
-        case 'restore':
-          await handleRestore();
-          break;
-        case 'record-attendance':
-          await handleRecordAttendance();
-          break;
+      const studentData = {
+        ...formData,
+        parent: { id: formData.parentId },
+        school: { id: formData.schoolId }
+      };
+
+      if (selectedStudent) {
+        await studentService.updateStudent(selectedStudent.id, studentData);
+      } else {
+        await studentService.createStudent(studentData);
       }
 
-      setOperationStatus({ loading: false, success: true, error: null });
-      showToast('success', 'Operation completed successfully');
-        closeModal();
-        await fetchStudents();
-    } catch (err: any) {
-      const errorMessage = err.response?.data?.message || 'Operation failed';
-      setOperationStatus({ loading: false, success: false, error: errorMessage });
+      await fetchStudents();
+      closeModal();
+      showToast('success', `Student successfully ${selectedStudent ? 'updated' : 'created'}`);
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'An error occurred';
+      setError(errorMessage);
       showToast('error', errorMessage);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -303,10 +359,10 @@ const StudentsList: React.FC = () => {
         lastName: student.lastName,
         dateOfBirth: student.dateOfBirth,
         grade: student.grade,
-        parentId: student.parentId,
-        schoolId: student.schoolId,
+        parentId: student.parent?.id,
+        schoolId: student.school?.id,
         seatNumber: student.seatNumber,
-        isActive: student.isActive
+        active: student.active
       });
     } else {
       setSelectedStudent(null);
@@ -329,26 +385,67 @@ const StudentsList: React.FC = () => {
     if (!formData.grade?.trim()) throw new Error('Grade is required');
   };
 
-  // Filter Functions
   const getFilteredStudents = () => {
-    if (!Array.isArray(students)) return [];
+    console.log('Filtering students with:', {
+      searchQuery,
+      filterGrade,
+      filter,
+      totalStudents: students.length
+    });
+
+    if (!Array.isArray(students)) {
+      console.warn('Students is not an array:', students);
+      return [];
+    }
     
     return students.filter(student => {
-      if (!student) return false;
+      if (!student) {
+        console.warn('Found null student in array');
+        return false;
+      }
       
+      // Name search filter
       const fullName = `${student.firstName || ''} ${student.lastName || ''}`.toLowerCase();
       const searchText = searchQuery.toLowerCase();
-      
       const matchesSearch = !searchText || fullName.includes(searchText);
+      
+      // Grade filter
       const matchesGrade = !filterGrade || student.grade === filterGrade;
-      const currentSchoolId = getSchoolId();
-      const matchesSchool = !currentSchoolId || student.schoolId === currentSchoolId;
-        
-      return matchesSearch && matchesGrade && matchesSchool;
+      
+      // School filter
+      const schoolData = JSON.parse(localStorage.getItem('school') || '{}');
+      const currentSchoolId = schoolData.id || 0;
+      const matchesSchool = !currentSchoolId || student.school?.id === currentSchoolId;
+      
+      // Status and trip filters
+      let matchesFilter = true;
+      if (filter === 'active') {
+        matchesFilter = Boolean(student.active);
+      } else if (filter === 'inactive') {
+        matchesFilter = !student.active;
+      } else if (filter === 'withTrip') {
+        matchesFilter = Boolean(student.hasTrip);
+      } else if (filter === 'withoutTrip') {
+        matchesFilter = !student.hasTrip;
+      }
+
+      const shouldInclude = matchesSearch && matchesGrade && matchesSchool && matchesFilter;
+      console.log('Filter result for student:', {
+        id: student.id,
+        name: `${student.firstName} ${student.lastName}`,
+        matchesSearch,
+        matchesGrade,
+        matchesSchool,
+        matchesFilter,
+        shouldInclude
+      });
+      
+      return shouldInclude;
     });
   };
 
-  // Render Functions
+  const gradeOptions = Array.from(new Set(students.map(s => s?.grade || ''))).filter(Boolean);
+
   const renderStudentListItem = (student: Student) => {
     const initials = `${student.firstName.charAt(0)}${student.lastName.charAt(0)}`;
     
@@ -364,7 +461,7 @@ const StudentsList: React.FC = () => {
               </div>
           <div className="student-details-list">
             <p><strong>Grade</strong> <span>{student.grade || 'Not assigned'}</span></p>
-            <p><strong>Seat</strong> <span>{student.seatNumber || 'Not assigned'}</span></p>
+            <p><strong>Seat</strong> <span>{student.currentTrip?.attendances?.find(a => a.student.id === student.id)?.seatNumber || 'Not assigned'}</span></p>
             <p><strong>QR Code</strong> <span>{student.qrCode ? 'Available' : 'Not available'}</span></p>
             <div className="trip-status">
               <strong>Trip Status</strong>
@@ -417,110 +514,110 @@ const StudentsList: React.FC = () => {
   };
 
   const renderAddEditForm = (title: string) => (
-          <div className="modal-content">
+    <div className="modal-content">
       <h3>{title}</h3>
-            <form onSubmit={handleSubmit}>
-              <div className="form-group">
-                <label htmlFor="firstName">First Name <span className="required">*</span></label>
-                <input
-                  type="text"
-                  id="firstName"
-                  name="firstName"
-                  value={formData.firstName}
-                  onChange={handleInputChange}
-                  required
-                />
-              </div>
-              <div className="form-group">
-                <label htmlFor="lastName">Last Name <span className="required">*</span></label>
-                <input
-                  type="text"
-                  id="lastName"
-                  name="lastName"
-                  value={formData.lastName}
-                  onChange={handleInputChange}
-                  required
-                />
-              </div>
-              <div className="form-group">
-                <label htmlFor="dateOfBirth">Date of Birth <span className="required">*</span></label>
-                <input
-                  type="date"
-                  id="dateOfBirth"
-                  name="dateOfBirth"
-                  value={formData.dateOfBirth}
-                  onChange={handleInputChange}
-                  required
-                />
-              </div>
-              <div className="form-group">
-                <label htmlFor="grade">Grade <span className="required">*</span></label>
-                <select
-                  id="grade"
-                  name="grade"
-                  value={formData.grade}
-                  onChange={handleInputChange}
-                  required
-                >
-                  <option value="">Select Grade</option>
+      <form onSubmit={handleFormSubmit}>
+        <div className="form-group">
+          <label htmlFor="firstName">First Name <span className="required">*</span></label>
+          <input
+            type="text"
+            id="firstName"
+            name="firstName"
+            value={formData.firstName}
+            onChange={handleInputChange}
+            required
+          />
+        </div>
+        <div className="form-group">
+          <label htmlFor="lastName">Last Name <span className="required">*</span></label>
+          <input
+            type="text"
+            id="lastName"
+            name="lastName"
+            value={formData.lastName}
+            onChange={handleInputChange}
+            required
+          />
+        </div>
+        <div className="form-group">
+          <label htmlFor="dateOfBirth">Date of Birth <span className="required">*</span></label>
+          <input
+            type="date"
+            id="dateOfBirth"
+            name="dateOfBirth"
+            value={formData.dateOfBirth}
+            onChange={handleInputChange}
+            required
+          />
+        </div>
+        <div className="form-group">
+          <label htmlFor="grade">Grade <span className="required">*</span></label>
+          <select
+            id="grade"
+            name="grade"
+            value={formData.grade}
+            onChange={handleInputChange}
+            required
+          >
+            <option value="">Select Grade</option>
             {GRADES.map(grade => (
-                    <option key={grade} value={grade}>{grade}</option>
-                  ))}
-                </select>
-              </div>
-              <div className="form-group">
-                <label htmlFor="parentId">Parent <span className="required">*</span></label>
-                <select
-                  id="parentId"
-                  name="parentId"
-                  value={formData.parentId || ''}
-                  onChange={handleInputChange}
-                  required
-                >
-                  <option value="">Select Parent</option>
-                  {parents.map(parent => (
-                    <option key={parent.id} value={parent.id}>
-                      {parent.firstName} {parent.lastName}
-                    </option>
-                  ))}
-                </select>
-              </div>
+              <option key={grade} value={grade}>{grade}</option>
+            ))}
+          </select>
+        </div>
+        <div className="form-group">
+          <label htmlFor="parentId">Parent <span className="required">*</span></label>
+          <select
+            id="parentId"
+            name="parentId"
+            value={formData.parentId || ''}
+            onChange={handleInputChange}
+            required
+          >
+            <option value="">Select Parent</option>
+            {parents.map(parent => (
+              <option key={parent.id} value={parent.id}>
+                {parent.firstName} {parent.lastName}
+              </option>
+            ))}
+          </select>
+        </div>
         {modalType === 'edit' && (
-              <div className="form-group status-toggle">
-                <label>
-                  <span>Status: </span>
-                  <div className="toggle-switch">
-                    <input
-                      type="checkbox"
-                      id="isActive"
-                      name="isActive"
-                      checked={formData.isActive}
-                  onChange={(e) => setFormData(prev => ({ ...prev, isActive: e.target.checked }))}
-                    />
-                    <label htmlFor="isActive" className="toggle-label">
-                      <span className="toggle-inner"></span>
-                      <span className="toggle-switch-label">{formData.isActive ? 'Active' : 'Inactive'}</span>
-                    </label>
-                  </div>
+          <div className="form-group status-toggle">
+            <label>
+              <span>Status: </span>
+              <div className="toggle-switch">
+                <input
+                  type="checkbox"
+                  id="active"
+                  name="active"
+                  checked={formData.active}
+                  onChange={(e) => setFormData(prev => ({ ...prev, active: e.target.checked }))}
+                />
+                <label htmlFor="active" className="toggle-label">
+                  <span className="toggle-inner"></span>
+                  <span className="toggle-switch-label">{formData.active ? 'Active' : 'Inactive'}</span>
                 </label>
               </div>
-        )}
-              <div className="form-actions">
-                <button type="submit" className="btn-primary" disabled={operationStatus.loading}>
-            {operationStatus.loading ? `${modalType === 'add' ? 'Adding...' : 'Updating...'}` : `${modalType === 'add' ? 'Add Student' : 'Update Student'}`}
-                </button>
-                <button type="button" className="btn-secondary" onClick={closeModal}>
-                  Cancel
-                </button>
-              </div>
-              {operationStatus.error && (
-                <div className="operation-message error">
-                  {operationStatus.error}
-                </div>
-              )}
-            </form>
+            </label>
           </div>
-        );
+        )}
+        <div className="form-actions">
+          <button 
+            type="submit" 
+            className="btn-primary" 
+            disabled={loading}
+          >
+            {loading ? `${modalType === 'add' ? 'Adding...' : 'Updating...'}` : `${modalType === 'add' ? 'Add Student' : 'Update Student'}`}
+          </button>
+          <button type="button" className="btn-secondary" onClick={closeModal}>
+            Cancel
+          </button>
+        </div>
+        {error && <div className="error-message">{error}</div>}
+      </form>
+    </div>
+  );
         
   const renderViewDetails = () => {
     if (!selectedStudent) return null;
@@ -595,35 +692,33 @@ const StudentsList: React.FC = () => {
     if (!selectedStudent) return null;
 
     return (
-          <div className="modal-content">
-            <h3>Confirm Delete</h3>
-            <p>Are you sure you want to delete this student?</p>
-            <div className="student-details">
-              <div className="details-row">
-                <span className="label">Name:</span>
-                <span className="value">{selectedStudent.firstName} {selectedStudent.lastName}</span>
-              </div>
-              <div className="details-row">
-                <span className="label">Grade:</span>
-                <span className="value">{selectedStudent.grade || 'Not assigned'}</span>
-              </div>
-            </div>
-        <p className="warning">⚠️ This action cannot be undone.</p>
-            {operationStatus.error && (
-          <div className="operation-message error">{operationStatus.error}</div>
-            )}
-            <div className="form-actions">
-          <button type="button" className="btn-secondary" onClick={closeModal}>Cancel</button>
-              <button 
-                type="button" 
-                className="btn-danger" 
-                onClick={handleSubmit}
-                disabled={operationStatus.loading}
-              >
-                {operationStatus.loading ? 'Deleting...' : 'Delete Student'}
-              </button>
-            </div>
+      <div className="modal-content">
+        <h3>Confirm Delete</h3>
+        <p>Are you sure you want to delete this student?</p>
+        <div className="student-details">
+          <div className="details-row">
+            <span className="label">Name:</span>
+            <span className="value">{selectedStudent.firstName} {selectedStudent.lastName}</span>
           </div>
+          <div className="details-row">
+            <span className="label">Grade:</span>
+            <span className="value">{selectedStudent.grade || 'Not assigned'}</span>
+          </div>
+        </div>
+        <p className="warning">⚠️ This action cannot be undone.</p>
+        {error && <div className="error-message">{error}</div>}
+        <div className="form-actions">
+          <button type="button" className="btn-secondary" onClick={closeModal}>Cancel</button>
+          <button 
+            type="button" 
+            className="btn-danger" 
+            onClick={handleButtonClick}
+            disabled={loading}
+          >
+            {loading ? 'Deleting...' : 'Delete Student'}
+          </button>
+        </div>
+      </div>
     );
   };
 
@@ -652,7 +747,7 @@ const StudentsList: React.FC = () => {
               <button 
                 type="button" 
             className="btn-primary" 
-            onClick={handleSubmit}
+            onClick={handleSubmitAction}
                 disabled={operationStatus.loading}
               >
                 {operationStatus.loading ? 'Restoring...' : 'Restore Student'}
@@ -678,7 +773,7 @@ const StudentsList: React.FC = () => {
                 <span className="value">{selectedStudent.grade || 'Not assigned'}</span>
               </div>
               </div>
-            <form onSubmit={handleSubmit}>
+            <form onSubmit={handleFormSubmit}>
               <div className="form-group">
                 <label htmlFor="status">Attendance Status <span className="required">*</span></label>
                 <select
@@ -713,10 +808,6 @@ const StudentsList: React.FC = () => {
     );
   };
 
-  // Get filtered students and unique grades
-  const filteredStudents = getFilteredStudents();
-  const gradeOptions = Array.from(new Set(students.map(s => s?.grade || ''))).filter(Boolean);
-
   return (
     <div className="students-list-container">
       {authService.isAuthenticated() && students.length > 0 && (
@@ -741,10 +832,22 @@ const StudentsList: React.FC = () => {
                 <option key={grade} value={grade}>{grade}</option>
               ))}
             </select>
+            <select
+              className="filter-select"
+              value={filter}
+              onChange={(e) => setFilter(e.target.value)}
+              aria-label="Filter by status"
+            >
+              <option value="">All Students</option>
+              <option value="active">Active</option>
+              <option value="inactive">Inactive</option>
+              <option value="withTrip">With Trip</option>
+              <option value="withoutTrip">Without Trip</option>
+            </select>
           </div>
-            <button className="btn-primary add-button" onClick={() => openModal('add')} style={{backgroundColor: '#28887A'}}>
-              <span>Add New Student</span>
-            </button>
+          <button className="btn-primary add-button" onClick={() => openModal('add')} style={{backgroundColor: '#28887A'}}>
+            <span>Add New Student</span>
+          </button>
         </div>
       )}
       

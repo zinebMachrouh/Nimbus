@@ -139,9 +139,6 @@ public class DriverServiceImpl extends BaseServiceImpl<Driver, DriverRepository>
         if (latitude == null || longitude == null) {
             throw new ValidationException("Latitude and longitude are required");
         }
-
-        driver.setCurrentLatitude(latitude);
-        driver.setCurrentLongitude(longitude);
         repository.save(driver);
         log.info("Successfully updated location for driver {}", driverId);
     }

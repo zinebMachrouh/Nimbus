@@ -33,7 +33,8 @@ public interface ParentMapper {
                     summary.setStudentId(student.getId());
                     summary.setFullName(student.getFirstName() + " " + student.getLastName());
                     summary.setSchoolName(student.getSchool().getName());
-                    summary.setSeatNumber(student.getSeatNumber());
+                    // Seat number will be set by service layer from latest attendance
+                    summary.setSeatNumber(null);
                     // Current trip status will be set by service layer
                     summary.setCurrentTripStatus(ParentDTO.TripStatus.NOT_STARTED);
                     return summary;

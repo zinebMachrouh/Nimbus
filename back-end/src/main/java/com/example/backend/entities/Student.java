@@ -10,6 +10,8 @@ import lombok.Setter;
 import org.springframework.util.StringUtils;
 
 import java.time.LocalDate;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.UUID;
 
 @Getter
@@ -29,9 +31,6 @@ public class Student extends BaseEntity {
     @Column(nullable = false)
     private LocalDate dateOfBirth;
 
-    @Column(unique = true)
-    private String studentId;
-
     @ManyToOne
     @JoinColumn(name = "parent_id", nullable = false)
     @JsonBackReference("parent-student")
@@ -43,39 +42,28 @@ public class Student extends BaseEntity {
     private School school;
 
     @Column
-    private Integer seatNumber;
-
-    @Column
     private String grade;
 
     @Column(unique = true)
     private String qrCode;
 
     @Column
+    @Transient
     private Double attendancePercentage;
 
     @Column(nullable = false)
     private boolean active = true;
 
-    /**
-     * QR code will be generated after a route is assigned to the student
-     * This is called programmatically, not via PrePersist
-     */
+    @ManyToMany(mappedBy = "students")
+    @JsonBackReference("trips-students")
+    private Set<Trip> trips = new HashSet<>();
+
     public void generateQRCode() {
-        // Generate a unique QR code using student ID and school ID
         String uniqueId = UUID.randomUUID().toString().substring(0, 8);
         this.qrCode = String.format("STUDENT-%s-%d-%d", 
             uniqueId,
             this.school != null ? this.school.getId() : 0,
             this.id != null ? this.id : 0
         );
-    }
-
-    public void setSeatNumber(Integer seatNumber) {
-        this.seatNumber = seatNumber;
-        // Generate QR code when seat number is set
-        if (seatNumber != null) {
-            generateQRCode();
-        }
     }
 } 

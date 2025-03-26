@@ -1,4 +1,5 @@
 import { Trip } from '../core/entities/trip.entity';
+import { Student } from '../core/entities/student.entity';
 
 export interface TripService {
   getAllTrips(): Promise<Trip[]>;
@@ -34,4 +35,6 @@ export interface TripService {
   findTripsByStudentId(studentId: number, page: number, size: number): Promise<Trip[]>;
   assignStudents(tripId: number, studentIds: number[]): Promise<Trip>;
   getTripRequestSchema(): Promise<any>;
+  getAssignedStudents(tripId: number): Promise<Student[]>;
+  getUnassignedStudents(tripId: number, schoolId: number): Promise<Student[]>;
 } 

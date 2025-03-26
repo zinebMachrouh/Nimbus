@@ -5,6 +5,7 @@ import lombok.Getter;
 import lombok.Setter;
 
 import java.time.LocalDate;
+import java.util.Set;
 
 @Getter
 @Setter
@@ -16,7 +17,9 @@ public class StudentDTO extends BaseDTO {
     private String parentName;
     private Long schoolId;
     private String schoolName;
-    private Integer seatNumber;
+    private String grade;
     private String qrCode;
     private Double attendancePercentage;
+    private boolean active;
+    private Set<Long> tripIds;
 } 

@@ -386,12 +386,9 @@ public class UserServiceImpl extends BaseServiceImpl<User, UserRepository> imple
         student.setDateOfBirth(dateOfBirth);
         student.setParent(parent);
         student.setSchool(school);
-        student.setSeatNumber(seatNumber);
         student.setActive(true);
 
-        // Generate student ID
-        String studentId = generateStudentId(schoolId);
-        student.setStudentId(studentId);
+        student.generateQRCode();
 
         return studentRepository.save(student);
     }

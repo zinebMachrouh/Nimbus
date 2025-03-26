@@ -141,55 +141,50 @@ const RoutesList: React.FC = () => {
     setError(null);
     
     try {
-      // First get all routes basic info
-      const allRoutes = await routeService.getAllRoutes();
-      console.log('Successfully fetched basic routes list:', allRoutes.length, 'routes');
+      // Get school ID from localStorage
+      const schoolId = getSchoolIdFromLocalStorage();
+      console.log('Fetching routes for school ID:', schoolId);
+      
+      if (!schoolId) {
+        throw new Error('School ID not found. Please log in again.');
+      }
+
+      // Get routes for the specific school
+      const schoolRoutes = await routeService.findBySchoolId(schoolId);
+      console.log('API Response - Routes for school:', schoolRoutes);
+      
+      if (!schoolRoutes || schoolRoutes.length === 0) {
+        console.log('No routes found for school:', schoolId);
+        setRoutes([]);
+        return;
+      }
       
       // Then load detailed information for each route with stops
       const detailedRoutes = await Promise.all(
-        allRoutes.map(async (route) => {
+        schoolRoutes.map(async (route) => {
           try {
-            // Get route details with stops
             console.log(`Fetching details for route ${route.id}`);
             const detailedRoute = await routeService.findByIdWithStops(route.id);
+            console.log(`Route ${route.id} details:`, detailedRoute);
             return detailedRoute;
           } catch (err) {
             console.warn(`Could not load details for route ${route.id}:`, err);
-            
-            // If we couldn't get details, return the basic route info we already have
             return {
               ...route,
-              stops: [] // Ensure there's at least an empty stops array
+              stops: []
             };
           }
         })
       );
       
-      // Log routes for debugging
-      console.log('Loaded routes with details:', detailedRoutes);
-      
-      // Filter out any undefined or null routes that might have occurred during errors
-      const validRoutes = detailedRoutes.filter(route => route !== undefined && route !== null && route.active === true);
-      
-      // Log school info for each route
-      validRoutes.forEach(route => {
-        if (route.school) {
-          console.log(`Route ${route.id} assigned to school:`, route.school.id, route.school.name);
-        } else {
-          console.warn(`Route ${route.id} has no school assigned!`);
-        }
-      });
+      // Filter out any undefined or null routes
+      const validRoutes = detailedRoutes.filter(route => route !== undefined && route !== null);
+      console.log('Final valid routes:', validRoutes);
       
       setRoutes(validRoutes);
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Error fetching routes:', err);
-      
-      if (err.response?.status === 401 || err.response?.status === 403) {
-        setIsAuthenticated(false);
-        setError('Authentication required or session expired. Please log in again.');
-      } else {
-        setError('Error fetching routes. Please try again later.');
-      }
+      setError('Error fetching routes. Please try again later.');
     } finally {
       setLoading(false);
     }
@@ -210,10 +205,27 @@ const RoutesList: React.FC = () => {
   // Enhance the getSchoolIdFromLocalStorage function with a hardcoded fallback
   const getSchoolIdFromLocalStorage = (): number => {
     try {
-      // First try: Get the user profile from localStorage which should contain the school information
+      console.log('=== Debugging getSchoolIdFromLocalStorage ===');
+      
+      // First try: Get the school object directly from localStorage
+      const schoolStr = localStorage.getItem('school');
+      console.log('school from localStorage:', schoolStr);
+      if (schoolStr) {
+        const school = JSON.parse(schoolStr);
+        console.log('Parsed school:', school);
+        if (school && school.id && parseInt(school.id) > 0) {
+          const schoolId = parseInt(school.id);
+          console.log('Found valid school ID from school object:', schoolId);
+          return schoolId;
+        }
+      }
+      
+      // If no school object found, try other methods...
       const userProfileStr = localStorage.getItem('userProfile');
+      console.log('userProfile from localStorage:', userProfileStr);
       if (userProfileStr) {
         const userProfile = JSON.parse(userProfileStr);
+        console.log('Parsed userProfile:', userProfile);
         if (userProfile && userProfile.schoolId && parseInt(userProfile.schoolId) > 0) {
           const schoolId = parseInt(userProfile.schoolId);
           console.log('Found valid school ID in userProfile:', schoolId);
@@ -221,10 +233,12 @@ const RoutesList: React.FC = () => {
         }
       }
       
-      // Second try: Get school from user data
+      // Rest of the fallback methods...
       const userDataStr = localStorage.getItem('userData');
+      console.log('userData from localStorage:', userDataStr);
       if (userDataStr) {
         const userData = JSON.parse(userDataStr);
+        console.log('Parsed userData:', userData);
         if (userData && userData.school && userData.school.id && parseInt(userData.school.id) > 0) {
           const schoolId = parseInt(userData.school.id);
           console.log('Found valid school ID in userData:', schoolId);
@@ -232,10 +246,11 @@ const RoutesList: React.FC = () => {
         }
       }
       
-      // Third try: Check the schoolCache
       const schoolCacheStr = localStorage.getItem('schoolCache');
+      console.log('schoolCache from localStorage:', schoolCacheStr);
       if (schoolCacheStr) {
         const schoolCache = JSON.parse(schoolCacheStr);
+        console.log('Parsed schoolCache:', schoolCache);
         if (schoolCache && schoolCache.id && parseInt(schoolCache.id) > 0) {
           const schoolId = parseInt(schoolCache.id);
           console.log('Found valid school ID in schoolCache:', schoolId);
@@ -243,11 +258,10 @@ const RoutesList: React.FC = () => {
         }
       }
       
-      // Fourth try: Look for school in token claims
       const tokenStr = localStorage.getItem('token');
+      console.log('token from localStorage:', tokenStr);
       if (tokenStr) {
         try {
-          // Decode JWT token to get user claims
           const base64Url = tokenStr.split('.')[1];
           const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
           const jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
@@ -255,6 +269,7 @@ const RoutesList: React.FC = () => {
           }).join(''));
           
           const decoded = JSON.parse(jsonPayload);
+          console.log('Decoded token claims:', decoded);
           if (decoded && decoded.schoolId && parseInt(decoded.schoolId) > 0) {
             const schoolId = parseInt(decoded.schoolId);
             console.log('Found valid school ID in token claims:', schoolId);
@@ -265,22 +280,16 @@ const RoutesList: React.FC = () => {
         }
       }
       
-      // Fifth try: Fallback to first school in the list if available
+      console.log('Available schools:', schools);
       if (schools.length > 0) {
         console.log('Using first school in list as fallback:', schools[0].id);
         return schools[0].id;
       }
       
-      // Final fallback - default to school ID 1 if all else fails
       console.warn('Using hardcoded school ID fallback: 1');
-      
-      // Store this fallback ID in localStorage for future use
-      localStorage.setItem('fallbackSchoolId', '1');
-      
       return 1;
     } catch (err) {
       console.error('Error getting school ID from localStorage:', err);
-      // Final fallback - school ID 1
       return 1;
     }
   };
@@ -576,15 +585,37 @@ const RoutesList: React.FC = () => {
     setSelectedRoute(null);
   };
 
+  const getSchoolId = () => {
+    const schoolFromStorage = JSON.parse(localStorage.getItem('school') || '{}');
+    return schoolFromStorage.id;
+  };
+
   // Filter routes
   const getFilteredRoutes = () => {
-    return routes.filter(route => {
+    const currentSchoolId = getSchoolIdFromLocalStorage();
+    console.log('Current school ID:', currentSchoolId);
+    console.log('Total routes before filtering:', routes.length);
+    console.log('Search query:', searchQuery);
+    console.log('Filter type:', filterType);
+    
+    const filtered = routes.filter(route => {
       const nameMatch = route.name.toLowerCase().includes(searchQuery.toLowerCase());
       const typeMatch = !filterType || route.type === filterType;
-      const schoolMatch =route.school && route.school.id === getSchoolId();
+      const schoolMatch = route.school && route.school.id === currentSchoolId;
+      
+      console.log(`Route ${route.id}:`, {
+        name: route.name,
+        schoolId: route.school?.id,
+        nameMatch,
+        typeMatch,
+        schoolMatch
+      });
       
       return nameMatch && typeMatch && schoolMatch;
     });
+    
+    console.log('Routes after filtering:', filtered.length);
+    return filtered;
   };
 
   const filteredRoutes = getFilteredRoutes();
@@ -1272,11 +1303,6 @@ const RoutesList: React.FC = () => {
       default:
         return null;
     }
-  };
-
-  const getSchoolId = () => {
-    const schoolFromStorage = JSON.parse(localStorage.getItem('school') || '{}');
-    return schoolFromStorage.id;
   };
 
   // Main render

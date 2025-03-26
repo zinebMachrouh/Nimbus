@@ -12,12 +12,13 @@ import java.time.LocalDateTime;
 public class AttendanceDTO extends BaseDTO {
     private Long studentId;
     private String studentName;
-    private Integer seatNumber;
     private Long tripId;
     private String tripName;
-    private LocalDateTime scheduledDepartureTime;
     private Attendance.AttendanceStatus status;
     private LocalDateTime scanTime;
     private String notes;
     private Boolean parentNotified;
+    private Integer seatNumber;
+    private String qrCode;
+    private boolean active;
 } 

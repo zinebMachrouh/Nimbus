@@ -40,7 +40,7 @@ public class School extends BaseEntity {
 
     @OneToMany(mappedBy = "school")
     @Builder.Default
-    @JsonIgnore
+    @JsonBackReference("school-route")
     private Set<Route> routes = new HashSet<>();
     
     @OneToMany(mappedBy = "school")

@@ -5,10 +5,11 @@ import { Trip } from '../../../core/entities/trip.entity';
 import { Vehicle } from '../../../core/entities/vehicle.entity';
 import { Route } from '../../../core/entities/route.entity';
 import { Student } from '../../../core/entities/student.entity';
-import { Driver } from '../../../core/entities/driver.entity';
+import { Driver, DriverStatus } from '../../../core/entities/driver.entity';
 import { useDriverService, useTripService, useVehicleService, useRouteService, useStudentService } from '../../../contexts/ServiceContext';
 import { FiMap, FiTruck, FiUsers, FiClock, FiCheckCircle, FiXCircle } from 'react-icons/fi';
 import './DriverDashboard.css';
+import { QRCodeCanvas } from 'qrcode.react';
 
 const DriverDashboard: React.FC = () => {
     const navigate = useNavigate();
@@ -25,6 +26,9 @@ const DriverDashboard: React.FC = () => {
     const [students, setStudents] = useState<Student[]>([]);
     const [driver, setDriver] = useState<Driver | null>(null);
     const [driverStatus, setDriverStatus] = useState<string>('OFF_DUTY');
+    const [schoolId, setSchoolId] = useState<number>(0);
+    const [isLoading, setIsLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
         if (!authService.isAuthenticated() || !authService.hasRole('ROLE_DRIVER')) {
@@ -32,41 +36,72 @@ const DriverDashboard: React.FC = () => {
             return;
         }
 
-        const fetchData = async () => {
+        const fetchDriverData = async () => {
             try {
-                // Get driver details
-                const driverData = await driverService.getCurrentDriver();
+                setIsLoading(true);
+                setError(null);
+                const currentUser = await authService.getCurrentUser();
+                if (!currentUser?.id) {
+                    throw new Error('User ID not found');
+                }
+                
+                const driverData = await driverService.getDriverById(currentUser.id);
                 setDriver(driverData);
                 setDriverStatus(driverData.status);
-
-                // Get current trip
-                const tripData = await tripService.getCurrentTrip();
-                setCurrentTrip(tripData);
-
-                if (tripData) {
-                    // Get vehicle details
-                    const vehicleData = await vehicleService.findById(tripData.vehicle?.id || 0);
-                    setVehicle(vehicleData);
-
-                    // Get route details
-                    const routeData = await routeService.findByIdWithStops(tripData.route?.id || 0);
-                    setRoute(routeData);
-
-                    // Get students for the route
-                    const studentsData = await studentService.findStudentsByRoute(tripData.route?.id || 0);
-                    setStudents(studentsData);
+                
+                if (driverData.school?.id) {
+                    setSchoolId(driverData.school.id);
+                    localStorage.setItem('schoolId', driverData.school.id.toString());
+                } else {
+                    throw new Error('School ID not found in driver data');
                 }
             } catch (error) {
-                console.error('Error fetching data:', error);
+                console.error('Error fetching driver data:', error);
+                setError(error instanceof Error ? error.message : 'Failed to fetch driver data');
+            } finally {
+                setIsLoading(false);
             }
         };
 
-        fetchData();
-    }, [authService, navigate]);
+        fetchDriverData();
+    }, [authService, navigate, driverService]);
+
+    useEffect(() => {
+        if (!schoolId || !driver?.id) return;
+
+        const fetchTripData = async () => {
+            try {
+                setIsLoading(true);
+                setError(null);
+                
+                const trips = await tripService.findByDriverId(driver.id);
+                const activeTrip = trips.find(trip => trip.status === 'IN_PROGRESS');
+                setCurrentTrip(activeTrip || null);
+
+                if (activeTrip) {
+                    const vehicleData = await vehicleService.findById(activeTrip.vehicle?.id || 0);
+                    setVehicle(vehicleData);
+
+                    const routeData = await routeService.findByIdWithStops(activeTrip.route?.id || 0);
+                    setRoute(routeData);
+
+                    const studentsData = await studentService.findStudentsByRoute(activeTrip.route?.id || 0);
+                    setStudents(studentsData);
+                }
+            } catch (error) {
+                console.error('Error fetching trip data:', error);
+                setError(error instanceof Error ? error.message : 'Failed to fetch trip data');
+            } finally {
+                setIsLoading(false);
+            }
+        };
+
+        fetchTripData();
+    }, [schoolId, driver?.id, tripService, vehicleService, routeService, studentService]);
 
     const handleStatusChange = async (newStatus: string) => {
         try {
-            await driverService.updateStatus(newStatus);
+            await driverService.updateDriver(driver?.id || 0, { status: newStatus as DriverStatus });
             setDriverStatus(newStatus);
         } catch (error) {
             console.error('Error updating status:', error);
@@ -87,6 +122,14 @@ const DriverDashboard: React.FC = () => {
                 return '#95a5a6';
         }
     };
+
+    if (isLoading) {
+        return <div className="loading">Loading...</div>;
+    }
+
+    if (error) {
+        return <div className="error">{error}</div>;
+    }
 
     return (
         <div className="driver-dashboard">
@@ -125,7 +168,7 @@ const DriverDashboard: React.FC = () => {
                                 <h3>{currentTrip.route?.name}</h3>
                                 <p>Status: {currentTrip.status}</p>
                                 <p>Type: {currentTrip.route?.type}</p>
-                                <p>Vehicle: {vehicle?.plateNumber}</p>
+                                <p>Vehicle: {vehicle?.licensePlate}</p>
                             </div>
                         </div>
                     ) : (
@@ -139,7 +182,7 @@ const DriverDashboard: React.FC = () => {
                         <div className="vehicle-details">
                             <FiTruck className="vehicle-icon" />
                             <div className="vehicle-info">
-                                <h3>{vehicle.plateNumber}</h3>
+                                <h3>{vehicle.licensePlate}</h3>
                                 <p>Model: {vehicle.model}</p>
                                 <p>Capacity: {vehicle.capacity} students</p>
                                 <p>Status: {vehicle.status}</p>
@@ -159,7 +202,7 @@ const DriverDashboard: React.FC = () => {
                                 <div className="student-info">
                                     <h3>{student.firstName} {student.lastName}</h3>
                                     <p>Grade: {student.grade}</p>
-                                    <p>Stop: {student.stop?.name}</p>
+                                    <p>Stop: <QRCodeCanvas value={student.qrCode.toString()} size={256} /> </p>
                                 </div>
                             </div>
                         ))}
@@ -175,7 +218,7 @@ const DriverDashboard: React.FC = () => {
                                 <h3>{route.name}</h3>
                                 <p>Type: {route.type}</p>
                                 <p>Total Stops: {route.stops?.length || 0}</p>
-                                <p>Estimated Duration: {route.estimatedDuration} minutes</p>
+                                <p>Estimated Duration: {route.duration} minutes</p>
                             </div>
                         </div>
                     ) : (

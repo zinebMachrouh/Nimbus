@@ -2,6 +2,7 @@ import { TripService } from '../TripService';
 import { Trip } from '../../core/entities/trip.entity';
 import { BaseHttpService } from '../BaseHttpService';
 import { ApiResponse } from '../../core/models/ApiResponse';
+import { Student } from '../../core/entities/student.entity';
 
 export class TripServiceImpl extends BaseHttpService implements TripService {
   constructor() {
@@ -170,5 +171,15 @@ export class TripServiceImpl extends BaseHttpService implements TripService {
   async getTripRequestSchema(): Promise<any> {
     const response = await this.get<ApiResponse<any>>('/schema');
     return response.data;
+  }
+
+  async getAssignedStudents(tripId: number): Promise<Student[]> {
+    const response = await this.get<ApiResponse<Student[]>>(`/${tripId}/students`);
+    return response.data;
+  }
+
+  async getUnassignedStudents(tripId: number, schoolId: number): Promise<Student[]> {
+    const response = await this.get<Student[]>(`/${tripId}/unassigned-students?schoolId=${schoolId}`);
+    return response || [];
   }
 } 

@@ -2,6 +2,7 @@ package com.example.backend.service;
 
 import com.example.backend.dto.trip.TripRequest;
 import com.example.backend.entities.Trip;
+import com.example.backend.entities.Student;
 import com.example.backend.service.base.BaseService;
 import jakarta.validation.Valid;
 import org.springframework.data.domain.Page;
@@ -43,4 +44,6 @@ public interface TripService extends BaseService<Trip> {
     List<Trip> findTripsByStudentId(Long studentId, int page, int size);
     Trip create(@Valid TripRequest tripRequest);
     Trip assignStudents(Long tripId, List<Long> studentIds);
+    List<Student> getAssignedStudents(Long tripId);
+    List<Student> findUnassignedStudents(Long tripId, Long schoolId);
 } 

@@ -3,6 +3,7 @@ import { User, UserRole } from '../../core/entities/user.entity'
 import { AuthRequest, AuthResponse, RegisterRequest } from '../../core/dto/auth.dto'
 import { BaseHttpService } from '../BaseHttpService'
 import { ApiError } from '../../core/models/ApiError'
+import { SchoolServiceImpl } from './SchoolServiceImpl'
 
 export class AuthServiceImpl extends BaseHttpService implements AuthService {
     constructor() {
@@ -14,6 +15,17 @@ export class AuthServiceImpl extends BaseHttpService implements AuthService {
             const credentials: AuthRequest = { username, password };
             const response = await this.post<AuthResponse>('/login', credentials);
             this.setTokens(response);
+            
+            // If the user has a schoolId, fetch and store the school data
+            if (response.schoolId) {
+                try {
+                    const schoolService = new SchoolServiceImpl();
+                    const school = await schoolService.findById(response.schoolId);
+                    localStorage.setItem('school', JSON.stringify(school));
+                } catch (error) {
+                    console.error('Failed to fetch school data:', error);
+                }
+            }
         } catch (error) {
             if (error instanceof ApiError) {
                 console.error(`Login failed: ${error.message}`);
@@ -102,12 +114,22 @@ export class AuthServiceImpl extends BaseHttpService implements AuthService {
             lastName: response.lastName,
             phoneNumber: response.phoneNumber,
             role: response.role,
+            schoolId: response.schoolId
         }));
+        
+        if (response.schoolId) {
+            localStorage.setItem('schoolId', response.schoolId.toString());
+        }
     }
 
     private clearTokens(): void {
         localStorage.removeItem('token');
         localStorage.removeItem('currentUser');
+        localStorage.removeItem('schoolId');
+        localStorage.removeItem('school');
+        localStorage.removeItem('schoolCache');
+        localStorage.removeItem('userProfile');
+        localStorage.removeItem('userData');
     }
 
     getToken(): string {

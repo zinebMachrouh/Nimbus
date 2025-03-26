@@ -39,8 +39,12 @@ public class Driver extends User {
     private School school;
 
     @OneToMany(mappedBy = "driver")
-    @JsonIgnore
+    @JsonBackReference("driver-trip")
     private Set<Trip> trips = new HashSet<>();
+
+    @Column(nullable = false)
+    @Enumerated(EnumType.STRING)
+    private DriverStatus status = DriverStatus.AVAILABLE;
 
     @Column
     private Double currentLatitude;
@@ -48,9 +52,8 @@ public class Driver extends User {
     @Column
     private Double currentLongitude;
 
-    @Column(nullable = false)
-    @Enumerated(EnumType.STRING)
-    private DriverStatus status = DriverStatus.AVAILABLE;
+    @Column
+    private LocalDateTime lastLocationUpdate;
 
     @Transient
     private Long completedTripsCount;

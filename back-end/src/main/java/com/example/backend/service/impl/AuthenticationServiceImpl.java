@@ -4,9 +4,12 @@ import com.example.backend.dto.auth.AuthRequest;
 import com.example.backend.dto.auth.AuthResponse;
 import com.example.backend.dto.auth.JwtResponse;
 import com.example.backend.dto.auth.RegisterRequest;
+import com.example.backend.entities.School;
 import com.example.backend.entities.user.User;
 import com.example.backend.entities.user.User.Role;
 import com.example.backend.entities.user.Admin;
+import com.example.backend.entities.user.Driver;
+import com.example.backend.entities.user.Parent;
 import com.example.backend.exception.ValidationException;
 import com.example.backend.security.jwt.JwtUtils;
 import com.example.backend.security.services.UserDetailsImpl;
@@ -74,6 +77,24 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         // Generate JWT token
         String accessToken = jwtUtils.generateJwtToken(authentication);
 
+        // Get school ID based on user type
+        Long schoolId = null;
+        if (user instanceof Driver) {
+            schoolId = ((Driver) user).getSchool() != null ? ((Driver) user).getSchool().getId() : null;
+        } else if (user instanceof Admin) {
+            // For admin, get the first managed school's ID if any exist
+            schoolId = ((Admin) user).getManagedSchools().stream()
+                .findFirst()
+                .map(School::getId)
+                .orElse(null);
+        } else if (user instanceof Parent) {
+            // For parent, get the school ID from their first student if any exist
+            schoolId = ((Parent) user).getStudents().stream()
+                .findFirst()
+                .map(student -> student.getSchool() != null ? student.getSchool().getId() : null)
+                .orElse(null);
+        }
+
         return new JwtResponse(accessToken,
                 user.getId(),
                 user.getUsername(),
@@ -81,7 +102,8 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                 user.getFirstName(),
                 user.getPhoneNumber(),
                 user.getLastName(),
-                "ROLE_" + user.getRole().name());
+                "ROLE_" + user.getRole().name(),
+                schoolId);
     }
 
     @Override
@@ -130,6 +152,24 @@ public class AuthenticationServiceImpl implements AuthenticationService {
             
             String jwt = jwtUtils.generateJwtToken(authentication);
             log.debug("Generated JWT token successfully");
+
+            // Get school ID based on user type
+            Long schoolId = null;
+            if (user instanceof Driver) {
+                schoolId = ((Driver) user).getSchool() != null ? ((Driver) user).getSchool().getId() : null;
+            } else if (user instanceof Admin) {
+                // For admin, get the first managed school's ID if any exist
+                schoolId = ((Admin) user).getManagedSchools().stream()
+                    .findFirst()
+                    .map(School::getId)
+                    .orElse(null);
+            } else if (user instanceof Parent) {
+                // For parent, get the school ID from their first student if any exist
+                schoolId = ((Parent) user).getStudents().stream()
+                    .findFirst()
+                    .map(student -> student.getSchool() != null ? student.getSchool().getId() : null)
+                    .orElse(null);
+            }
             
             return new JwtResponse(jwt,
                     user.getId(),
@@ -138,7 +178,8 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                     user.getFirstName(),
                     user.getPhoneNumber(),
                     user.getLastName(),
-                    "ROLE_" + user.getRole().name());
+                    "ROLE_" + user.getRole().name(),
+                    schoolId);
         } catch (Exception e) {
             log.error("Authentication failed for user: {} - Exception: {} - Stack trace: {}", 
                 loginRequest.getUsername(), e.getMessage(), e.getStackTrace());

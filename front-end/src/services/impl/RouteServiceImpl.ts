@@ -185,33 +185,23 @@ export class RouteServiceImpl extends BaseHttpService implements RouteService {
 
   async findByIdWithStops(id: number): Promise<Route> {
     try {
-      // Try the with-stops endpoint first
-      console.log(`Attempting to fetch route ${id} with stops using combined endpoint`);
+      console.log(`Fetching route ${id} with stops`);
       const response = await this.get<ApiResponse<Route>>(`/${id}/with-stops`);
+      if (!response.data) {
+        throw new Error(`Route ${id} not found or is not active`);
+      }
       return response.data;
     } catch (error) {
-      console.log(`Combined endpoint failed, fetching route and stops separately for route ${id}`);
-      
-      // Fallback: Get the route data first
-      const route = await this.getRouteById(id);
-      
-      try {
-        // Then try to get the stops for this route
-        const stopsResponse = await this.get<ApiResponse<any[]>>(`/${id}/stops`);
-        
-        // Add the stops to the route object
-        return {
-          ...route,
-          stops: stopsResponse.data || []
-        };
-      } catch (stopError) {
-        console.warn(`Could not fetch stops for route ${id}:`, stopError);
-        // Return the route without stops if we couldn't get them
-        return {
-          ...route,
-          stops: []
-        };
-      }
+      console.error(`Error fetching route ${id} with stops:`, error);
+      // Return a basic route object with empty stops if the route is not found
+      return {
+        id,
+        name: 'Unknown Route',
+        description: '',
+        type: 'MORNING_PICKUP',
+        active: false,
+        stops: []
+      };
     }
   }
 
