@@ -134,7 +134,8 @@ public class AttendanceServiceImpl extends BaseServiceImpl<Attendance, Attendanc
 
         attendance.setStatus(Attendance.AttendanceStatus.valueOf(status));
         attendance.setNotes(notes);
-        attendance.setParentNotified(false); // Reset notification flag as status has changed
+        attendance.setScanTime(LocalDateTime.now());
+        attendance.setParentNotified(false);
 
         repository.save(attendance);
         log.info("Successfully updated attendance {} status to {}", attendanceId, status);
@@ -161,6 +162,13 @@ public class AttendanceServiceImpl extends BaseServiceImpl<Attendance, Attendanc
         validateDateRange(start, end);
 
         return repository.findSchoolAttendanceInPeriod(schoolId, start, end);
+    }
+
+    @Override
+    public List<Attendance> findAllSchoolAttendance(Long schoolId) {
+        log.debug("Finding all attendance records for school {}", schoolId);
+        validateSchoolExists(schoolId);
+        return repository.findBySchoolId(schoolId);
     }
 
     // Private validation methods
@@ -244,9 +252,12 @@ public class AttendanceServiceImpl extends BaseServiceImpl<Attendance, Attendanc
     }
 
     private void validateStatusUpdate(Attendance attendance) {
-        // Validate if the attendance record is not too old to update
-        if (ChronoUnit.DAYS.between(attendance.getScanTime(), LocalDateTime.now()) > 7) {
-            throw new ValidationException("Cannot update attendance status after 7 days");
+        // Only validate time difference if there's a previous scan time
+        if (attendance.getScanTime() != null) {
+            long daysDifference = ChronoUnit.DAYS.between(attendance.getScanTime(), LocalDateTime.now());
+            if (daysDifference > 7) {
+                throw new ValidationException("Cannot update attendance status after 7 days");
+            }
         }
     }
 

@@ -22,15 +22,17 @@ const AttendanceManagement: React.FC = () => {
       }
 
       try {
-        const data = await attendanceService.findSchoolAttendanceInPeriod(
-          schoolId,
-          new Date().toISOString().split('T')[0], // Today's date
-          new Date().toISOString().split('T')[0]  // Today's date
-        );
-        setAttendances(data);
+        console.log('Fetching all attendance records for school:', schoolId);
+        const data = await attendanceService.findAllSchoolAttendance(schoolId);
+        console.log('Received attendance data:', data);
+        console.log('Data type:', typeof data);
+        console.log('Is Array?', Array.isArray(data));
+        console.log('Data length:', data?.length);
+        console.log('Data structure:', JSON.stringify(data, null, 2));
+        setAttendances(data || []);
       } catch (err) {
-        setError('Failed to fetch attendance data');
         console.error('Error fetching attendances:', err);
+        setError('Failed to fetch attendance data');
       } finally {
         setLoading(false);
       }
@@ -43,12 +45,10 @@ const AttendanceManagement: React.FC = () => {
     try {
       await attendanceService.updateAttendanceStatus(attendanceId, newStatus);
       // Refresh the attendance data after update
-      const updatedData = await attendanceService.findSchoolAttendanceInPeriod(
-        schoolId,
-        new Date().toISOString().split('T')[0],
-        new Date().toISOString().split('T')[0]
-      );
-      setAttendances(updatedData);
+      console.log('Refreshing attendance data after status update');
+      const updatedData = await attendanceService.findAllSchoolAttendance(schoolId);
+      console.log('Received updated attendance data:', updatedData);
+      setAttendances(updatedData || []);
     } catch (err) {
       console.error('Error updating attendance status:', err);
       setError('Failed to update attendance status');
@@ -74,9 +74,6 @@ const AttendanceManagement: React.FC = () => {
 
   return (
     <div className="attendance-management">
-      <div className="attendance-header">
-        <h2>Attendance Management</h2>
-      </div>
 
       <div className="attendance-stats">
         <div className="stat-card present">
@@ -138,11 +135,11 @@ const AttendanceManagement: React.FC = () => {
             {attendances.map((attendance) => (
               <tr key={attendance.id}>
                 <td>
-                  {attendance.student.firstName} {attendance.student.lastName}
+                  {attendance.student ? `${attendance.student.firstName} ${attendance.student.lastName}` : 'Unknown Student'}
                 </td>
                 <td>{attendance.trip.id}</td>
                 <td>
-                  <span className={`status-badge ${attendance.status.toLowerCase()}`}>
+                  <span className={`status-badge}`}>
                     {attendance.status}
                   </span>
                 </td>

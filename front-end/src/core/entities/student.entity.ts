@@ -19,4 +19,11 @@ export interface Student {
   updatedAt?: string;
   hasTrip?: boolean;
   currentTrip?: Trip;
+}
+
+export interface StudentDTO {
+  id: number;
+  firstName: string;
+  lastName: string;
+  grade?: string;
 } 

@@ -1,6 +1,7 @@
 package com.example.backend.controller;
 
 import com.example.backend.dto.attendance.AttendanceRequest;
+import com.example.backend.dto.attendance.AttendanceResponseDTO;
 import com.example.backend.dto.response.ApiResponse;
 import com.example.backend.entities.Attendance;
 import com.example.backend.service.AttendanceService;
@@ -17,6 +18,7 @@ import org.springframework.web.bind.annotation.*;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/v1/attendance")
@@ -157,5 +159,17 @@ public class AttendanceController {
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime end) {
         return ResponseEntity.ok(ApiResponse.success(
                 attendanceService.findAttendanceWithStats(schoolId, start, end)));
+    }
+
+    @Operation(summary = "Find all school attendance")
+    @GetMapping("/school/{schoolId}/all")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<ApiResponse<List<AttendanceResponseDTO>>> findAllSchoolAttendance(
+            @PathVariable Long schoolId) {
+        List<Attendance> attendances = attendanceService.findAllSchoolAttendance(schoolId);
+        List<AttendanceResponseDTO> dtos = attendances.stream()
+                .map(AttendanceResponseDTO::fromEntity)
+                .collect(Collectors.toList());
+        return ResponseEntity.ok(ApiResponse.success(dtos));
     }
 } 

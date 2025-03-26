@@ -181,7 +181,10 @@ public class RouteServiceImpl implements RouteService {
             stop.setEstimatedMinutesFromStart(calculateEstimatedMinutes(route.getStops(), sequence - 1));
         }
         
-        route.getStops().add(sequence - 1, stop);
+        // Create a new mutable list and add the stop
+        List<Route.RouteStop> stops = new ArrayList<>(route.getStops());
+        stops.add(sequence - 1, stop);
+        route.setStops(stops);
         
         // If we've used a custom estimatedMinutesFromStart, don't recalculate everything
         if (estimatedMinutesFromStart == null) {
@@ -208,14 +211,33 @@ public class RouteServiceImpl implements RouteService {
             throw new ValidationException("Invalid stop sequence");
         }
         
-        Route.RouteStop stop = route.getStops().get(stopId.intValue());
-        stop.setName(stopName);
-        stop.setLatitude(latitude);
-        stop.setLongitude(longitude);
+        // Create a new mutable list of stops
+        List<Route.RouteStop> stops = new ArrayList<>(route.getStops());
         
-        route.getStops().remove(stopId.intValue());
-        route.getStops().add(sequence - 1, stop);
-        updateEstimatedTimes(route.getStops());
+        // Since RouteStop is embeddable and doesn't have an ID, we use the stopId as the index
+        if (stopId < 0 || stopId >= stops.size()) {
+            throw new ValidationException("Stop not found with index: " + stopId);
+        }
+        
+        Route.RouteStop stopToUpdate = stops.get(stopId.intValue());
+        
+        // Remove the stop from its current position
+        stops.remove(stopId.intValue());
+        
+        // Update the stop properties
+        stopToUpdate.setName(stopName);
+        stopToUpdate.setLatitude(latitude);
+        stopToUpdate.setLongitude(longitude);
+        
+        // Add the stop at the new position
+        stops.add(sequence - 1, stopToUpdate);
+        
+        // Update the route with the new stops list
+        route.setStops(stops);
+        
+        // Update estimated times for all stops
+        updateEstimatedTimes(stops);
+        
         routeRepository.save(route);
     }
 

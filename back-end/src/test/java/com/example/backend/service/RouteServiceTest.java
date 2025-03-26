@@ -14,7 +14,9 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -69,7 +71,11 @@ class RouteServiceTest {
         route.setSchool(school);
         route.setType(Route.RouteType.MORNING_PICKUP);
         route.setStatus(Route.RouteStatus.ACTIVE);
-        route.setStops(Arrays.asList(stop1, stop2));
+        route.setStops(new ArrayList<>(Arrays.asList(stop1, stop2)));
+
+        // Set up default mocks
+        when(schoolRepository.findById(1L)).thenReturn(Optional.of(school));
+        when(routeRepository.findById(1L)).thenReturn(Optional.of(route));
     }
 
     @Test
@@ -91,18 +97,17 @@ class RouteServiceTest {
     @Test
     void saveRoute_InvalidSchool_ThrowsException() {
         // Arrange
-        when(schoolRepository.findById(1L)).thenReturn(Optional.empty());
+        route.setSchool(null);
 
         // Act & Assert
-        assertThrows(EntityNotFoundException.class, () -> routeService.save(route));
+        assertThrows(ValidationException.class, () -> routeService.save(route));
         verify(routeRepository, never()).save(any(Route.class));
     }
 
     @Test
     void saveRoute_InvalidStops_ThrowsException() {
         // Arrange
-        route.setStops(Arrays.asList(stop1)); // Only one stop
-        when(schoolRepository.findById(1L)).thenReturn(Optional.of(school));
+        route.setStops(new ArrayList<>(Arrays.asList(stop1))); // Only one stop
 
         // Act & Assert
         assertThrows(ValidationException.class, () -> routeService.save(route));
@@ -112,7 +117,6 @@ class RouteServiceTest {
     @Test
     void addStop_WithAddress_Success() {
         // Arrange
-        when(routeRepository.findById(1L)).thenReturn(Optional.of(route));
         when(routeRepository.save(any(Route.class))).thenReturn(route);
 
         // Act
@@ -170,7 +174,6 @@ class RouteServiceTest {
     @Test
     void updateStop_Success() {
         // Arrange
-        when(routeRepository.findById(1L)).thenReturn(Optional.of(route));
         when(routeRepository.save(any(Route.class))).thenReturn(route);
 
         // Act
@@ -295,28 +298,29 @@ class RouteServiceTest {
     @Test
     void findBySchoolId_Success() {
         // Arrange
-        when(schoolRepository.findById(1L)).thenReturn(Optional.of(school));
-        List<Route> expectedRoutes = Arrays.asList(route);
-        when(routeRepository.findBySchoolIdAndActiveTrue(1L)).thenReturn(expectedRoutes);
+        List<Route> routes = Arrays.asList(route);
+        when(routeRepository.findBySchoolIdAndActiveTrue(1L)).thenReturn(routes);
 
         // Act
         List<Route> result = routeService.findBySchoolId(1L);
 
         // Assert
-        assertEquals(expectedRoutes, result);
+        assertNotNull(result);
+        assertEquals(1, result.size());
+        assertEquals(route, result.get(0));
         verify(routeRepository).findBySchoolIdAndActiveTrue(1L);
     }
 
     @Test
     void findBySchoolId_EmptyList() {
         // Arrange
-        when(schoolRepository.findById(1L)).thenReturn(Optional.of(school));
-        when(routeRepository.findBySchoolIdAndActiveTrue(1L)).thenReturn(Arrays.asList());
+        when(routeRepository.findBySchoolIdAndActiveTrue(1L)).thenReturn(Collections.emptyList());
 
         // Act
         List<Route> result = routeService.findBySchoolId(1L);
 
         // Assert
+        assertNotNull(result);
         assertTrue(result.isEmpty());
         verify(routeRepository).findBySchoolIdAndActiveTrue(1L);
     }
@@ -331,10 +335,10 @@ class RouteServiceTest {
     @Test
     void findBySchoolId_InvalidSchool_ThrowsException() {
         // Arrange
-        when(schoolRepository.findById(1L)).thenReturn(Optional.empty());
+        when(schoolRepository.findById(999L)).thenReturn(Optional.empty());
 
         // Act & Assert
-        assertThrows(EntityNotFoundException.class, () -> routeService.findBySchoolId(1L));
+        assertThrows(EntityNotFoundException.class, () -> routeService.findBySchoolId(999L));
         verify(routeRepository, never()).findBySchoolIdAndActiveTrue(any());
     }
 

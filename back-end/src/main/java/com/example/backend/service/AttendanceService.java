@@ -21,4 +21,11 @@ public interface AttendanceService extends BaseService<Attendance> {
     void updateAttendanceStatus(Long attendanceId, String status, String notes);
     void markAsNotified(Long attendanceId);
     List<Attendance> findAttendanceWithStats(Long schoolId, LocalDateTime start, LocalDateTime end);
+    /**
+     * Find all attendance records for a school
+     *
+     * @param schoolId the ID of the school
+     * @return list of attendance records
+     */
+    List<Attendance> findAllSchoolAttendance(Long schoolId);
 } 

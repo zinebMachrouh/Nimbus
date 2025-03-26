@@ -1,21 +1,20 @@
-import { Student } from './student.entity';
-import { Trip } from './trip.entity';
+import { StudentDTO } from './student.entity';
+import { TripDTO } from './trip.entity';
 
 export enum AttendanceStatus {
   PENDING = 'PENDING',
   PRESENT = 'PRESENT',
   ABSENT = 'ABSENT',
-  LATE = 'LATE',
-  EXCUSED = 'EXCUSED',
-  ABSENT_NOTIFIED = 'ABSENT_NOTIFIED'
+  ABSENT_NOTIFIED = 'ABSENT_NOTIFIED',
+  EXCUSED = 'EXCUSED'
 }
 
 export interface Attendance {
   id: number;
-  student: Student;
-  trip: Trip;
+  student: StudentDTO;
+  trip: TripDTO;
   status: AttendanceStatus;
-  scanTime: string;
+  scanTime?: string;
   notes?: string;
   parentNotified: boolean;
   seatNumber?: number;
@@ -23,12 +22,4 @@ export interface Attendance {
   active: boolean;
   createdAt: string;
   updatedAt: string;
-  tripId: number;
-  studentId: number;
-  schoolId: number;
-  parentId: number;
-  notificationSentAt?: string;
-  notificationMethod?: 'SMS' | 'EMAIL' | 'APP';
-  notificationStatus?: 'PENDING' | 'SENT' | 'FAILED';
-  notificationError?: string;
 } 

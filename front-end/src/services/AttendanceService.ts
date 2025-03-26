@@ -75,4 +75,9 @@ export interface AttendanceService {
       percentage: number;
     }>;
   }>;
+  findAllSchoolAttendance(schoolId: number): Promise<Attendance[]>;
+  findSchoolAttendanceInPeriod(schoolId: number, start: string, end: string): Promise<Attendance[]>;
+  recordAttendance(request: any): Promise<void>;
+  updateAttendanceStatus(attendanceId: number, status: string, notes?: string): Promise<void>;
+  markAsNotified(attendanceId: number): Promise<void>;
 } 

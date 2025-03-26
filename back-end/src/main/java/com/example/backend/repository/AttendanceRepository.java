@@ -5,6 +5,7 @@ import com.example.backend.entities.Student;
 import com.example.backend.entities.Trip;
 import com.example.backend.repository.base.BaseRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDateTime;
@@ -112,4 +113,20 @@ public interface AttendanceRepository extends BaseRepository<Attendance> {
     List<Attendance> findByTripIdOrderBySeatNumberAsc(Long tripId);
 
     Attendance findByStudentIdAndTripId(Long studentId, Long tripId);
+
+    /**
+     * Find all attendance records for a school
+     *
+     * @param schoolId the ID of the school
+     * @return list of attendance records
+     */
+    @Query("""
+            SELECT DISTINCT a FROM Attendance a 
+            LEFT JOIN FETCH a.student s 
+            LEFT JOIN FETCH a.trip t 
+            WHERE a.trip.route.school.id = :schoolId 
+            AND a.active = true
+            ORDER BY a.scanTime DESC
+            """)
+    List<Attendance> findBySchoolId(@Param("schoolId") Long schoolId);
 }

@@ -52,4 +52,9 @@ export interface TripRequest {
   scheduledArrivalTime: string;
   notes?: string;
   status?: TripStatus;
+}
+
+export interface TripDTO {
+  id: number;
+  name: string;
 } 
