@@ -1,10 +1,12 @@
-import { useState, useCallback, useEffect } from 'react';
-import { GoogleMap, useJsApiLoader, Marker, InfoWindow, DirectionsRenderer } from '@react-google-maps/api';
-import { Vehicle } from '../../../core/entities/vehicle.entity';
-import { useVehicleService, useRouteService, useSchoolService, useTripService } from '../../../contexts/ServiceContext';
+import {useCallback, useEffect, useState} from 'react';
+import {DirectionsRenderer, GoogleMap, InfoWindow, Marker, Polyline, useJsApiLoader} from '@react-google-maps/api';
+import {Vehicle} from '../../../core/entities/vehicle.entity';
+import {useRouteService, useSchoolService, useTripService, useVehicleService} from '../../../contexts/ServiceContext';
 import './Map.css';
-import { School } from '../../../core/entities/school.entity';
-import { Trip } from '../../../core/entities/trip.entity';
+import {School} from '../../../core/entities/school.entity';
+import {Trip} from '../../../core/entities/trip.entity';
+import {Coordinates} from "../../../core/entities/coordinates.entity.ts";
+import {Client} from "@stomp/stompjs";
 
 const containerStyle = {
   width: '100%',
@@ -76,6 +78,7 @@ const Map = () => {
   const [noLocationVehicles, setNoLocationVehicles] = useState<number[]>([]);
   const [school, setSchool] = useState<School | null>(null);
   const [trips, setTrips] = useState<Trip[]>([]);
+  const [geometries, setGeometries] = useState<{ [tripId: string]: Coordinates[] }>({});
   const [showDebug, setShowDebug] = useState<boolean>(true);
 
   const routeColorPalette = [
@@ -189,13 +192,13 @@ const Map = () => {
         });
       });
       
-      const interval = setInterval(() => {
+      // const interval = setInterval(() => {
         vehicleService.findVehiclesBySchool(schoolId).then(updatedVehicles => {
           if (!updatedVehicles || updatedVehicles.length === 0) {
             console.log("No updated vehicles data available");
             return;
           }
-          
+
           setVehicles(prev => {
             const updated = updatedVehicles.map(vehicle => {
               const existingVehicle = prev.find(v => v.id === vehicle.id);
@@ -207,7 +210,7 @@ const Map = () => {
             console.log("Updated vehicles:", updated);
             return updated;
           });
-          
+
           const missingLocations: number[] = [];
           updatedVehicles.forEach(vehicle => {
             if (!vehicle.currentLatitude && !vehicle.currentLongitude) {
@@ -216,9 +219,9 @@ const Map = () => {
           });
           setNoLocationVehicles(missingLocations);
         });
-      }, 10000);
+      // }, 10000);
       
-      return () => clearInterval(interval);
+      // return () => clearInterval(interval);
     }
   }, [schoolId, schoolLocation, vehicleService, routeService, tripService]);
 
@@ -293,6 +296,92 @@ const Map = () => {
     }
   }, [directionsService, schoolLocation, selectedVehicle, noLocationVehicles]);
 
+  // WebSocket connection setup
+  useEffect(() => {
+    // Create a new STOMP client
+    const stompClient = new Client({
+      // Use SockJS as the WebSocket transport
+      brokerURL: "ws://localhost:8080/ws",
+      // Reconnect delay in milliseconds
+      reconnectDelay: 5000,
+      // Heartbeat configuration
+      heartbeatIncoming: 4000,
+      heartbeatOutgoing: 4000,
+      // Debug mode
+      debug: (str) => {
+        if (showDebug) {
+          console.log(str)
+        }
+      },
+    })
+
+    // Connection established handler
+    stompClient.onConnect = (frame) => {
+      console.log("Connected to WebSocket:", frame)
+
+      // Subscribe to vehicle updates topic
+      stompClient.subscribe(`/topic/vehicle-locations`, (message) => {
+        try {
+          const position: any = JSON.parse(message.body)
+          console.log("Received vehicle position update:", position)
+
+          // Update vehicles with new position data
+          setVehicles((prev) =>
+              prev.map((vehicle) => {
+                if (vehicle.id === position.vehicleId) {
+                  return {
+                    ...vehicle,
+                    currentLatitude: position.coordinates.lat,
+                    currentLongitude: position.coordinates.lng,
+                  }
+                }
+                return vehicle
+              }),
+          )
+
+          // Remove from noLocationVehicles if we now have a position
+          setNoLocationVehicles((prev) => prev.filter((id) => id !== position.vehicleId))
+        } catch (error) {
+          console.error("Error processing WebSocket message:", error)
+        }
+      })
+    }
+
+    // Connection error handler
+    stompClient.onStompError = (frame) => {
+      console.error("STOMP error:", frame.headers, frame.body)
+    }
+
+    // Start the connection
+    stompClient.activate()
+
+    // Cleanup function
+    return () => {
+      if (stompClient.connected) {
+        console.log("Disconnecting WebSocket")
+        stompClient.deactivate()
+      }
+    }
+  }, [showDebug])
+
+
+  useEffect(() => {
+    const fetchAllGeometries = async () => {
+      const geometriesMap: { [tripId: string]: Coordinates[] } = {};
+      for (const trip of trips) {
+        try {
+          geometriesMap[trip.id] = await tripService.fetchRouteGeometriesFromApi(trip.id);
+        } catch (error) {
+          console.error(`Failed to fetch geometries for trip ${trip.id}:`, error);
+        }
+      }
+
+      setGeometries(geometriesMap);
+    };
+
+    fetchAllGeometries();
+  }, [trips]);
+
   const onLoad = useCallback((map: google.maps.Map) => {
     setMap(map);
   }, []);
@@ -343,6 +432,20 @@ const Map = () => {
         onLoad={onLoad}
         onUnmount={onUnmount}
       >
+        {trips && trips.map(trip => (
+            geometries[trip.id] && (
+                <Polyline
+                    key={trip.id}
+                    path={geometries[trip.id]}
+                    options={{
+                      strokeColor: selectedVehicle ? routeColors[selectedVehicle.id] : '#3366CC',
+                      strokeWeight: 5,
+                      strokeOpacity: 0.7,
+                      geodesic: true
+                    }}
+                />
+            )
+        ))}
         {/* School marker */}
         <Marker
           position={schoolLocation}

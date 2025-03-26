@@ -478,11 +478,6 @@ const StudentsList: FC = () => {
           <button className="action-btn edit" onClick={() => openModal('edit', student)}>
             Edit
                 </button>
-          {student.hasTrip && student.active && (
-            <button className="action-btn record" onClick={() => openModal('record-attendance', student)}>
-              Attendance
-            </button>
-          )}
           <button 
             className={`action-btn ${student.active ? 'delete' : 'restore'}`}
             onClick={() => openModal(student.active ? 'delete' : 'restore', student)}

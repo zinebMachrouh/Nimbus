@@ -14,8 +14,12 @@ import com.example.backend.repository.VehicleRepository;
 import com.example.backend.repository.RouteRepository;
 import com.example.backend.repository.StudentRepository;
 import com.example.backend.repository.AttendanceRepository;
+import com.example.backend.service.MapboxService;
 import com.example.backend.service.TripService;
+import com.example.backend.service.VehicleSimulatorService;
 import com.example.backend.service.base.BaseServiceImpl;
+import com.example.backend.utils.helpers.GeoHelper;
+import com.example.backend.utils.records.Coordinates;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.validation.ValidationException;
 import lombok.extern.slf4j.Slf4j;
@@ -25,11 +29,15 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.Set;
 import java.util.HashSet;
+
+import static com.example.backend.utils.helpers.GeoHelper.createCoordinates;
 
 @Slf4j
 @Service
@@ -41,6 +49,8 @@ public class TripServiceImpl extends BaseServiceImpl<Trip, TripRepository> imple
     private final RouteRepository routeRepository;
     private final StudentRepository studentRepository;
     private final AttendanceRepository attendanceRepository;
+    private final MapboxService mapboxService;
+    private final VehicleSimulatorService vehicleSimulatorService;
 
     // Constants for business rules
     private static final int MIN_TRIP_DURATION_MINUTES = 15;
@@ -49,17 +59,71 @@ public class TripServiceImpl extends BaseServiceImpl<Trip, TripRepository> imple
     private static final int MAX_SCHEDULE_ADVANCE_DAYS = 30;
 
     public TripServiceImpl(TripRepository repository,
-                          DriverRepository driverRepository,
-                          VehicleRepository vehicleRepository,
-                          RouteRepository routeRepository,
-                          StudentRepository studentRepository,
-                          AttendanceRepository attendanceRepository) {
+                           DriverRepository driverRepository,
+                           VehicleRepository vehicleRepository,
+                           RouteRepository routeRepository,
+                           StudentRepository studentRepository,
+                           AttendanceRepository attendanceRepository, MapboxService mapboxService, VehicleSimulatorService vehicleSimulatorService) {
         super(repository);
         this.driverRepository = driverRepository;
         this.vehicleRepository = vehicleRepository;
         this.routeRepository = routeRepository;
         this.studentRepository = studentRepository;
         this.attendanceRepository = attendanceRepository;
+        this.mapboxService = mapboxService;
+        this.vehicleSimulatorService = vehicleSimulatorService;
+    }
+
+    @Override
+    public List<Coordinates> fetchRouteGeometriesFromApi(Long id) {
+        Trip trip = repository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Trip with id " + id + " not found"));
+
+        List<Coordinates> tripCoordinates = extractTripCoordinates(trip);
+
+        log.info("Retrieving route of coordinates {}", tripCoordinates);
+
+        List<Coordinates> routeCoordinates = mapboxService.getDirections(tripCoordinates)
+                .routes()
+                .stream()
+                .findFirst()
+                .map(route -> route.geometry().coordinates().stream()
+                        .map(GeoHelper::convertToCoordinates)
+                        .toList())
+                .orElseThrow(() -> new RuntimeException("No route found"));
+
+        log.info("Successfully retrieved route coordinates with size: {}", routeCoordinates.size());
+        return routeCoordinates;
+    }
+
+    private List<Coordinates> extractTripCoordinates(Trip trip) {
+        List<Coordinates> coordinates = new ArrayList<>();
+
+        // Add school location as start point
+        coordinates.add(
+                createCoordinates(
+                        trip.getRoute().getSchool().getLatitude(),
+                        trip.getRoute().getSchool().getLongitude()
+                )
+        );
+
+        // Add stop locations
+        coordinates.addAll(trip.getRoute().getStops().stream()
+                .map(s -> createCoordinates(
+                        s.getLatitude(),
+                        s.getLongitude()
+                ))
+                .toList());
+
+        // Add current vehicle location as end point
+        coordinates.add(
+                createCoordinates(
+                        trip.getVehicle().getCurrentLatitude(),
+                        trip.getVehicle().getCurrentLongitude()
+                )
+        );
+
+        return coordinates;
     }
 
     @Override
@@ -189,6 +253,21 @@ public class TripServiceImpl extends BaseServiceImpl<Trip, TripRepository> imple
         trip.setActualDepartureTime(LocalDateTime.now());
         repository.save(trip);
         log.info("Successfully started trip {}", tripId);
+
+        List<Coordinates> routeCoordinates = new ArrayList<>(fetchRouteGeometriesFromApi(trip.getId()));
+        Collections.reverse(routeCoordinates);
+
+        log.info("Successfully retrieved route coordinates: {}", routeCoordinates.size());
+
+        List<Coordinates> stopCoordinates = trip.getRoute().getStops().stream()
+                .map(stop -> new Coordinates(stop.getLatitude(), stop.getLongitude()))
+                .toList();
+
+        vehicleSimulatorService.startVehicleMovement(
+                trip.getVehicle().getId(),
+                routeCoordinates,
+                stopCoordinates
+        );
     }
 
     @Override

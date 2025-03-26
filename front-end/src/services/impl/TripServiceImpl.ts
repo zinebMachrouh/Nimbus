@@ -2,6 +2,7 @@ import { TripService } from '../TripService';
 import { Trip } from '../../core/entities/trip.entity';
 import { BaseHttpService } from '../BaseHttpService';
 import { ApiResponse } from '../../core/models/ApiResponse';
+import {Coordinates} from "../../core/entities/coordinates.entity.ts";
 import { Student } from '../../core/entities/student.entity';
 
 export class TripServiceImpl extends BaseHttpService implements TripService {
@@ -11,6 +12,11 @@ export class TripServiceImpl extends BaseHttpService implements TripService {
 
   async getAllTrips(): Promise<Trip[]> {
     const response = await this.get<ApiResponse<Trip[]>>();
+    return response.data;
+  }
+
+  async fetchRouteGeometriesFromApi(routeId:number): Promise<Coordinates[]> {
+    const response = await this.get<ApiResponse<any>>(`/${routeId}/routing`);
     return response.data;
   }
 

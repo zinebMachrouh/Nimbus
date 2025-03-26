@@ -18,7 +18,6 @@ public interface ParentMapper {
     @Mapping(target = "recentNotifications", ignore = true) // Will be set by service layer
     ParentDTO toDto(Parent entity);
 
-    @InheritConfiguration(name = "toDto")
     void updateEntity(ParentDTO dto, @MappingTarget Parent entity);
 
     @InheritInverseConfiguration(name = "toDto")

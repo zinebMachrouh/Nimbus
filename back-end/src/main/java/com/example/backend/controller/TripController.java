@@ -5,6 +5,7 @@ import com.example.backend.dto.trip.TripRequest;
 import com.example.backend.entities.Trip;
 import com.example.backend.entities.Student;
 import com.example.backend.service.TripService;
+import com.example.backend.utils.records.Coordinates;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -31,6 +32,13 @@ public class TripController {
     @PreAuthorize("hasAnyRole('ADMIN', 'DRIVER')")
     public ResponseEntity<ApiResponse<List<Trip>>> getAllTrips() {
         return ResponseEntity.ok(ApiResponse.success(tripService.findAll()));
+    }
+
+    @Operation(summary = "Fetch route geometries from Mapbox API")
+    @GetMapping("/{id}/routing")
+    @PreAuthorize("hasAnyRole('ADMIN', 'DRIVER')")
+    public ResponseEntity<ApiResponse<List<Coordinates>>> fetchRouteGeometriesFromApi(@PathVariable Long id) {
+        return ResponseEntity.ok(ApiResponse.success(tripService.fetchRouteGeometriesFromApi(id)));
     }
 
     @Operation(summary = "Get trip by ID")

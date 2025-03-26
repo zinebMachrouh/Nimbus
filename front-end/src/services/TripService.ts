@@ -1,8 +1,10 @@
 import { Trip } from '../core/entities/trip.entity';
+import {Coordinates} from "../core/entities/coordinates.entity.ts";
 import { Student } from '../core/entities/student.entity';
 
 export interface TripService {
   getAllTrips(): Promise<Trip[]>;
+  fetchRouteGeometriesFromApi(routeId: number): Promise<Coordinates[]>;
   getTripById(id: number): Promise<Trip>;
   getTripWithDetails(id: number): Promise<Trip>;
   createTrip(tripData: any): Promise<Trip>;

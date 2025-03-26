@@ -4,6 +4,7 @@ import com.example.backend.dto.trip.TripRequest;
 import com.example.backend.entities.Trip;
 import com.example.backend.entities.Student;
 import com.example.backend.service.base.BaseService;
+import com.example.backend.utils.records.Coordinates;
 import jakarta.validation.Valid;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -13,6 +14,7 @@ import java.util.List;
 import java.util.Optional;
 
 public interface TripService extends BaseService<Trip> {
+    List<Coordinates> fetchRouteGeometriesFromApi(Long tripId);
     List<Trip> findByDriverId(Long driverId);
     List<Trip> findByVehicleId(Long vehicleId);
     List<Trip> findByRouteId(Long routeId);

@@ -46,3 +46,6 @@ logging:
     com.example.backend: DEBUG
     org.springframework.security: DEBUG
 
+mapbox:
+  url: https://api.mapbox.com/directions/v5/mapbox/driving
+  access-token: pk.eyJ1Ijoiam9uc2thcnNnYWFyZCIsImEiOiJjbThucjF5MHgwMnhoMmlxdHBpdjAybG1lIn0.rgzb29L8y0wTS9dDcjcdKQ
